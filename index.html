@@ -1299,6 +1299,11 @@ const order = {
   fletchCount:'4', weightClass:'standard', helical:'6', helicalDir:'right',
   color:'#c1272d', packSize:'18', quantity:1
 };
+// Declared early (not down near the rest of the custom-editor code) because
+// renderShapeCards() reads this the moment the page loads, well before that
+// later code would otherwise run -- a real bug that broke the whole page
+// (Uncaught ReferenceError: Cannot access 'customizeOpen' before initialization).
+let customizeOpen = false;
 
 /* =====================================================================
    CURVE MATH (shared by 3D preview, mini-icons, and the custom editor)
@@ -1913,7 +1918,6 @@ document.getElementById('qtyPlus').addEventListener('click', ()=>{
 /* =====================================================================
    CUSTOM SHAPE EDITOR
 ===================================================================== */
-let customizeOpen = false;
 let cpNodes = [];
 const CP_OVERHANG_LIMIT = 40;
 
