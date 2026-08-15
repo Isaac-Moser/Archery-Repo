@@ -40,6 +40,7 @@
    MINI CURVE ICONS        - small SVG previews on shape cards
    UI BUILD                - shape/color grid rendering + segmented button wiring
    COMPARE PAGE            - COMPARE_INFO ratings + renderCompareGrid()
+   REVIEWS                  - <-- REVIEWS array lives here, add real reviews as they come in
    CUSTOM SHAPE EDITOR      - the node-drag graph in "design your own custom shape"
    BUY NOW                  - submitOrder(): builds and sends the order email
    SCROLL REVEAL            - IntersectionObserver wiring for .reveal elements
@@ -345,7 +346,7 @@
     background:linear-gradient(160deg, #e8e6e0 0%, #cfccc2 55%, #b8b4a6 100%);
     position:relative; box-shadow:0 30px 60px -20px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(255,255,255,0.06);
   }
-  #canvasHost{ width:100%; height:46vh; min-height:300px; max-height:460px; display:block; cursor:grab; }
+  #canvasHost{ width:100%; height:46vh; min-height:300px; max-height:460px; display:block; cursor:grab; touch-action:none; }
   #canvasHost:active{ cursor:grabbing; }
   .stage-hint{
     position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
@@ -405,7 +406,15 @@
     transition:color .15s;
   }
   .customize-link:hover{ color:var(--accent); border-color:var(--accent); }
-  .customize-link.active{ color:var(--accent); border-color:var(--accent); }
+
+  .customize-btn{
+    display:inline-flex; align-items:center; gap:9px; margin-top:20px; font-family:var(--label);
+    font-size:14px; font-weight:600; letter-spacing:0.3px; text-transform:uppercase;
+    color:var(--text); cursor:pointer; background:var(--surface); border:1.5px solid var(--line);
+    border-radius:4px; padding:13px 20px; transition:all .15s;
+  }
+  .customize-btn:hover{ border-color:var(--accent); color:var(--accent); }
+  .customize-btn.active{ background:var(--accent); border-color:var(--accent); color:#fff; }
 
   /* ---- customize panel ---- */
   #customizePanel{
@@ -472,6 +481,9 @@
   }
   .segbtn:hover{ border-color:var(--accent); }
   .segbtn.active{ background:var(--accent); border-color:var(--accent); color:#fff; }
+  .segbtn.disabled{ opacity:0.4; cursor:not-allowed; }
+  .segbtn.disabled:hover{ border-color:var(--line); }
+  .segbtn.disabled .thick{ color:var(--accent); opacity:1; font-weight:700; }
   .segbtn .thick{ display:block; font-size:10.5px; font-weight:400; opacity:0.8; margin-top:2px; }
 
   .color-grid{ display:flex; gap:9px; flex-wrap:wrap; }
@@ -481,6 +493,13 @@
   }
   .color-opt:hover{ border-color:var(--muted); transform:translateY(-2px); }
   .color-opt.active{ border-color:var(--accent); box-shadow:0 0 0 2px var(--accent); transform:translateY(-2px); }
+  .color-opt.out-of-stock{ opacity:0.35; position:relative; cursor:not-allowed; }
+  .color-opt.out-of-stock::after{
+    content:''; position:absolute; inset:0; background:
+      linear-gradient(to top right, transparent 46%, #fff 48%, #fff 52%, transparent 54%);
+  }
+  .color-opt.out-of-stock:hover{ transform:none; }
+  .stock-msg{ font-size:12.5px; color:var(--accent); margin-top:8px; min-height:16px; }
 
   /* ---- price ---- */
   .price-card{
@@ -530,6 +549,28 @@
   .faq-item summary::after{ content:'+'; color:var(--accent); font-size:20px; font-weight:400; margin-left:12px; }
   .faq-item[open] summary::after{ content:'\2212'; }
   .faq-item p{ font-size:13.5px; color:var(--muted); line-height:1.6; padding:0 0 16px; margin:0; }
+
+  /* ---- reviews ---- */
+  .reviews-summary{
+    display:flex; align-items:center; gap:20px; background:var(--surface2); border:1.5px solid var(--line);
+    border-radius:6px; padding:22px 26px;
+  }
+  .rs-score{ font-family:var(--display); font-size:44px; color:var(--accent); line-height:1; }
+  .rs-stars{ font-size:18px; letter-spacing:2px; color:var(--accent); }
+  .rs-stars .dim{ color:var(--line); }
+  .rs-count{ font-size:12.5px; color:var(--muted); margin-top:4px; }
+
+  .reviews-list{ display:flex; flex-direction:column; gap:14px; }
+  .review-card{
+    background:var(--surface); border:1.5px solid var(--line); border-radius:4px; padding:18px 20px;
+  }
+  .review-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; flex-wrap:wrap; gap:6px; }
+  .review-name{ font-family:var(--label); font-weight:600; font-size:14px; letter-spacing:0.2px; }
+  .review-stars{ font-size:14px; letter-spacing:1.5px; color:var(--accent); }
+  .review-meta{ font-size:11.5px; color:var(--muted-dim); margin-bottom:10px; }
+  .review-text{ font-size:13.5px; color:var(--muted); line-height:1.6; }
+  .review-photo{ margin-top:12px; max-width:220px; border-radius:4px; border:1px solid var(--line); display:block; }
+  .reviews-empty{ text-align:center; color:var(--muted-dim); font-size:13.5px; padding:30px 0; }
   #confirmPanel p{ font-size:13.5px; color:var(--muted); line-height:1.6; margin-bottom:14px; }
   #copyOrderBtn{
     background:var(--surface); border:1.5px solid var(--line); color:var(--text); padding:10px 18px;
@@ -590,6 +631,7 @@
       <a href="#home" class="nav-tab active" data-page="home">Home</a>
       <a href="#compare" class="nav-tab" data-page="compare">Compare</a>
       <a href="#howto" class="nav-tab" data-page="howto">How To</a>
+      <a href="#reviews" class="nav-tab" data-page="reviews">Reviews</a>
       <a href="#about" class="nav-tab" data-page="about">About</a>
     </nav>
     <div class="cart-btn-wrap">
@@ -671,8 +713,8 @@
     <div class="customize-link" id="compareLink" style="margin-right:18px;">
       <span>⚖</span> Not sure? Compare all six shapes
     </div>
-    <div class="customize-link" id="customizeLink">
-      <span>✎</span> Or design your own custom shape
+    <div class="customize-btn" id="customizeLink">
+      <span>✎</span> Design Your Own Custom Shape
     </div>
     <div id="customizePanel">
       <div class="cp-head">
@@ -694,7 +736,7 @@
       </div>
       <div class="cp-axis-x">LENGTH ALONG VANE (mm) — X &nbsp;·&nbsp; FRONT → BACK</div>
       <div id="cpWarn"></div>
-      <div id="cpNote">Click empty space to add a point, drag any point to reshape the curve, or type exact X/Y coordinates above. Select a point to delete it. When you're happy with it, hit "Use This Shape" below.</div>
+      <div id="cpNote">Want a head start? Click any shape above to load its curve in here, then tweak it. Otherwise: click empty space to add a point, drag any point to reshape the curve, or type exact X/Y coordinates above. Select a point to delete it. When you're happy with it, hit "Use This Shape" below.</div>
       <div class="cp-btn primary" id="cpUseShape" style="margin-top:14px; display:inline-block;">Use This Shape</div>
     </div>
   </section>
@@ -754,9 +796,9 @@
         <label>Weight Class</label>
         <div class="segbtn-row">
           <div class="segbtn active" data-group="weightClass" data-val="standard">Standard<span class="thick">0.60mm wall</span></div>
-          <div class="segbtn" data-group="weightClass" data-val="ultralight">Ultralight<span class="thick">0.35mm wall</span></div>
+          <div class="segbtn disabled" id="ultralightBtn" title="Still in development — not orderable yet">Ultralight<span class="thick">In Progress</span></div>
         </div>
-        <div class="help">Ultralight trims weight for a bit more speed and a quieter shot.</div>
+        <div class="help">Ultralight trims weight for a bit more speed and a quieter shot — still being tested, not available to order yet.</div>
       </div>
     </div>
     <div class="field-grid">
@@ -782,6 +824,7 @@
     <div class="field">
       <label>Color</label>
       <div class="color-grid" id="colorGrid"></div>
+      <div id="colorStockMsg" class="stock-msg"></div>
     </div>
   </section>
 
@@ -1001,6 +1044,42 @@
   </div>
 </div>
 
+<div id="page-reviews" style="display:none;">
+  <div class="about-hero">
+    <svg class="hero-target" viewBox="0 0 400 400" aria-hidden="true">
+      <circle cx="200" cy="200" r="190" fill="none" stroke="currentColor" stroke-width="1"/>
+      <circle cx="200" cy="200" r="140" fill="none" stroke="currentColor" stroke-width="1"/>
+      <circle cx="200" cy="200" r="90" fill="none" stroke="currentColor" stroke-width="1"/>
+      <circle cx="200" cy="200" r="40" fill="none" stroke="currentColor" stroke-width="1"/>
+    </svg>
+    <div class="wrap">
+      <div class="eyebrow-top">From the Field</div>
+      <h1>What people are <em>saying</em>.</h1>
+    </div>
+  </div>
+
+  <div class="wrap about-body">
+    <section class="about-block reveal">
+      <div class="reviews-summary">
+        <div class="rs-score" id="rsScore">--</div>
+        <div class="rs-details">
+          <div class="rs-stars" id="rsStars"></div>
+          <div class="rs-count" id="rsCount">No reviews yet</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-block reveal">
+      <div class="reviews-list" id="reviewsList"></div>
+    </section>
+
+    <section class="about-block reveal about-cta">
+      <h2>Tried a Set?</h2>
+      <p>We'd love to hear how they flew — email us a note (and a photo if you've got one) and we'll add it here.</p>
+    </section>
+  </div>
+</div>
+
 <div id="page-about" style="display:none;">
   <div class="about-hero">
     <svg class="hero-target" viewBox="0 0 400 400" aria-hidden="true">
@@ -1064,7 +1143,7 @@
 /* =====================================================================
    BUSINESS CONFIG — edit before going live
 ===================================================================== */
-const BUSINESS_EMAIL = "isaacmoser6@gmail.com"; // <-- CHANGE THIS to your real order inbox
+const BUSINESS_EMAIL = "yourname@example.com"; // <-- CHANGE THIS to your real order inbox
 
 /* =====================================================================
    PASSWORD GATE — soft "not open to the public yet" barrier.
@@ -1114,11 +1193,19 @@ const host = document.getElementById('canvasHost');
 const scene = new THREE.Scene();
 scene.background = null;
 const camera = new THREE.PerspectiveCamera(45, host.clientWidth/Math.max(1,host.clientHeight), 0.1, 2000);
-const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true, powerPreference:'default'});
 renderer.setClearColor(0x000000, 0);
 renderer.setSize(host.clientWidth, host.clientHeight);
-renderer.setPixelRatio(window.devicePixelRatio);
+// Uncapped devicePixelRatio is a common cause of mobile WebGL slowdown/glitching --
+// phones often report 3x or higher, which renders at 9x the actual pixel count.
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 host.appendChild(renderer.domElement);
+
+// Mobile GPUs under memory pressure can silently lose the WebGL context,
+// which otherwise leaves a frozen/black canvas with no recovery. Handle both
+// sides so it at least resumes instead of staying broken.
+renderer.domElement.addEventListener('webglcontextlost', e=>{ e.preventDefault(); }, false);
+renderer.domElement.addEventListener('webglcontextrestored', ()=>{ render(); }, false);
 
 const dl1 = new THREE.DirectionalLight(0xfff6e8, 1.25); dl1.position.set(50,90,60); scene.add(dl1);
 const dl2 = new THREE.DirectionalLight(0xffffff, 0.3); dl2.position.set(-60,-20,-50); scene.add(dl2);
@@ -1129,8 +1216,9 @@ const modelGroup = new THREE.Group();
 scene.add(modelGroup);
 
 let isDragging=false, prevX=0, prevY=0, rotY=0.6, rotX=-0.2, camDist=95;
-renderer.domElement.addEventListener('pointerdown', e=>{isDragging=true; prevX=e.clientX; prevY=e.clientY;});
+renderer.domElement.addEventListener('pointerdown', e=>{ isDragging=true; prevX=e.clientX; prevY=e.clientY; renderer.domElement.setPointerCapture(e.pointerId); });
 window.addEventListener('pointerup', ()=>isDragging=false);
+window.addEventListener('pointercancel', ()=>isDragging=false);
 window.addEventListener('pointermove', e=>{
   if(!isDragging) return;
   const dx=e.clientX-prevX, dy=e.clientY-prevY;
@@ -1157,7 +1245,21 @@ function resizeRenderer(){
   camera.updateProjectionMatrix();
   renderer.setSize(host.clientWidth, host.clientHeight);
 }
-window.addEventListener('resize', resizeRenderer);
+// Debounced + width-only resize handling. Mobile browsers fire a flood of
+// resize events as the address bar shows/hides during scroll, which was
+// causing constant renderer.setSize() calls and visible flicker. Only react
+// once things settle, and only when the actual width changed -- height
+// alone changing is almost always just the address bar, not a real resize.
+let lastResizeWidth = host.clientWidth, resizeTimer = null;
+window.addEventListener('resize', ()=>{
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(()=>{
+    if(host.clientWidth !== lastResizeWidth){
+      lastResizeWidth = host.clientWidth;
+      resizeRenderer();
+    }
+  }, 150);
+});
 function animate(){ requestAnimationFrame(animate); updateCamera(); renderer.render(scene,camera); }
 animate();
 
@@ -1178,10 +1280,17 @@ const SHAPES = {
   longrange: { name:'LONGRANGE', desc:'Long, smooth, extra stability.', rounding:100,
     nodes:[{x:0,h:0},{x:22,h:7},{x:48,h:12.7},{x:74,h:7},{x:97,h:0}] }
 };
+// To take a color out of stock, change its "stock:true" to "stock:false" below.
+// It'll gray out and cross itself out automatically on the site.
 const COLORS = [
-  {name:'White',hex:'#f2f2ee'}, {name:'Black',hex:'#1c1c1c'}, {name:'Red',hex:'#c1272d'},
-  {name:'Orange',hex:'#ff7a1a'}, {name:'Yellow',hex:'#f4c430'}, {name:'Green',hex:'#2e7d32'},
-  {name:'Blue',hex:'#1565c0'}, {name:'Purple',hex:'#6a1b9a'}
+  {name:'White',  hex:'#f2f2ee', stock:true},
+  {name:'Black',  hex:'#1c1c1c', stock:true},
+  {name:'Red',    hex:'#c1272d', stock:true},
+  {name:'Orange', hex:'#ff7a1a', stock:true},
+  {name:'Yellow', hex:'#f4c430', stock:true},
+  {name:'Green',  hex:'#2e7d32', stock:true},
+  {name:'Blue',   hex:'#1565c0', stock:true},
+  {name:'Purple', hex:'#6a1b9a', stock:true}
 ];
 
 const order = {
@@ -1586,12 +1695,17 @@ function renderShapeCards(){
     const card = document.createElement('div');
     card.className = 'shape-card' + (order.shape===key ? ' selected' : '');
     card.dataset.key = key;
+    card.title = customizeOpen ? `Load ${s.name}'s curve into the editor to start from` : '';
     card.innerHTML = `
       <div class="check"><svg viewBox="0 0 10 10"><polyline points="1,5 4,8 9,1" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       ${miniCurveSVG(s.nodes, s.rounding)}
       <div class="name">${s.name}</div>
       <div class="desc">${s.desc}</div>`;
     card.addEventListener('click', ()=>{
+      if(customizeOpen){
+        loadShapeIntoEditor(s);
+        return;
+      }
       order.shape = key;
       document.getElementById('customizeLink').classList.remove('active');
       document.getElementById('customizePanel').style.display = 'none';
@@ -1600,6 +1714,20 @@ function renderShapeCards(){
     });
     shapeGrid.appendChild(card);
   });
+}
+
+function loadShapeIntoEditor(s){
+  const length = Math.max(40, order.vaneLength);
+  const scale = length / s.nodes[s.nodes.length-1].x;
+  const scaled = s.nodes.map(n => ({ x: Math.round(n.x*scale), h: Math.round(n.h*10)/10 }));
+  scaled[0].x = 0;
+  scaled[scaled.length-1].x = Math.round(length);
+  cpNodes = scaled;
+  document.getElementById('cpRounding').value = s.rounding;
+  document.getElementById('cpRoundingVal').textContent = s.rounding+'%';
+  cpSelected = Math.min(2, cpNodes.length-1);
+  drawCPGraph();
+  document.getElementById('customizePanel').scrollIntoView({behavior:'smooth', block:'center'});
 }
 
 /* =====================================================================
@@ -1655,13 +1783,75 @@ function renderCompareGrid(){
 }
 renderShapeCards();
 
+/* =====================================================================
+   REVIEWS
+   Add real reviews here as customers send them in -- there's no live
+   submission form on the site itself (that needs a backend this site
+   doesn't have), so this array is the actual source of what shows up.
+   Copy the example format below for each new one. "photo" is optional --
+   set it to a URL, or a base64 data URI (same approach as the logo), or
+   just omit/null it for no photo.
+
+   Example entry:
+   { name:'Jane D.', rating:5, date:'2026-09',
+     text:'Fletched a dozen arrows in about ten minutes total.',
+     photo:null }
+===================================================================== */
+const REVIEWS = [
+  // Add real reviews here, formatted like the example above.
+];
+
+function starString(rating, max){
+  max = max || 5;
+  let s = '';
+  for(let i=1;i<=max;i++) s += `<span class="${i<=Math.round(rating)?'':'dim'}">\u2605</span>`;
+  return s;
+}
+function renderReviews(){
+  const listEl = document.getElementById('reviewsList');
+  const scoreEl = document.getElementById('rsScore');
+  const starsEl = document.getElementById('rsStars');
+  const countEl = document.getElementById('rsCount');
+  if(!listEl) return;
+
+  if(REVIEWS.length === 0){
+    scoreEl.textContent = '--';
+    starsEl.innerHTML = starString(0);
+    countEl.textContent = 'No reviews yet — be the first!';
+    listEl.innerHTML = '<div class="reviews-empty">Reviews from real customers will show up here once orders start coming in.</div>';
+    return;
+  }
+
+  const avg = REVIEWS.reduce((sum,r)=>sum+r.rating, 0) / REVIEWS.length;
+  scoreEl.textContent = avg.toFixed(1);
+  starsEl.innerHTML = starString(avg);
+  countEl.textContent = `Based on ${REVIEWS.length} review${REVIEWS.length===1?'':'s'}`;
+
+  listEl.innerHTML = REVIEWS.slice().reverse().map(r => `
+    <div class="review-card">
+      <div class="review-head">
+        <div class="review-name">${r.name}</div>
+        <div class="review-stars">${starString(r.rating)}</div>
+      </div>
+      <div class="review-meta">${r.date || ''}</div>
+      <div class="review-text">${r.text}</div>
+      ${r.photo ? `<img class="review-photo" src="${r.photo}" alt="Photo from ${r.name}">` : ''}
+    </div>`).join('');
+}
+
 const colorGrid = document.getElementById('colorGrid');
 COLORS.forEach(c=>{
   const dot = document.createElement('div');
-  dot.className = 'color-opt' + (c.hex===order.color ? ' active' : '');
+  dot.className = 'color-opt' + (c.hex===order.color ? ' active' : '') + (c.stock ? '' : ' out-of-stock');
   dot.style.background = c.hex;
-  dot.title = c.name;
+  dot.title = c.stock ? c.name : c.name + ' (out of stock)';
   dot.addEventListener('click', ()=>{
+    const msgEl = document.getElementById('colorStockMsg');
+    if(!c.stock){
+      msgEl.textContent = `${c.name} is currently out of stock — pick another color, or check back soon.`;
+      return;
+    }
+    msgEl.textContent = '';
     order.color = c.hex;
     document.querySelectorAll('.color-opt').forEach(d=>d.classList.remove('active'));
     dot.classList.add('active');
@@ -2077,6 +2267,7 @@ function showPage(name){
   document.getElementById('stickyBar').style.display = (name==='home') ? '' : 'none';
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.toggle('active', t.dataset.page===name));
   if(name==='compare') renderCompareGrid();
+  if(name==='reviews') renderReviews();
   window.scrollTo(0,0);
 }
 document.querySelectorAll('.nav-tab').forEach(el=>{
