@@ -44,10 +44,12 @@
    PAGE NAVIGATION           - Home/Compare/How To/About tab switching (showPage)
    INIT                      - startup calls at the very bottom of the script
 
-   CHANGE_STOCK_HERE
-   PASSWORD GATE         - full-screen "enter password" overlay styling *********
+PERSONAL NOTES:
+   CHANGE_STOCK_HERE     - <-- remove/add this for stock colors available for purchase *************
+   PASSWORD GATE         - <-- full-screen "enter password" overlay styling *********
    BUSINESS CONFIG       - <-- BUSINESS_EMAIL lives here, edit before going live        ************************
-   PASSWORD GATE          - <-- SITE_PASSWORD lives here; remove this whole block when ready to launch    ********************
+   PASSWORD GATE         - <-- SITE_PASSWORD lives here; remove this whole block when ready to launch    ********************
+   ADD PASSWORD HERE     - <-- remove/add this whole block when ready to launch    ********************
 
 -->
 <html lang="en">
@@ -613,6 +615,9 @@
 </head>
 <body>
 
+<!--
+  ***ADD PASSWORD HERE IF NEEDED***
+
 <div id="passwordGate">
   <div class="pg-box">
     <div class="pg-logo">MOSER <span class="mark">ARCHERY</span></div>
@@ -623,6 +628,7 @@
     <div id="pgError">That's not it — try again.</div>
   </div>
 </div>
+-->
 
 <header>
   <div class="wrap">
@@ -1147,6 +1153,9 @@
 ===================================================================== */
 const BUSINESS_EMAIL = "isaacmoser6@gmail.com"; // <-- CHANGE THIS to your real order inbox
 
+/*
+  ***ADD PASSWORD HERE IF NEEDED***
+
 /* =====================================================================
    PASSWORD GATE — soft "not open to the public yet" barrier.
    NOT real security: this password lives in plain view in this file's
@@ -1157,7 +1166,7 @@ const BUSINESS_EMAIL = "isaacmoser6@gmail.com"; // <-- CHANGE THIS to your real 
    #passwordGate div near the top of <body>) once you're ready to launch
    for real.
 ===================================================================== */
-const SITE_PASSWORD = "moser2026"; // <-- CHANGE THIS to whatever you tell testers
+/*const SITE_PASSWORD = "moser2026"; // <-- CHANGE THIS to whatever you tell testers
 (function(){
   const gate = document.getElementById('passwordGate');
   const input = document.getElementById('pgInput');
@@ -1187,6 +1196,8 @@ const SITE_PASSWORD = "moser2026"; // <-- CHANGE THIS to whatever you tell teste
     setTimeout(()=>input.focus(), 100);
   }
 })();
+*/
+
 
 /* =====================================================================
    3D PREVIEW SCENE
