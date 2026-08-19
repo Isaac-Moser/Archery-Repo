@@ -44,13 +44,12 @@
    PAGE NAVIGATION           - Home/Compare/How To/About tab switching (showPage)
    INIT                      - startup calls at the very bottom of the script
 
-PERSONAL NOTES:
-   CHANGE_STOCK_HERE     - <-- remove/add this for stock colors available for purchase *************
-   PASSWORD GATE         - <-- full-screen "enter password" overlay styling *********
+ PERSONAL KEYWORDS:
+   CHANGE_STOCK_HERE
+   PASSWORD GATE         - full-screen "enter password" overlay styling *********
    BUSINESS CONFIG       - <-- BUSINESS_EMAIL lives here, edit before going live        ************************
-   PASSWORD GATE         - <-- SITE_PASSWORD lives here; remove this whole block when ready to launch    ********************
-   ADD PASSWORD HERE     - <-- remove/add this whole block when ready to launch    ********************
-
+   PASSWORD GATE          - <-- SITE_PASSWORD lives here; remove this whole block when ready to launch    ********************
+   PASSWORD ENABLE
 -->
 <html lang="en">
 <head>
@@ -615,9 +614,7 @@ PERSONAL NOTES:
 </head>
 <body>
 
-<!--
-  ***ADD PASSWORD HERE IF NEEDED***
-
+<!-- PASSWORD ENABLE
 <div id="passwordGate">
   <div class="pg-box">
     <div class="pg-logo">MOSER <span class="mark">ARCHERY</span></div>
@@ -1153,8 +1150,31 @@ PERSONAL NOTES:
 ===================================================================== */
 const BUSINESS_EMAIL = "isaacmoser6@gmail.com"; // <-- CHANGE THIS to your real order inbox
 
-/*
-  ***ADD PASSWORD HERE IF NEEDED***
+/* =====================================================================
+   ORDER TRACKER (optional) — logs every order to a Google Sheet via a
+   free Google Apps Script "Web App" endpoint. No server, no cost.
+   Setup:
+     1. Create a Google Sheet.
+     2. Extensions > Apps Script, paste the doPost() code from the setup
+        notes you were given, then Deploy > New deployment > Web app,
+        "Execute as: Me", "Who has access: Anyone".
+     3. Paste the resulting Web App URL below.
+   Leave this blank to skip tracking entirely -- checkout still works
+   fine either way, since this call never blocks the email.
+===================================================================== */
+const ORDER_TRACKER_URL = "https://script.google.com/macros/s/AKfycbyoZZ8wSD14rP3tMvp8gbF7qMX6LQpuqxY-6yT605QYIWgAR8ePJjxjeJ-mCsFwKRjJDQ/exec"; // <-- PASTE your Apps Script Web App URL here
+
+function logOrderToTracker(payload){
+  if(!ORDER_TRACKER_URL) return; // tracker not configured -- skip silently
+  try{
+    fetch(ORDER_TRACKER_URL, {
+      method: 'POST',
+      mode: 'no-cors', // fire-and-forget; response can't be read, and that's fine
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    }).catch(()=>{}); // network hiccup here should never block checkout
+  }catch(e){ /* never let tracker issues interrupt an order */ }
+}
 
 /* =====================================================================
    PASSWORD GATE — soft "not open to the public yet" barrier.
@@ -1166,7 +1186,10 @@ const BUSINESS_EMAIL = "isaacmoser6@gmail.com"; // <-- CHANGE THIS to your real 
    #passwordGate div near the top of <body>) once you're ready to launch
    for real.
 ===================================================================== */
-/*const SITE_PASSWORD = "moser2026"; // <-- CHANGE THIS to whatever you tell testers
+
+/*
+/* PASSWORD ENABLE 
+const SITE_PASSWORD = "moser2026"; // <-- CHANGE THIS to whatever you tell testers
 (function(){
   const gate = document.getElementById('passwordGate');
   const input = document.getElementById('pgInput');
@@ -1197,7 +1220,6 @@ const BUSINESS_EMAIL = "isaacmoser6@gmail.com"; // <-- CHANGE THIS to your real 
   }
 })();
 */
-
 
 /* =====================================================================
    3D PREVIEW SCENE
@@ -2190,27 +2212,58 @@ function buildItemProfileData(name, s){
     quantity: s.quantity
   };
 }
-function buildItemLines(s, pricing, index){
+function buildItemLines(s, pricing, index, total){
   const shapeName = shapeDisplayName(s);
   const wrapLine = s.usingWraps==='yes'
     ? 'Yes' + (s.wrapThickness ? ' (' + s.wrapThickness + 'mm)' : '') + (s.wrapBrand ? ' [brand: ' + s.wrapBrand + ']' : (s.wrapThickness ? '' : ' [thickness/brand not provided — confirm before printing]'))
     : 'No';
+  const divider = '------------------------------------';
   return [
-    `ITEM ${index}`,
-    'Shape: ' + shapeName + (s.shape==='custom' ? ' (see profile data below for exact curve)' : ''),
-    'Vane Length: ' + s.vaneLength + 'mm',
-    'Shaft OD: ' + s.shaftOD + 'mm',
-    'Arrow Wraps: ' + wrapLine,
-    'Number of Vanes: ' + s.fletchCount,
-    'Weight Class: ' + s.weightClass,
-    'Helical: ' + (s.helical==='0' ? 'Straight (0°)' : s.helical+'° '+s.helicalDir),
-    'Color: ' + colorDisplayName(s.color),
-    'Pack Size: ' + pricing.pack,
-    'Quantity: ' + pricing.qty + ' pack(s)',
-    'Est. Weight/vane: ~' + pricing.grains.toFixed(0) + ' grains',
-    'Price: $' + pricing.total,
+    divider,
+    `ITEM ${index} of ${total} — ${shapeName.toUpperCase()}`,
+    divider,
+    '  Shape:          ' + shapeName + (s.shape==='custom' ? ' (see profile data below for exact curve)' : ''),
+    '  Vane Length:    ' + s.vaneLength + 'mm',
+    '  Shaft OD:       ' + s.shaftOD + 'mm',
+    '  Arrow Wraps:    ' + wrapLine,
+    '  Fin Count:      ' + s.fletchCount,
+    '  Weight Class:   ' + s.weightClass,
+    '  Helical:        ' + (s.helical==='0' ? 'Straight (0°)' : s.helical+'° '+s.helicalDir),
+    '  Color:          ' + colorDisplayName(s.color) + ' (' + s.color + ')',
+    '  Pack Size:      ' + pricing.pack,
+    '  Quantity:       ' + pricing.qty + ' pack(s)',
+    '  Est. Wt/vane:   ~' + pricing.grains.toFixed(0) + ' grains',
+    '  Price:          $' + pricing.total,
     ''
   ];
+}
+
+// Studio-order copy block: same field order as the Studio tool's inputs,
+// so production can retype top-to-bottom without hunting through the email.
+function buildStudioCopyLines(s, index, total){
+  const lines = [
+    `>>> STUDIO COPY-PASTE — ITEM ${index} of ${total} (paste top to bottom) <<<`,
+    'Shape: ' + s.shape,
+  ];
+  if(s.shape==='custom'){
+    lines.push('Custom Nodes: ' + JSON.stringify(s.customNodes));
+    lines.push('Custom Rounding: ' + s.customRounding);
+  }
+  lines.push(
+    'Vane Length (mm): ' + s.vaneLength,
+    'Shaft OD (mm): ' + s.shaftOD,
+    'Arrow Wraps: ' + s.usingWraps,
+    (s.usingWraps==='yes' ? 'Wrap Thickness (mm): ' + (s.wrapThickness || '(not provided)') : null),
+    (s.usingWraps==='yes' ? 'Wrap Brand: ' + (s.wrapBrand || '(not provided)') : null),
+    'Fin Count: ' + s.fletchCount,
+    'Weight Class: ' + s.weightClass,
+    'Helical (deg): ' + s.helical,
+    'Helical Dir: ' + s.helicalDir,
+    'Color (hex): ' + s.color,
+    'Pack Size: ' + s.packSize,
+    ''
+  );
+  return lines.filter(l => l !== null);
 }
 
 function submitOrder(){
@@ -2269,31 +2322,59 @@ function submitOrder(){
   const grandTotal = checkoutItems.reduce((sum,item)=>sum+item.pricing.total, 0);
   const allProfiles = checkoutItems.map(item => buildItemProfileData(name, item.snapshot));
   const firstShapeName = shapeDisplayName(checkoutItems[0].snapshot);
+  const itemCount = checkoutItems.length;
 
   let itemLines = [];
+  let studioLines = [];
   checkoutItems.forEach((item, i) => {
-    itemLines = itemLines.concat(buildItemLines(item.snapshot, item.pricing, i+1));
+    itemLines = itemLines.concat(buildItemLines(item.snapshot, item.pricing, i+1, itemCount));
+    studioLines = studioLines.concat(buildStudioCopyLines(item.snapshot, i+1, itemCount));
   });
 
+  const divider = '========================================';
   const lines = [
-    'NEW ORDER — Moser Archery',
-    'Order Reference: ' + orderRef,
+    divider,
+    'MOSER ARCHERY — NEW ORDER',
+    'Ref: ' + orderRef,
+    divider,
     '',
     'CUSTOMER',
-    'Name: ' + name,
-    'Email: ' + email,
-    'Shipping Address: ' + (address || '(not provided — arrange pickup or ask customer)'),
-    'Notes: ' + (notes || '(none)'),
+    '  Name:      ' + name,
+    '  Email:     ' + email,
+    '  Ship to:   ' + (address || '(not provided — arrange pickup or ask customer)'),
+    '  Notes:     ' + (notes || '(none)'),
     '',
-    `ORDER DETAILS (${checkoutItems.length} item${checkoutItems.length===1?'':'s'})`,
+    `ORDER DETAILS (${itemCount} item${itemCount===1?'':'s'})`,
     ...itemLines,
+    divider,
     'GRAND TOTAL: $' + grandTotal,
+    divider,
     '',
-    '--- PROFILE DATA (for production) ---',
+    ...studioLines,
+    '--- raw profile JSON (backup only) ---',
     JSON.stringify(allProfiles)
   ];
   const body = lines.join('\n');
   const subject = 'New Order ' + orderRef + ' — ' + (checkoutItems.length>1 ? checkoutItems.length+' vanes' : firstShapeName + ' vanes') + ' for ' + name;
+
+  // Fire-and-forget log to the order tracker sheet. This never blocks or
+  // delays checkout -- if it's not configured yet, or the request fails,
+  // the email still goes out exactly as before.
+  logOrderToTracker({
+    orderRef, name, email,
+    address: address || '',
+    notes: notes || '',
+    grandTotal,
+    itemCount,
+    items: checkoutItems.map(item => ({
+      shape: shapeDisplayName(item.snapshot),
+      vaneLength: item.snapshot.vaneLength,
+      shaftOD: item.snapshot.shaftOD,
+      packSize: item.pricing.pack,
+      quantity: item.pricing.qty,
+      price: item.pricing.total
+    }))
+  });
 
   window.location.href = 'mailto:' + BUSINESS_EMAIL + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
 
