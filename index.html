@@ -44,12 +44,11 @@
    PAGE NAVIGATION           - Home/Compare/How To/About tab switching (showPage)
    INIT                      - startup calls at the very bottom of the script
 
- PERSONAL KEYWORDS:
    CHANGE_STOCK_HERE
    PASSWORD GATE         - full-screen "enter password" overlay styling *********
    BUSINESS CONFIG       - <-- BUSINESS_EMAIL lives here, edit before going live        ************************
    PASSWORD GATE          - <-- SITE_PASSWORD lives here; remove this whole block when ready to launch    ********************
-   PASSWORD ENABLE
+
 -->
 <html lang="en">
 <head>
@@ -614,7 +613,6 @@
 </head>
 <body>
 
-<!-- PASSWORD ENABLE
 <div id="passwordGate">
   <div class="pg-box">
     <div class="pg-logo">MOSER <span class="mark">ARCHERY</span></div>
@@ -625,7 +623,6 @@
     <div id="pgError">That's not it — try again.</div>
   </div>
 </div>
--->
 
 <header>
   <div class="wrap">
@@ -809,8 +806,8 @@
     </div>
     <div class="field-grid">
       <div class="field">
-        <label>Helical Twist <span class="opt" id="helicalSliderVal">0°</span></label>
-        <input type="range" id="helicalSlider" min="0" max="25" step="1" value="0" style="width:100%;">
+        <label>Helical Twist <span class="opt" id="helicalSliderVal">20°</span></label>
+        <input type="range" id="helicalSlider" min="0" max="25" step="1" value="20" style="width:100%;">
         <div class="help">More twist = more spin stabilization, especially useful with broadheads.</div>
       </div>
       <div class="field">
@@ -957,6 +954,14 @@
       <p><b>Height</b> is what steers a broadhead back on line — taller vanes correct more, which is exactly why hunting vanes tend to stand taller than target vanes. That correction isn't free, though: taller also means more noise and, to a lesser degree, more drag.</p>
       <p><b>Length</b> works differently than most people expect. It's actually the bigger factor in aerodynamic drag — a long vane costs you more speed than a tall one does. But length also quiets things down: spread the same surface area over a longer, lower-angle curve and it slices through the air with less noise than a short, steep one. That's why a vane can be both long <i>and</i> quiet at the same time.</p>
       <p>Every shape below is fully rounded already — no sharp edges anywhere in the curve, on any of them — so airflow separation and turbulence aren't a variable here. What actually separates these six is how much length and height each one leans on, and that's what the ratings below reflect.</p>
+    </section>
+
+    <section class="about-block reveal">
+      <div class="step-eyebrow">A Third Dial</div>
+      <h2>Helical Twist</h2>
+      <p>Where shape gives you a fixed amount of steering, <b>helical twist</b> is the dial you turn to add more — it spins the arrow in flight, which helps drive a broadhead back on line faster than a straight fletch alone. More twist means more of that correction.</p>
+      <p>It's not free, though. More twist also means more drag and more noise off the string — the same tradeoff height makes, just on a different axis. Higher settings lean harder into correction; lower settings lean toward speed and quiet.</p>
+      <p>Every order is printed to your exact twist setting, from <b>Straight (0°)</b> up to <b>25°</b>, in either direction — so you can dial it in for a stubborn broadhead or back off for a quieter target setup, shape by shape.</p>
     </section>
 
     <section class="about-block reveal">
@@ -1162,7 +1167,7 @@ const BUSINESS_EMAIL = "isaacmoser6@gmail.com"; // <-- CHANGE THIS to your real 
    Leave this blank to skip tracking entirely -- checkout still works
    fine either way, since this call never blocks the email.
 ===================================================================== */
-const ORDER_TRACKER_URL = "https://script.google.com/macros/s/AKfycbyoZZ8wSD14rP3tMvp8gbF7qMX6LQpuqxY-6yT605QYIWgAR8ePJjxjeJ-mCsFwKRjJDQ/exec"; // <-- PASTE your Apps Script Web App URL here
+const ORDER_TRACKER_URL = ""; // <-- PASTE your Apps Script Web App URL here
 
 function logOrderToTracker(payload){
   if(!ORDER_TRACKER_URL) return; // tracker not configured -- skip silently
@@ -1186,9 +1191,6 @@ function logOrderToTracker(payload){
    #passwordGate div near the top of <body>) once you're ready to launch
    for real.
 ===================================================================== */
-
-/*
-/* PASSWORD ENABLE 
 const SITE_PASSWORD = "moser2026"; // <-- CHANGE THIS to whatever you tell testers
 (function(){
   const gate = document.getElementById('passwordGate');
@@ -1219,7 +1221,6 @@ const SITE_PASSWORD = "moser2026"; // <-- CHANGE THIS to whatever you tell teste
     setTimeout(()=>input.focus(), 100);
   }
 })();
-*/
 
 /* =====================================================================
    3D PREVIEW SCENE
@@ -1352,7 +1353,7 @@ const COLORS = [
 const order = {
   shape:'impact', customNodes:null, customRounding:55,
   vaneLength:55, shaftOD:6.15, usingWraps:'no', wrapThickness:'', wrapBrand:'',
-  fletchCount:'4', weightClass:'standard', helical:'0', helicalDir:'right',
+  fletchCount:'4', weightClass:'standard', helical:'20', helicalDir:'right',
   color:'#c1272d', packSize:'18', quantity:1
 };
 // Declared early (not down near the rest of the custom-editor code) because
