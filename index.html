@@ -20,7 +20,7 @@
    PRODUCT STAGE         - 3D preview backdrop
    SECTIONS              - general .step section spacing/eyebrows
    BENEFITS SECTION      - "Why Switch" 3-card row
-   SHAPE CARDS           - the 6 shape-preset picker cards
+   SHAPE CARDS           - the 8 shape-preset picker cards
    CUSTOMIZE PANEL       - custom shape node editor styling
    FIELDS                - form inputs, segmented buttons, color swatches
    PRICE                 - price card
@@ -29,7 +29,7 @@
 
  JS (inside the main SCRIPT block, near the bottom of the file):
    3D PREVIEW SCENE       - Three.js camera/lighting/render loop
-   SHAPE LIBRARY          - SHAPES data: GHOST/IMPACT/CROSSOVER/TARGET/COMPACT/LONGRANGE
+   SHAPE LIBRARY          - SHAPES data: GHOST/IMPACT/CROSSOVER/TARGET/COMPACT/LONGRANGE/DRIFT/ARC
    CURVE MATH             - corner-rounding + curve sampling shared by preview/icons/editor
    3D GEOMETRY             - tube + fin mesh construction (preview only, not print-grade)
    PRICING                 - updatePricing(): the live price formula
@@ -45,6 +45,7 @@
    INIT                      - startup calls at the very bottom of the script
 
    CHANGE_STOCK_HERE
+   CHANGE_SHAPE_STOCK_HERE
    PASSWORD GATE         - full-screen "enter password" overlay styling *********
    BUSINESS CONFIG       - <-- BUSINESS_EMAIL lives here, edit before going live        ************************
    PASSWORD GATE          - <-- SITE_PASSWORD lives here; remove this whole block when ready to launch    ********************
@@ -393,6 +394,12 @@
   }
   .shape-card:hover{ border-color:var(--muted-dim); transform:translateY(-3px); }
   .shape-card.selected{ border-color:var(--accent); background:var(--surface2); box-shadow:0 0 0 1px var(--accent), 0 12px 24px -12px rgba(209,106,53,0.35); }
+  .shape-card.out-of-stock{ opacity:0.35; position:relative; cursor:not-allowed; }
+  .shape-card.out-of-stock::after{
+    content:''; position:absolute; inset:0; background:
+      linear-gradient(to top right, transparent 46%, var(--muted-dim) 48%, var(--muted-dim) 52%, transparent 54%);
+  }
+  .shape-card.out-of-stock:hover{ transform:none; border-color:var(--line); }
   .shape-card svg{ width:100%; height:36px; display:block; margin-bottom:10px; }
   .shape-card .name{ font-family:var(--label); font-weight:600; font-size:16px; letter-spacing:0.3px; text-transform:uppercase; }
   .shape-card .desc{ font-size:12px; color:var(--muted); margin-top:4px; line-height:1.4; }
@@ -714,8 +721,9 @@
     <h2>Choose your profile</h2>
     <div class="step-sub">Each shape is tuned for a different style of shooting. Not sure? IMPACT and CROSSOVER are the most popular all-around picks.</div>
     <div class="shape-grid" id="shapeGrid"></div>
+    <div class="stock-msg" id="shapeStockMsg"></div>
     <div class="customize-link" id="compareLink" style="margin-right:18px;">
-      <span>⚖</span> Not sure? Compare all six shapes
+      <span>⚖</span> Not sure? Compare all eight shapes
     </div>
     <div class="customize-btn" id="customizeLink">
       <span>✎</span> Design Your Own Custom Shape
@@ -752,8 +760,8 @@
     <div class="field-grid">
       <div class="field">
         <label>Vane Length (mm)</label>
-        <input type="number" id="vaneLength" value="55" step="1" min="35" max="80">
-        <div class="help" id="lengthErrorMsg">Must be between 35mm and 80mm.</div>
+        <input type="number" id="vaneLength" value="55" step="1" min="35" max="100">
+        <div class="help" id="lengthErrorMsg">Must be between 35mm and 100mm.</div>
       </div>
       <div class="field">
         <label>Shaft Outside Diameter (mm) <span class="opt" id="shaftODInchesReadout">= 0.242in</span></label>
@@ -792,8 +800,6 @@
         <div class="segbtn-row">
           <div class="segbtn" data-group="fletchCount" data-val="3">3</div>
           <div class="segbtn active" data-group="fletchCount" data-val="4">4</div>
-          <div class="segbtn" data-group="fletchCount" data-val="5">5</div>
-          <div class="segbtn" data-group="fletchCount" data-val="6">6</div>
         </div>
       </div>
       <div class="field">
@@ -808,7 +814,7 @@
     <div class="field-grid">
       <div class="field">
         <label>Helical Twist <span class="opt" id="helicalSliderVal">20°</span></label>
-        <input type="range" id="helicalSlider" min="0" max="25" step="1" value="20" style="width:100%;">
+        <input type="range" id="helicalSlider" min="0" max="30" step="1" value="20" style="width:100%;">
         <div class="help">More twist = more spin stabilization, especially useful with broadheads.</div>
       </div>
       <div class="field">
@@ -944,7 +950,7 @@
     </svg>
     <div class="wrap">
       <div class="eyebrow-top">Pick With Confidence</div>
-      <h1>Compare the <em>six shapes</em>, side by side.</h1>
+      <h1>Compare the <em>eight shapes</em>, side by side.</h1>
     </div>
   </div>
 
@@ -954,7 +960,7 @@
       <h2>Two Numbers Do Most of the Work</h2>
       <p><b>Height</b> is what steers a broadhead back on line — taller vanes correct more, which is exactly why hunting vanes tend to stand taller than target vanes. That correction isn't free, though: taller also means more noise and, to a lesser degree, more drag.</p>
       <p><b>Length</b> works differently than most people expect. It's actually the bigger factor in aerodynamic drag — a long vane costs you more speed than a tall one does. But length also quiets things down: spread the same surface area over a longer, lower-angle curve and it slices through the air with less noise than a short, steep one. That's why a vane can be both long <i>and</i> quiet at the same time.</p>
-      <p>Every shape below is fully rounded already — no sharp edges anywhere in the curve, on any of them — so airflow separation and turbulence aren't a variable here. What actually separates these six is how much length and height each one leans on, and that's what the ratings below reflect.</p>
+      <p>Every shape below is fully rounded already — no sharp edges anywhere in the curve, on any of them — so airflow separation and turbulence aren't a variable here. What actually separates these eight is how much length and height each one leans on, and that's what the ratings below reflect.</p>
     </section>
 
     <section class="about-block reveal">
@@ -962,7 +968,7 @@
       <h2>Helical Twist</h2>
       <p>Where shape gives you a fixed amount of steering, <b>helical twist</b> is the dial you turn to add more — it spins the arrow in flight, which helps drive a broadhead back on line faster than a straight fletch alone. More twist means more of that correction.</p>
       <p>It's not free, though. More twist also means more drag and more noise off the string — the same tradeoff height makes, just on a different axis. Higher settings lean harder into correction; lower settings lean toward speed and quiet.</p>
-      <p>Every order is printed to your exact twist setting, from <b>Straight (0°)</b> up to <b>25°</b>, in either direction — so you can dial it in for a stubborn broadhead or back off for a quieter target setup, shape by shape.</p>
+      <p>Every order is printed to your exact twist setting, from <b>Straight (0°)</b> up to <b>30°</b>, in either direction — so you can dial it in for a stubborn broadhead or back off for a quieter target setup, shape by shape.</p>
     </section>
 
     <section class="about-block reveal">
@@ -1326,19 +1332,25 @@ animate();
 /* =====================================================================
    SHAPE LIBRARY
 ===================================================================== */
+// To take a shape out of stock, change its "stock:true" to "stock:false" below.        ******CHANGE_SHAPE_STOCK_HERE******
+// It'll gray out, cross itself out, and become unselectable on the site, same as colors.
 const SHAPES = {
-  ghost: { name:'GHOST', desc:'Smooth, low-drag, quiet in flight.', rounding:100,
+  ghost: { name:'GHOST', desc:'Smooth, low-drag, quiet in flight.', rounding:100, stock:true,
     nodes:[{x:0,h:0},{x:20,h:4},{x:38,h:9},{x:52,h:12.7},{x:63,h:6},{x:71,h:0}] },
-  impact: { name:'IMPACT', desc:'Tall profile for broadhead stability.', rounding:100,
+  impact: { name:'IMPACT', desc:'Tall profile for broadhead stability.', rounding:100, stock:true,
     nodes:[{x:0,h:0},{x:15,h:8},{x:26,h:14.7},{x:38,h:7},{x:53,h:0}] },
-  crossover: { name:'CROSSOVER', desc:'Compact, all-around favorite.', rounding:100,
-    nodes:[{x:0,h:0},{x:13,h:8.4},{x:19,h:8.4},{x:32,h:3},{x:50,h:0}] },
-  target: { name:'TARGET', desc:'Low profile, minimal drag, quiet.', rounding:100,
+  crossover: { name:'CROSSOVER', desc:'Compact, all-around favorite.', rounding:100, stock:true,
+    nodes:[{x:0,h:0},{x:9,h:5},{x:22,h:8.5},{x:32,h:9.5},{x:39,h:8.5},{x:43,h:5},{x:46,h:2},{x:48,h:0}] },
+  target: { name:'TARGET', desc:'Low profile, minimal drag, quiet.', rounding:100, stock:true,
     nodes:[{x:0,h:0},{x:14,h:8.4},{x:20,h:8.4},{x:34,h:3},{x:51,h:0}] },
-  compact: { name:'COMPACT', desc:'Small and smooth, minimal drag.', rounding:100,
+  compact: { name:'COMPACT', desc:'Small and smooth, minimal drag.', rounding:100, stock:true,
     nodes:[{x:0,h:0},{x:10,h:5.3},{x:22,h:9.65},{x:34,h:5.3},{x:44,h:0}] },
-  longrange: { name:'LONGRANGE', desc:'Long, smooth, extra stability.', rounding:100,
-    nodes:[{x:0,h:0},{x:22,h:7},{x:48,h:12.7},{x:74,h:7},{x:97,h:0}] }
+  longrange: { name:'LONGRANGE', desc:'Long, smooth, extra stability.', rounding:100, stock:true,
+    nodes:[{x:0,h:0},{x:22,h:7},{x:48,h:12.7},{x:74,h:7},{x:97,h:0}] },
+  drift: { name:'DRIFT', desc:'Long, gradual rise with a sharp taper.', rounding:100, stock:true,
+    nodes:[{x:0,h:0},{x:62,h:12},{x:67,h:7.5},{x:70,h:4},{x:73,h:1.5},{x:75,h:0}] },
+  arc: { name:'ARC', desc:'Rounded, back-loaded peak for steady correction.', rounding:100, stock:true,
+    nodes:[{x:0,h:0},{x:3,h:2},{x:47,h:10.5},{x:57,h:7.5},{x:61,h:2},{x:63,h:0}] }
 };
 // To take a color out of stock, change its "stock:true" to "stock:false" below.                                  ******CHANGE_STOCK_HERE******
 // It'll gray out and cross itself out automatically on the site.
@@ -1405,12 +1417,17 @@ function activeRounding(){
   return order.shape==='custom' ? order.customRounding : SHAPES[order.shape].rounding;
 }
 
-// Helical twist is a flat total in degrees, matching EasyVanes' real
-// commercial spec (1deg or 3deg) -- not scaled by vane length. We tried the
-// "degrees per inch" industry convention first, but real-world testing on
-// this exact printing method (one-piece TPU tube+fin) showed that's far
-// beyond what's actually achievable, and the closest real competitor's
-// own product confirms a flat few degrees is the proven ceiling.
+// Helical twist is a flat total in degrees, applied as a direct rotational
+// sweep around the shaft axis (not scaled by vane length, not the "degrees
+// per inch" convention some sites use, and not the arctan(offset/length)
+// value a physical vane-angle tool reports -- those are different
+// measurements that don't correspond 1:1 to this number).
+// An earlier 25deg test print failed (fins drooped outward/pinwheeled), but
+// that batch ran on filament that had absorbed moisture. A retest at
+// 28-32deg on dry filament, with tuned retraction/cooling, printed cleanly
+// at the same quality as the lower-twist batches -- so 25deg was a filament
+// issue, not a geometry ceiling. 30deg is the current validated max; always
+// confirm dry filament before printing anywhere near that top end.
 
 /* =====================================================================
    3D GEOMETRY (visual preview only)
@@ -1530,8 +1547,12 @@ function updatePricing(){
   const ultralight = order.weightClass==='ultralight';
 
   // Calibrated so a 24-pack lands $40-55 for 4-fletch and $35-50 for 3-fletch
-  // across the full range of shapes/helical settings at Standard weight.
-  let materialTerm = 1.4810 + Math.max(0,(length-50))*0.00961;
+  // across the full range of shapes/helical settings at Standard weight, for
+  // vanes up to 80mm. Above 80mm (LONGRANGE-length hunting shafts) material
+  // and print time step up noticeably, so a second, steeper segment kicks in
+  // past that point rather than continuing the same shallow per-mm rate.
+  let materialTerm = 1.4810 + Math.max(0,(Math.min(length,80)-50))*0.00961;
+  if(length > 80) materialTerm += (length-80)*0.02305;
   if(ultralight) materialTerm *= 0.85;
   const fletchSurcharge = Math.max(0,(numFletches-3))*0.2148;
   const helicalSurcharge = helicalDeg*0.005;
@@ -1540,11 +1561,15 @@ function updatePricing(){
 
   const pack = parseInt(order.packSize);
   const bulkMult = pack===24 ? 0.97 : 1.0;
-  // Hard clamp: a pack must never price below $35 or above $60, no matter
-  // what combination of shape/length/fletch count/helical/weight class
-  // produces it. The formula above still drives *where* within that band a
-  // given configuration lands -- this is just an absolute floor and ceiling.
-  const packPrice = Math.min(60, Math.max(35, Math.round(perVane*pack*bulkMult)));
+  // Hard clamp: a pack must never price below $35, no matter what
+  // combination of shape/length/fletch count/helical/weight class produces
+  // it. The ceiling is $60 for vanes up to 80mm (the original calibrated
+  // band), and $72 for the longer 80-100mm LONGRANGE-length tier, since a
+  // fixed $60 ceiling would undercut material cost at that length. The
+  // formula above still drives *where* within the applicable band a given
+  // configuration lands.
+  const packCeiling = length > 80 ? 72 : 60;
+  const packPrice = Math.min(packCeiling, Math.max(35, Math.round(perVane*pack*bulkMult)));
   const qty = Math.max(1, parseInt(order.quantity)||1);
   const total = packPrice * qty;
 
@@ -1765,20 +1790,35 @@ function renderShapeCards(){
   shapeGrid.innerHTML = '';
   Object.entries(SHAPES).forEach(([key,s])=>{
     const card = document.createElement('div');
-    card.className = 'shape-card' + (order.shape===key ? ' selected' : '');
+    card.className = 'shape-card' + (order.shape===key ? ' selected' : '') + (s.stock ? '' : ' out-of-stock');
     card.dataset.key = key;
-    card.title = customizeOpen ? `Load ${s.name}'s curve into the editor to start from` : '';
+    card.title = !s.stock ? `${s.name} (out of stock)` : customizeOpen ? `Load ${s.name}'s curve into the editor to start from` : '';
     card.innerHTML = `
       <div class="check"><svg viewBox="0 0 10 10"><polyline points="1,5 4,8 9,1" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       ${miniCurveSVG(s.nodes, s.rounding)}
       <div class="name">${s.name}</div>
       <div class="desc">${s.desc}</div>`;
     card.addEventListener('click', ()=>{
+      const msgEl = document.getElementById('shapeStockMsg');
+      if(!s.stock){
+        msgEl.textContent = `${s.name} is currently out of stock — pick another shape, or check back soon.`;
+        return;
+      }
+      msgEl.textContent = '';
       if(customizeOpen){
         loadShapeIntoEditor(s);
         return;
       }
       order.shape = key;
+      // Clicking a shape loads its own designed length too, clamped to the
+      // 35-100mm range we can produce. If you edit the length field
+      // afterward, it rescales from there as normal -- this only sets the
+      // starting point at the moment of picking the shape.
+      const nativeLength = s.nodes[s.nodes.length-1].x;
+      const clampedLength = Math.min(LENGTH_MAX, Math.max(LENGTH_MIN, nativeLength));
+      order.vaneLength = clampedLength;
+      document.getElementById('vaneLength').value = clampedLength;
+      document.getElementById('lengthErrorMsg').classList.remove('field-error');
       document.getElementById('customizeLink').classList.remove('active');
       document.getElementById('customizePanel').style.display = 'none';
       renderShapeCards();
@@ -1808,7 +1848,7 @@ function loadShapeIntoEditor(s){
    applying the published relationships: height drives steering power and
    noise (taller = more of both); length is the stronger driver of drag,
    and longer vanes run quieter for a given height. Values below are
-   relative rankings across these six shapes, not absolute measurements.
+   relative rankings across these eight shapes, not absolute measurements.
 ===================================================================== */
 const COMPARE_INFO = {
   ghost:      { stab:4, quiet:3, speed:2, bestFor:'Quiet hunting shots where you still want real correction — long enough to stay quiet, tall enough to steer.' },
@@ -1817,6 +1857,8 @@ const COMPARE_INFO = {
   target:     { stab:2, quiet:5, speed:5, bestFor:'Field points and indoor/3D target work — minimal drag, minimal noise.' },
   compact:    { stab:3, quiet:4, speed:4, bestFor:'Small-diameter or speed-focused builds that still want dependable steering.' },
   longrange:  { stab:4, quiet:4, speed:1, bestFor:'Longer shots or heavier hunting arrows needing sustained correction in flight.' },
+  drift:      { stab:4, quiet:3, speed:2, bestFor:'Long, gradual correction with a sharp taper near the nock — steady steering without excess bulk.' },
+  arc:        { stab:3, quiet:4, speed:3, bestFor:'A rounded, back-loaded profile for smooth, sustained correction across mixed hunting and target use.' },
 };
 function ratingBar(score){
   let html = '<div class="cc-bar">';
@@ -1949,7 +1991,7 @@ document.getElementById('helicalSlider').addEventListener('input', e=>{
   render();
 });
 
-const LENGTH_MIN = 35, LENGTH_MAX = 80;
+const LENGTH_MIN = 35, LENGTH_MAX = 100;
 document.getElementById('vaneLength').addEventListener('input', e=>{
   const raw = parseFloat(e.target.value);
   const errEl = document.getElementById('lengthErrorMsg');
@@ -2300,10 +2342,10 @@ function submitOrder(){
   }
 
   // Absolute guarantee, independent of the input field's own clamping:
-  // nothing outside 35-80mm can ever actually be checked out.
+  // nothing outside 35-100mm can ever actually be checked out.
   const badLength = checkoutItems.find(item => item.snapshot.vaneLength < LENGTH_MIN || item.snapshot.vaneLength > LENGTH_MAX);
   if(badLength){
-    errEl.textContent = `One of your items has a vane length outside the 35–80mm range we can produce (${badLength.snapshot.vaneLength}mm). Please fix it before checking out.`;
+    errEl.textContent = `One of your items has a vane length outside the 35–100mm range we can produce (${badLength.snapshot.vaneLength}mm). Please fix it before checking out.`;
     errEl.style.display = 'block';
     return;
   }
@@ -2313,6 +2355,16 @@ function submitOrder(){
   const badOD = checkoutItems.find(item => item.snapshot.shaftOD < SHAFT_OD_REASONABLE_MIN || item.snapshot.shaftOD > SHAFT_OD_REASONABLE_MAX);
   if(badOD){
     errEl.textContent = `One of your items has a shaft diameter of ${badOD.snapshot.shaftOD}mm, which isn't realistic for an arrow shaft — this usually means inches got entered where millimeters were expected. Please double check that field before checking out.`;
+    errEl.style.display = 'block';
+    return;
+  }
+
+  // Same guarantee for shape stock -- catches a shape that was in the cart
+  // (or already selected) before it got marked out of stock via the
+  // CHANGE_SHAPE_STOCK_HERE flag above.
+  const badShape = checkoutItems.find(item => item.snapshot.shape !== 'custom' && SHAPES[item.snapshot.shape] && !SHAPES[item.snapshot.shape].stock);
+  if(badShape){
+    errEl.textContent = `${SHAPES[badShape.snapshot.shape].name} is currently out of stock. Please pick another shape before checking out.`;
     errEl.style.display = 'block';
     return;
   }
