@@ -55,7 +55,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Moser Archery — Easy-Apply Vanes, Fit to Your Arrow</title>
+<title>Moser Archery — Slide-On Vanes, Fit to Your Arrow</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -257,6 +257,18 @@
     display:flex; justify-content:space-between; font-family:var(--display); font-size:19px;
     color:var(--accent); margin-bottom:12px;
   }
+  .cart-shipping-row{ font-size:14px; color:var(--muted); margin-bottom:8px; }
+  .cart-total-row{
+    font-size:21px; color:var(--text); border-top:1px solid var(--line); padding-top:10px; margin-top:2px;
+  }
+  .shipping-promo-note{
+    font-size:12.5px; line-height:1.5; margin:2px 0 10px; padding:8px 10px;
+    border-radius:6px; display:none;
+  }
+  .shipping-promo-note.locked{ background:rgba(255,255,255,0.04); color:var(--muted-dim); border:1px solid var(--line); display:block; }
+  .shipping-promo-note.unlocked{ background:rgba(92,154,95,0.12); color:var(--good); border:1px solid var(--good); font-weight:600; display:block; }
+  .os-shipping-row .shipping-free, .cart-shipping-row .shipping-free{ color:var(--good); font-weight:700; }
+  .os-shipping-row .shipping-strike, .cart-shipping-row .shipping-strike{ text-decoration:line-through; color:var(--muted-dim); font-weight:400; margin-right:6px; }
 
   /* ---- about page ---- */
   .about-hero{ padding:56px 0 44px; position:relative; overflow:hidden; text-align:center; border-bottom:1px solid var(--line-soft); }
@@ -403,7 +415,7 @@
   .shape-card svg{ width:100%; height:36px; display:block; margin-bottom:10px; }
   .shape-card .name{ font-family:var(--label); font-weight:600; font-size:16px; letter-spacing:0.3px; text-transform:uppercase; }
   .shape-card .desc{ font-size:12px; color:var(--muted); margin-top:4px; line-height:1.4; }
-  .shape-card .dims{ font-size:11px; color:var(--accent); margin-top:6px; font-family:var(--mono); letter-spacing:0.2px; }
+  .shape-card .dims{ font-size:11px; color:var(--accent); margin-top:6px; font-family:'SF Mono','Consolas','Courier New',monospace; letter-spacing:0.2px; }
   .shape-card .check{
     position:absolute; top:12px; right:12px; width:18px; height:18px; border-radius:2px;
     background:var(--accent); display:none; align-items:center; justify-content:center;
@@ -496,6 +508,14 @@
   .segbtn.disabled:hover{ border-color:var(--line); }
   .segbtn.disabled .thick{ color:var(--accent); opacity:1; font-weight:700; }
   .segbtn .thick{ display:block; font-size:10.5px; font-weight:400; opacity:0.8; margin-top:2px; }
+  .unitbtn-row{ display:flex; gap:4px; flex-shrink:0; }
+  .unitbtn{
+    background:var(--surface); border:1.5px solid var(--line); color:var(--muted);
+    padding:0 14px; border-radius:4px; font-size:13px; font-weight:600; cursor:pointer;
+    display:flex; align-items:center; transition:all .12s; user-select:none;
+  }
+  .unitbtn:hover{ border-color:var(--accent); }
+  .unitbtn.active{ background:var(--accent); border-color:var(--accent); color:#fff; }
 
   .color-grid{ display:flex; gap:9px; flex-wrap:wrap; }
   .color-opt{
@@ -607,6 +627,9 @@
 
   footer{ padding:40px 0 20px; text-align:center; color:var(--muted-dim); font-size:12.5px; }
   footer .fmark{ font-family:var(--label); font-weight:700; letter-spacing:1px; color:var(--muted); font-size:13px; margin-bottom:6px; }
+  footer .footer-contact{ margin-top:10px; }
+  footer .footer-contact a{ color:var(--muted); text-decoration:none; border-bottom:1px solid var(--line); padding-bottom:1px; transition:color .15s, border-color .15s; }
+  footer .footer-contact a:hover{ color:var(--accent); border-color:var(--accent); }
 
   @media(max-width:700px){
     .shape-grid{ grid-template-columns:repeat(2,1fr); }
@@ -666,7 +689,10 @@
   <div class="cart-persist-note">⚠ Your cart clears if you refresh or close this page — check out when you're ready, don't wait too long.</div>
   <div id="cartItemsList"></div>
   <div class="cart-drawer-footer">
+    <div id="cartPromoNote" class="shipping-promo-note"></div>
     <div class="cart-subtotal-row"><span>Subtotal</span><span id="cartSubtotal">$0</span></div>
+    <div class="cart-subtotal-row cart-shipping-row"><span>Shipping</span><span id="cartShipping">$4.99</span></div>
+    <div class="cart-subtotal-row cart-total-row"><span>Total</span><span id="cartGrandTotal">$4.99</span></div>
     <button class="buy-btn" id="cartCheckoutBtn">Proceed to Checkout</button>
   </div>
 </div>
@@ -757,17 +783,42 @@
   <section class="step reveal">
     <div class="step-eyebrow">The Fit</div>
     <h2>Your arrow</h2>
-    <div class="step-sub">These measurements come from your arrow shaft — check your shaft's spec sheet or measure with calipers if you're unsure.</div>
+    <div class="step-sub">Tell us what you shoot — we'll handle the sizing on our end.</div>
     <div class="field-grid">
       <div class="field">
         <label>Vane Length (mm)</label>
         <input type="number" id="vaneLength" value="55" step="1" min="35" max="100">
         <div class="help" id="lengthErrorMsg">Must be between 35mm and 100mm.</div>
       </div>
+    </div>
+    <div class="field-grid" style="grid-template-columns:1fr 1fr 1fr;">
       <div class="field">
-        <label>Shaft Outside Diameter (mm) <span class="opt" id="shaftODInchesReadout">= 0.242in</span></label>
-        <input type="number" id="shaftOD" value="6.15" step="0.01">
-        <div class="help" id="shaftODMsg">Most standard hunting/target shafts run 5.7–6.5mm. Know your shaft in inches instead? Check the number above — it converts live, so you can confirm you've got the right value before ordering. We build in a small glue gap (about 0.15mm) around whatever diameter you enter, so it slides on smooth and seats snug once glued — enter your shaft's actual OD and we handle the rest.</div>
+        <label>Arrow Brand</label>
+        <input type="text" id="arrowBrand" list="arrowBrandList" placeholder="e.g. Easton" autocomplete="off">
+        <datalist id="arrowBrandList"></datalist>
+      </div>
+      <div class="field">
+        <label>Arrow Model</label>
+        <input type="text" id="arrowModel" list="arrowModelList" placeholder="e.g. Axis 5mm" autocomplete="off">
+        <datalist id="arrowModelList"></datalist>
+      </div>
+      <div class="field">
+        <label>Spine</label>
+        <input type="text" id="arrowSpine" list="arrowSpineList" placeholder="e.g. 340" autocomplete="off">
+        <datalist id="arrowSpineList"></datalist>
+      </div>
+    </div>
+    <div class="field-grid">
+      <div class="field">
+        <label>Shaft Size <span class="opt">only needed if Brand/Model/Spine above don't match one we know</span></label>
+        <div style="display:flex; gap:8px; align-items:stretch;">
+          <input type="number" id="shaftOD" step="0.01" placeholder="e.g. 6.15" style="flex:1;">
+          <div class="unitbtn-row">
+            <div class="unitbtn active" data-unit="mm">mm</div>
+            <div class="unitbtn" data-unit="in">in</div>
+          </div>
+        </div>
+        <div class="help" id="shaftODMsg">Check your shaft's spec sheet — most hunting/target shafts run about 5.7–7.5mm (0.22–0.30in).</div>
       </div>
     </div>
     <div class="field">
@@ -883,7 +934,7 @@
       </details>
       <details class="faq-item">
         <summary>How tight is the fit around my shaft?</summary>
-        <p>We build a small glue gap into every vane — about 0.15mm larger than the exact shaft diameter you enter. That's enough room for glue and a smooth slide-on, but tight enough that it seats snug and doesn't wobble before the glue sets. It's a tolerance we hold on every print, not a rough estimate.</p>
+        <p>We build a small glue gap into every vane — about 0.525mm larger than the exact shaft diameter you enter. That's enough room for glue and a smooth slide-on, but tight enough that it seats snug and doesn't wobble before the glue sets. It's a tolerance we hold on every print, not a rough estimate.</p>
       </details>
       <details class="faq-item">
         <summary>Can I pick up locally instead of shipping?</summary>
@@ -918,6 +969,8 @@
     <div class="order-summary" id="orderSummary">
       <div class="os-title" id="orderSummaryTitle">Your Order</div>
       <div class="os-grid" id="orderSummaryGrid"></div>
+      <div id="osPromoNote" class="shipping-promo-note"></div>
+      <div class="os-row os-shipping-row"><span class="os-label">Shipping</span><span class="os-value" id="osShipping">$4.99</span></div>
       <div class="os-total-row">
         <span>Total</span>
         <span id="osTotal">$--</span>
@@ -1145,6 +1198,7 @@
 <footer>
   <div class="fmark">MOSER ARCHERY</div>
   <div>Custom-fit vanes, printed to order.</div>
+  <div class="footer-contact"><a href="mailto:isaacmoser6@gmail.com" id="footerContactLink">Contact Us</a></div>
 </footer>
 
 <div id="stickyBar">
@@ -1162,6 +1216,7 @@
    BUSINESS CONFIG — edit before going live
 ===================================================================== */
 const BUSINESS_EMAIL = "isaacmoser6@gmail.com"; // <-- CHANGE THIS to your real order inbox
+document.getElementById('footerContactLink').href = 'mailto:' + BUSINESS_EMAIL;
 
 /* =====================================================================
    ORDER TRACKER (optional) — logs every order to a Google Sheet via a
@@ -1335,6 +1390,327 @@ animate();
 ===================================================================== */
 // To take a shape out of stock, change its "stock:true" to "stock:false" below.        ******CHANGE_SHAPE_STOCK_HERE******
 // It'll gray out, cross itself out, and become unselectable on the site, same as colors.
+/* =====================================================================
+   ARROW SHAFT OD DATABASE -- Isaac's own compiled dataset, 274 verified
+   brand+model+spine entries with real outer diameter (mm), cross-checked
+   against OD (in) at import time -- not manufacturer marketing class
+   names. Sourced Aug 2026 from a spreadsheet Isaac compiled and
+   maintains himself.
+   -----------------------------------------------------------------------
+   Brand+Model+Spine that EXACTLY matches an entry here auto-fills Shaft
+   Size (see recomputeShaftSizing below) -- since this data is verified
+   and Isaac-maintained, an exact match is trusted to drive sizing
+   directly. Manual entry in Shaft Size always overrides a match if the
+   customer fills it in themselves.
+   To add more entries later: same {brand, model, spine, od} shape,
+   od in mm. No need to touch anything else -- the datalists and matching
+   logic below read this array directly.
+===================================================================== */
+const ARROW_SHAFTS = [
+  {brand:'Altra Arrows', model:'166 Centrum / Novum', spine:'400', od:5.918},
+  {brand:'Altra Arrows', model:'166 Centrum / Novum', spine:'350', od:6.071},
+  {brand:'Altra Arrows', model:'166 Centrum / Novum', spine:'300', od:6.248},
+  {brand:'Beman', model:'ICS Hunter Classic', spine:'500', od:7.29},
+  {brand:'Beman', model:'ICS Hunter Classic', spine:'400', od:7.468},
+  {brand:'Beman', model:'ICS Hunter Classic', spine:'340', od:7.569},
+  {brand:'Beman', model:'ICS Hunter Classic', spine:'300', od:7.62},
+  {brand:'Black Eagle', model:'Deep Impact', spine:'400', od:5.918},
+  {brand:'Black Eagle', model:'Deep Impact', spine:'350', od:6.096},
+  {brand:'Black Eagle', model:'Deep Impact', spine:'300', od:6.299},
+  {brand:'Black Eagle', model:'Instinct', spine:'600', od:5.867},
+  {brand:'Black Eagle', model:'Instinct', spine:'500', od:5.994},
+  {brand:'Black Eagle', model:'Instinct', spine:'400', od:6.096},
+  {brand:'Black Eagle', model:'Instinct', spine:'350', od:6.299},
+  {brand:'Black Eagle', model:'Rampage', spine:'400', od:6.426},
+  {brand:'Black Eagle', model:'Rampage', spine:'350', od:6.629},
+  {brand:'Black Eagle', model:'Rampage', spine:'300', od:6.706},
+  {brand:'Black Eagle', model:'Rampage', spine:'250', od:7.01},
+  {brand:'Black Eagle', model:'Rampage', spine:'200', od:7.239},
+  {brand:'Black Eagle', model:'Rampage', spine:'150', od:7.798},
+  {brand:'Black Eagle', model:'Renegade', spine:'400', od:6.68},
+  {brand:'Black Eagle', model:'Renegade', spine:'350', od:6.782},
+  {brand:'Black Eagle', model:'Renegade', spine:'300', od:6.985},
+  {brand:'Black Eagle', model:'Renegade', spine:'250', od:7.112},
+  {brand:'Black Eagle', model:'Spartan', spine:'500', od:6.807},
+  {brand:'Black Eagle', model:'Spartan', spine:'400', od:6.909},
+  {brand:'Black Eagle', model:'Spartan', spine:'350', od:7.01},
+  {brand:'Black Eagle', model:'Spartan', spine:'300', od:7.163},
+  {brand:'Black Eagle', model:'Spartan', spine:'250', od:7.341},
+  {brand:'Black Eagle', model:'Spartan', spine:'200', od:7.544},
+  {brand:'Black Eagle', model:'X-Impact', spine:'600', od:5.436},
+  {brand:'Black Eagle', model:'X-Impact', spine:'500', od:5.436},
+  {brand:'Black Eagle', model:'X-Impact', spine:'400', od:5.613},
+  {brand:'Black Eagle', model:'X-Impact', spine:'350', od:5.791},
+  {brand:'Black Eagle', model:'X-Impact', spine:'300', od:5.867},
+  {brand:'Black Eagle', model:'X-Impact', spine:'250', od:6.096},
+  {brand:'Black Eagle', model:'X-Impact', spine:'200', od:6.502},
+  {brand:'Bloodsport', model:'Evidence', spine:'500', od:5.867},
+  {brand:'Bloodsport', model:'Evidence', spine:'400', od:6.045},
+  {brand:'Bloodsport', model:'Evidence', spine:'350', od:6.223},
+  {brand:'Bloodsport', model:'Evidence', spine:'300', od:6.477},
+  {brand:'Carbon Express', model:'Maxima Hunter', spine:'450', od:7.696},
+  {brand:'Carbon Express', model:'Maxima Hunter', spine:'350', od:7.544},
+  {brand:'Carbon Express', model:'Maxima Hunter', spine:'250', od:7.493},
+  {brand:'Carbon Express', model:'Maxima RED', spine:'350', od:7.62},
+  {brand:'Carbon Express', model:'Maxima RED', spine:'250', od:7.493},
+  {brand:'Carbon Express', model:'Maxima RED SD', spine:'450', od:7.087},
+  {brand:'Carbon Express', model:'Maxima RED SD', spine:'350', od:6.909},
+  {brand:'Carbon Express', model:'Maxima RED SD', spine:'250', od:6.706},
+  {brand:'Carbon Express', model:'Maxima Triad', spine:'400', od:6.096},
+  {brand:'Carbon Express', model:'Maxima Triad', spine:'350', od:6.248},
+  {brand:'Carbon Express', model:'Maxima Triad', spine:'300', od:6.375},
+  {brand:'Carbon Express', model:'Maxima XRZ', spine:'350', od:7.518},
+  {brand:'Carbon Express', model:'Maxima XRZ', spine:'250', od:7.366},
+  {brand:'Carbon Express', model:'Maxima XRZ', spine:'150', od:7.239},
+  {brand:'Carbon Express', model:'Maxima XSD', spine:'400', od:6.096},
+  {brand:'Carbon Express', model:'Maxima XSD', spine:'350', od:6.248},
+  {brand:'Carbon Express', model:'Maxima XSD', spine:'300', od:6.375},
+  {brand:'Carbon Express', model:'PileDriver', spine:'350', od:7.645},
+  {brand:'Carbon Express', model:'PileDriver', spine:'250', od:7.569},
+  {brand:'Carbon Express', model:'Predator XSD', spine:'400', od:6.223},
+  {brand:'Carbon Express', model:'Predator XSD', spine:'350', od:6.426},
+  {brand:'Craft Archery', model:'Micro', spine:'500', od:5.944},
+  {brand:'Craft Archery', model:'Micro', spine:'300', od:6.477},
+  {brand:'Day Six Arrows', model:'HD Shafts', spine:'500', od:5.893},
+  {brand:'Day Six Arrows', model:'HD Shafts', spine:'400', od:6.045},
+  {brand:'Day Six Arrows', model:'HD Shafts', spine:'350', od:6.223},
+  {brand:'Day Six Arrows', model:'HD Shafts', spine:'300', od:6.426},
+  {brand:'Deer Crossing Archery', model:'SD Hunter', spine:'500', od:5.867},
+  {brand:'Deer Crossing Archery', model:'SD Hunter', spine:'400', od:6.045},
+  {brand:'Deer Crossing Archery', model:'SD Hunter', spine:'350', od:6.223},
+  {brand:'Deer Crossing Archery', model:'SD Hunter', spine:'300', od:6.477},
+  {brand:'Easton', model:'4MM Axis Long Range', spine:'400', od:5.817},
+  {brand:'Easton', model:'4MM Axis Long Range', spine:'340', od:5.944},
+  {brand:'Easton', model:'4MM Axis Long Range', spine:'300', od:6.121},
+  {brand:'Easton', model:'4MM Axis Long Range', spine:'250', od:6.198},
+  {brand:'Easton', model:'4MM FMJ', spine:'400', od:5.944},
+  {brand:'Easton', model:'4MM FMJ', spine:'340', od:6.096},
+  {brand:'Easton', model:'4MM FMJ', spine:'300', od:6.198},
+  {brand:'Easton', model:'4MM FMJ', spine:'250', od:6.274},
+  {brand:'Easton', model:'5MM Axis', spine:'600', od:6.426},
+  {brand:'Easton', model:'5MM Axis', spine:'500', od:6.553},
+  {brand:'Easton', model:'5MM Axis', spine:'400', od:6.706},
+  {brand:'Easton', model:'5MM Axis', spine:'340', od:6.782},
+  {brand:'Easton', model:'5MM Axis', spine:'300', od:6.985},
+  {brand:'Easton', model:'5MM Axis', spine:'260', od:7.112},
+  {brand:'Easton', model:'5MM Axis', spine:'200', od:7.264},
+  {brand:'Easton', model:'5MM FMJ', spine:'500', od:6.502},
+  {brand:'Easton', model:'5MM FMJ', spine:'400', od:6.68},
+  {brand:'Easton', model:'5MM FMJ', spine:'340', od:6.833},
+  {brand:'Easton', model:'5MM FMJ', spine:'300', od:6.934},
+  {brand:'Easton', model:'5MM FMJ', spine:'250', od:6.934},
+  {brand:'Easton', model:'5MM FMJ DG', spine:'250', od:7.366},
+  {brand:'Easton', model:'5MM FMJ Max', spine:'400', od:6.528},
+  {brand:'Easton', model:'5MM FMJ Max', spine:'340', od:6.629},
+  {brand:'Easton', model:'5MM FMJ Max', spine:'300', od:6.706},
+  {brand:'Easton', model:'5MM FMJ Max', spine:'250', od:6.833},
+  {brand:'Easton', model:'5MM FMJ Max', spine:'200', od:7.112},
+  {brand:'Easton', model:'6.5MM Bowhunter', spine:'500', od:7.29},
+  {brand:'Easton', model:'6.5MM Bowhunter', spine:'400', od:7.468},
+  {brand:'Easton', model:'6.5MM Bowhunter', spine:'340', od:7.569},
+  {brand:'Easton', model:'6.5MM Bowhunter', spine:'300', od:7.62},
+  {brand:'Easton', model:'6.5MM Bowhunter', spine:'250', od:7.645},
+  {brand:'Easton', model:'6.5MM Matrix', spine:'500', od:7.315},
+  {brand:'Easton', model:'6.5MM Matrix', spine:'400', od:7.366},
+  {brand:'Easton', model:'6.5MM Matrix', spine:'340', od:7.493},
+  {brand:'Easton', model:'6.5MM Matrix', spine:'300', od:7.595},
+  {brand:'Easton', model:'6.5MM Matrix', spine:'250', od:7.671},
+  {brand:'Easton', model:'A/C/C Pro Comp', spine:'520', od:5.512},
+  {brand:'Easton', model:'A/C/C Pro Comp', spine:'470', od:5.588},
+  {brand:'Easton', model:'A/C/C Pro Comp', spine:'420', od:5.69},
+  {brand:'Easton', model:'A/C/C Pro Comp', spine:'380', od:5.766},
+  {brand:'Easton', model:'A/C/C Pro Comp', spine:'340', od:5.867},
+  {brand:'Easton', model:'A/C/C Pro Comp', spine:'300', od:5.994},
+  {brand:'Easton', model:'A/C/C Pro Comp', spine:'250', od:6.223},
+  {brand:'Easton', model:'AC Injection', spine:'450', od:5.842},
+  {brand:'Easton', model:'AC Injection', spine:'390', od:5.994},
+  {brand:'Easton', model:'AC Injection', spine:'330', od:6.172},
+  {brand:'Easton', model:'Avance', spine:'2000', od:5.029},
+  {brand:'Easton', model:'Avance', spine:'1800', od:5.08},
+  {brand:'Easton', model:'Avance', spine:'1600', od:5.131},
+  {brand:'Easton', model:'Avance', spine:'1400', od:5.207},
+  {brand:'Easton', model:'Avance', spine:'1150', od:5.283},
+  {brand:'Easton', model:'Avance', spine:'1000', od:5.309},
+  {brand:'Easton', model:'Avance', spine:'900', od:5.359},
+  {brand:'Easton', model:'Avance', spine:'810', od:5.461},
+  {brand:'Easton', model:'Avance', spine:'730', od:5.512},
+  {brand:'Easton', model:'Avance', spine:'660', od:5.588},
+  {brand:'Easton', model:'Avance', spine:'600', od:5.69},
+  {brand:'Easton', model:'Avance', spine:'550', od:5.69},
+  {brand:'Easton', model:'Avance', spine:'500', od:5.766},
+  {brand:'Easton', model:'Avance', spine:'450', od:5.842},
+  {brand:'Easton', model:'Avance', spine:'400', od:5.944},
+  {brand:'Easton', model:'Avance', spine:'340', od:6.096},
+  {brand:'Easton', model:'Easton 5.0', spine:'500', od:6.325},
+  {brand:'Easton', model:'Easton 5.0', spine:'400', od:6.426},
+  {brand:'Easton', model:'Easton 5.0', spine:'340', od:6.553},
+  {brand:'Easton', model:'Easton 5.0', spine:'300', od:6.706},
+  {brand:'Easton', model:'Easton 5.0', spine:'250', od:6.858},
+  {brand:'Easton', model:'Easton 5.0', spine:'200', od:6.934},
+  {brand:'Easton', model:'FMJ Injexion', spine:'460', od:5.817},
+  {brand:'Easton', model:'FMJ Injexion', spine:'400', od:5.969},
+  {brand:'Easton', model:'FMJ Injexion', spine:'250', od:6.274},
+  {brand:'Easton', model:'Injection', spine:'480', od:5.893},
+  {brand:'Easton', model:'Injection', spine:'400', od:5.994},
+  {brand:'Easton', model:'Injection', spine:'390', od:5.994},
+  {brand:'Easton', model:'Injection', spine:'340', od:6.096},
+  {brand:'Easton', model:'Injection', spine:'330', od:6.198},
+  {brand:'Easton', model:'Injection', spine:'300', od:6.198},
+  {brand:'Easton', model:'Injection', spine:'280', od:6.198},
+  {brand:'Easton', model:'Sonic 6.0', spine:'600', od:6.807},
+  {brand:'Easton', model:'Sonic 6.0', spine:'500', od:6.934},
+  {brand:'Easton', model:'Sonic 6.0', spine:'400', od:6.985},
+  {brand:'Easton', model:'Sonic 6.0', spine:'340', od:7.087},
+  {brand:'Easton', model:'Sonic 6.0', spine:'300', od:7.264},
+  {brand:'Easton', model:'Sonic 6.0', spine:'250', od:7.391},
+  {brand:'Easton', model:'T-64', spine:'400', od:5.994},
+  {brand:'Easton', model:'T-64', spine:'300', od:6.172},
+  {brand:'Easton', model:'Vector', spine:'2000', od:5.029},
+  {brand:'Easton', model:'Vector', spine:'1800', od:5.08},
+  {brand:'Easton', model:'Vector', spine:'1600', od:5.131},
+  {brand:'Easton', model:'Vector', spine:'1400', od:5.232},
+  {brand:'Easton', model:'Vector', spine:'1200', od:5.359},
+  {brand:'Easton', model:'Vector', spine:'1000', od:5.436},
+  {brand:'Easton', model:'Vector', spine:'800', od:5.563},
+  {brand:'Easton', model:'Vector', spine:'600', od:5.791},
+  {brand:'Element Arrows', model:'Storm', spine:'400', od:5.613},
+  {brand:'Element Arrows', model:'Storm', spine:'350', od:5.74},
+  {brand:'Gold Tip', model:'Airstrike', spine:'400', od:6.452},
+  {brand:'Gold Tip', model:'Airstrike', spine:'340', od:6.553},
+  {brand:'Gold Tip', model:'Airstrike', spine:'300', od:6.655},
+  {brand:'Gold Tip', model:'Airstrike', spine:'250', od:6.833},
+  {brand:'Gold Tip', model:'Force F.O.C.', spine:'400', od:7.391},
+  {brand:'Gold Tip', model:'Force F.O.C.', spine:'340', od:7.518},
+  {brand:'Gold Tip', model:'Force F.O.C.', spine:'300', od:7.595},
+  {brand:'Gold Tip', model:'Force F.O.C.', spine:'250', od:7.722},
+  {brand:'Gold Tip', model:'Hunter', spine:'500', od:7.391},
+  {brand:'Gold Tip', model:'Hunter', spine:'400', od:7.493},
+  {brand:'Gold Tip', model:'Hunter', spine:'340', od:7.62},
+  {brand:'Gold Tip', model:'Hunter', spine:'300', od:7.671},
+  {brand:'Gold Tip', model:'Hunter Pro', spine:'500', od:7.391},
+  {brand:'Gold Tip', model:'Hunter Pro', spine:'400', od:7.493},
+  {brand:'Gold Tip', model:'Hunter Pro', spine:'340', od:7.62},
+  {brand:'Gold Tip', model:'Hunter Pro', spine:'300', od:7.671},
+  {brand:'Gold Tip', model:'Hunter XT', spine:'500', od:7.391},
+  {brand:'Gold Tip', model:'Hunter XT', spine:'400', od:7.493},
+  {brand:'Gold Tip', model:'Hunter XT', spine:'340', od:7.62},
+  {brand:'Gold Tip', model:'Hunter XT', spine:'300', od:7.671},
+  {brand:'Gold Tip', model:'Hunter XT', spine:'250', od:7.849},
+  {brand:'Gold Tip', model:'Kinetic', spine:'500', od:6.553},
+  {brand:'Gold Tip', model:'Kinetic', spine:'400', od:6.858},
+  {brand:'Gold Tip', model:'Kinetic', spine:'340', od:6.909},
+  {brand:'Gold Tip', model:'Kinetic', spine:'300', od:6.96},
+  {brand:'Gold Tip', model:'Kinetic', spine:'200', od:7.163},
+  {brand:'Gold Tip', model:'Kinetic Kaos', spine:'500', od:6.553},
+  {brand:'Gold Tip', model:'Kinetic Kaos', spine:'400', od:6.858},
+  {brand:'Gold Tip', model:'Kinetic Kaos', spine:'340', od:6.909},
+  {brand:'Gold Tip', model:'Kinetic Kaos', spine:'300', od:6.96},
+  {brand:'Gold Tip', model:'Kinetic Kaos', spine:'200', od:7.163},
+  {brand:'Gold Tip', model:'Pierce', spine:'500', od:5.639},
+  {brand:'Gold Tip', model:'Pierce', spine:'400', od:5.817},
+  {brand:'Gold Tip', model:'Pierce', spine:'340', od:5.944},
+  {brand:'Gold Tip', model:'Pierce', spine:'300', od:6.096},
+  {brand:'Gold Tip', model:'Pierce', spine:'250', od:6.223},
+  {brand:'Gold Tip', model:'Pierce Platinum', spine:'500', od:5.639},
+  {brand:'Gold Tip', model:'Pierce Platinum', spine:'400', od:5.817},
+  {brand:'Gold Tip', model:'Pierce Platinum', spine:'340', od:5.944},
+  {brand:'Gold Tip', model:'Pierce Platinum', spine:'300', od:6.096},
+  {brand:'Gold Tip', model:'Pierce Platinum', spine:'250', od:6.223},
+  {brand:'Gold Tip', model:'Ted Nugent', spine:'500', od:7.544},
+  {brand:'Gold Tip', model:'Ted Nugent', spine:'400', od:7.645},
+  {brand:'Gold Tip', model:'Ted Nugent', spine:'300', od:7.95},
+  {brand:'Gold Tip', model:'Traditional', spine:'600', od:7.493},
+  {brand:'Gold Tip', model:'Traditional', spine:'500', od:7.62},
+  {brand:'Gold Tip', model:'Traditional', spine:'400', od:7.671},
+  {brand:'Gold Tip', model:'Traditional', spine:'340', od:7.823},
+  {brand:'Gold Tip', model:'Valkyrie', spine:'600', od:7.188},
+  {brand:'Gold Tip', model:'Valkyrie', spine:'500', od:7.239},
+  {brand:'Gold Tip', model:'Valkyrie', spine:'400', od:7.391},
+  {brand:'Gold Tip', model:'Valkyrie', spine:'340', od:7.518},
+  {brand:'Gold Tip', model:'Valkyrie', spine:'300', od:7.595},
+  {brand:'Killin Stix', model:'Micro Ventilator', spine:'500', od:5.867},
+  {brand:'Killin Stix', model:'Micro Ventilator', spine:'400', od:6.045},
+  {brand:'Killin Stix', model:'Micro Ventilator', spine:'350', od:6.223},
+  {brand:'Killin Stix', model:'Micro Ventilator', spine:'300', od:6.477},
+  {brand:'Killin Stix', model:'Micro Ventilator LT', spine:'400', od:5.74},
+  {brand:'Killin Stix', model:'Micro Ventilator LT', spine:'350', od:5.817},
+  {brand:'Killin Stix', model:'Micro Ventilator LT', spine:'300', od:5.994},
+  {brand:'Nexus', model:'Infinity', spine:'400', od:5.893},
+  {brand:'Nexus', model:'Infinity', spine:'350', od:6.071},
+  {brand:'Nexus', model:'Infinity', spine:'300', od:6.241},
+  {brand:'Nexus', model:'Infinity', spine:'250', od:6.411},
+  {brand:'Sirius', model:'Orion', spine:'300', od:5.893},
+  {brand:'Sirius', model:'Orion', spine:'250', od:6.02},
+  {brand:'Sirius', model:'Orion', spine:'200', od:6.248},
+  {brand:'Vector Custom', model:'HMR', spine:'500', od:6.096},
+  {brand:'Vector Custom', model:'HMR', spine:'400', od:6.223},
+  {brand:'Vector Custom', model:'HMR', spine:'350', od:6.35},
+  {brand:'Vector Custom', model:'HMR', spine:'300', od:6.477},
+  {brand:'Victory', model:'RIP TKO', spine:'400', od:6.756},
+  {brand:'Victory', model:'RIP TKO', spine:'350', od:6.731},
+  {brand:'Victory', model:'RIP TKO', spine:'300', od:6.756},
+  {brand:'Victory', model:'RIP TKO', spine:'250', od:6.756},
+  {brand:'Victory', model:'RIP TKO', spine:'200', od:7.01},
+  {brand:'Victory', model:'VAP', spine:'1200', od:5.232},
+  {brand:'Victory', model:'VAP', spine:'1100', od:5.283},
+  {brand:'Victory', model:'VAP', spine:'1000', od:5.283},
+  {brand:'Victory', model:'VAP', spine:'900', od:5.334},
+  {brand:'Victory', model:'VAP', spine:'800', od:5.41},
+  {brand:'Victory', model:'VAP', spine:'700', od:5.486},
+  {brand:'Victory', model:'VAP', spine:'600', od:5.436},
+  {brand:'Victory', model:'VAP', spine:'500', od:5.537},
+  {brand:'Victory', model:'VAP', spine:'450', od:5.664},
+  {brand:'Victory', model:'VAP', spine:'400', od:5.766},
+  {brand:'Victory', model:'VAP', spine:'350', od:5.893},
+  {brand:'Victory', model:'VAP', spine:'300', od:6.02},
+  {brand:'Victory', model:'VAP', spine:'250', od:6.198},
+  {brand:'Victory', model:'VAP', spine:'200', od:6.401},
+  {brand:'Victory', model:'VAP Camo', spine:'400', od:5.893},
+  {brand:'Victory', model:'VAP Camo', spine:'350', od:6.02},
+  {brand:'Victory', model:'VAP Camo', spine:'300', od:6.147},
+  {brand:'Victory', model:'VAP SS', spine:'400', od:5.893},
+  {brand:'Victory', model:'VAP SS', spine:'350', od:5.944},
+  {brand:'Victory', model:'VAP SS', spine:'300', od:6.121},
+  {brand:'Victory', model:'VAP SS', spine:'250', od:6.299},
+  {brand:'Victory', model:'VAP TKO', spine:'400', od:5.944},
+  {brand:'Victory', model:'VAP TKO', spine:'350', od:6.02},
+  {brand:'Victory', model:'VAP TKO', spine:'300', od:6.147},
+  {brand:'Victory', model:'VForce', spine:'600', od:7.29},
+  {brand:'Victory', model:'VForce', spine:'500', od:7.341},
+  {brand:'Victory', model:'VForce', spine:'400', od:7.493},
+  {brand:'Victory', model:'VForce', spine:'350', od:7.569},
+  {brand:'Victory', model:'VForce', spine:'300', od:7.722},
+  {brand:'Victory', model:'VForce', spine:'250', od:7.849}
+];
+
+// Flat shipping charge added once per order, on top of item pricing --
+// not per item, not per pack. Change this one number to update it
+// everywhere (cart drawer, order summary, checkout email, sticky bar).
+const SHIPPING_FLAT_RATE = 4.99;
+// Free-shipping promo: buy 2+ packs (total quantity across every item,
+// not per-item) OR spend $80+ before shipping, and shipping drops to $0.
+// Change these two numbers to adjust the promo.
+const FREE_SHIP_MIN_PACKS = 2;
+const FREE_SHIP_MIN_SUBTOTAL = 80;
+function shippingFor(itemsSubtotal, packQty){
+  return (packQty >= FREE_SHIP_MIN_PACKS || itemsSubtotal >= FREE_SHIP_MIN_SUBTOTAL) ? 0 : SHIPPING_FLAT_RATE;
+}
+function shippingPromoHTML(itemsSubtotal, packQty){
+  const unlocked = shippingFor(itemsSubtotal, packQty) === 0;
+  if(unlocked){
+    return { cls:'unlocked', html:'🎉 Free shipping unlocked!' };
+  }
+  const packsNeeded = FREE_SHIP_MIN_PACKS - packQty;
+  const dollarsNeeded = FREE_SHIP_MIN_SUBTOTAL - itemsSubtotal;
+  return { cls:'locked', html:`🚚 Add ${packsNeeded} more pack${packsNeeded===1?'':'s'} <span style="color:var(--muted-dim);">or</span> spend $${dollarsNeeded.toFixed(2)} more to unlock <b style="color:var(--text);">FREE shipping</b>.` };
+}
+function shippingValueHTML(itemsSubtotal, packQty){
+  const shipping = shippingFor(itemsSubtotal, packQty);
+  return shipping === 0
+    ? `<span class="shipping-strike">$${SHIPPING_FLAT_RATE.toFixed(2)}</span><span class="shipping-free">FREE</span>`
+    : '$'+shipping.toFixed(2);
+}
+
 const SHAPES = {
   ghost: { name:'GHOST', desc:'Smooth, low-drag, quiet in flight.', rounding:100, stock:true,
     nodes:[{x:0,h:0},{x:20,h:4},{x:38,h:9},{x:52,h:12.7},{x:63,h:6},{x:71,h:0}] },
@@ -1360,17 +1736,17 @@ const COLORS = [
   {name:'Black',  hex:'#1c1c1c', stock:false},
   {name:'Red',    hex:'#c1272d', stock:false},
   {name:'Orange', hex:'#ff7a1a', stock:false},
-  {name:'Yellow', hex:'#f4c430', stock:false},
-  {name:'Green',  hex:'#2e7d32', stock:false},
+  {name:'Yellow', hex:'#f4c430', stock:true},
+  {name:'Green',  hex:'#2e7d32', stock:true},
   {name:'Blue',   hex:'#1565c0', stock:false},
   {name:'Purple', hex:'#6a1b9a', stock:false}
 ];
 
 const order = {
   shape:'impact', customNodes:null, customRounding:55,
-  vaneLength:55, shaftOD:6.15, usingWraps:'no', wrapThickness:'', wrapBrand:'',
+  vaneLength:55, shaftOD:6.15, arrowBrand:'', arrowModel:'', arrowSpine:'', shaftSizeSource:'unset', usingWraps:'no', wrapThickness:'', wrapBrand:'',
   fletchCount:'4', weightClass:'standard', helical:'20', helicalDir:'right',
-  color:'#c1272d', packSize:'18', quantity:1
+  color:'#2e7d32', packSize:'18', quantity:1
 };
 // Declared early (not down near the rest of the custom-editor code) because
 // renderShapeCards() reads this the moment the page loads, well before that
@@ -1501,7 +1877,7 @@ function render(){
   const wrapAdd = (order.usingWraps==='yes') ? 2*(isNaN(wrapVal) ? 0.15 : wrapVal) : 0;
   const effOD = order.shaftOD + wrapAdd;
   const wall = order.weightClass==='standard' ? 0.60 : 0.35;
-  const Rin = (effOD + 0.15)/2, Rout = Rin+wall, overlap = wall*0.6;
+  const Rin = (effOD + 0.525)/2, Rout = Rin+wall, overlap = wall*0.6;
 
   buildTube(Rin, Rout, length, 48);
   const numFletches = parseInt(order.fletchCount);
@@ -1543,34 +1919,19 @@ function render(){
 function updatePricing(){
   const length = order.vaneLength;
   const numFletches = parseInt(order.fletchCount);
-  const helicalDeg = parseFloat(order.helical);
-  const peak = Math.max(...activeNodes().map(n=>n.h));
-  const ultralight = order.weightClass==='ultralight';
-
-  // Calibrated so a 24-pack lands $40-55 for 4-fletch and $35-50 for 3-fletch
-  // across the full range of shapes/helical settings at Standard weight, for
-  // vanes up to 80mm. Above 80mm (LONGRANGE-length hunting shafts) material
-  // and print time step up noticeably, so a second, steeper segment kicks in
-  // past that point rather than continuing the same shallow per-mm rate.
-  let materialTerm = 1.4810 + Math.max(0,(Math.min(length,80)-50))*0.00961;
-  if(length > 80) materialTerm += (length-80)*0.02305;
-  if(ultralight) materialTerm *= 0.85;
-  const fletchSurcharge = Math.max(0,(numFletches-3))*0.2148;
-  const helicalSurcharge = helicalDeg*0.005;
-  const heightSurcharge = Math.max(0,(peak-12))*0.0512;
-  const perVane = materialTerm + fletchSurcharge + helicalSurcharge + heightSurcharge;
-
   const pack = parseInt(order.packSize);
-  const bulkMult = pack===24 ? 0.97 : 1.0;
-  // Hard clamp: a pack must never price below $35, no matter what
-  // combination of shape/length/fletch count/helical/weight class produces
-  // it. The ceiling is $60 for vanes up to 80mm (the original calibrated
-  // band), and $72 for the longer 80-100mm LONGRANGE-length tier, since a
-  // fixed $60 ceiling would undercut material cost at that length. The
-  // formula above still drives *where* within the applicable band a given
-  // configuration lands.
-  const packCeiling = length > 80 ? 72 : 60;
-  const packPrice = Math.min(packCeiling, Math.max(35, Math.round(perVane*pack*bulkMult)));
+
+  // Price correlates with vane length and fletch count (3 vs 4 vanes per
+  // arrow) to set the base 18-pack price -- bounded $38 (35mm, 3-fletch)
+  // to $50 (100mm, 4-fletch). Switching pack size from 18 to 24 scales
+  // that price up proportionally rather than adding a flat surcharge:
+  // 24-pack price = (18-pack price / 18 * 3) + 18-pack price. So a $45
+  // 18-pack becomes (45/18*3)+45 = $52.50 -> $53 at 24.
+  const lengthTerm = 8 * (length - 35) / (100 - 35);
+  const fletchTerm = 4 * Math.max(0, numFletches - 3); // only 3 or 4 offered today
+  const price18 = Math.min(50, Math.max(38, 38 + lengthTerm + fletchTerm));
+  const packPrice = Math.round(pack === 24 ? (price18/18*3) + price18 : price18);
+
   const qty = Math.max(1, parseInt(order.quantity)||1);
   const total = packPrice * qty;
 
@@ -1587,7 +1948,7 @@ function updatePricing(){
 
   updateOrderSummary(total);
 
-  return {perVane, packPrice, qty, total, pack, grains};
+  return {packPrice, qty, total, pack, grains};
 }
 
 function shapeDisplayName(ord){
@@ -1611,7 +1972,12 @@ function updateOrderSummary(total){
       const colorName = colorDisplayName(item.snapshot.color);
       return `<div class="os-row"><span class="os-label"><span class="os-swatch" style="background:${item.snapshot.color}"></span>${shapeName} &middot; ${colorName} &middot; Pack of ${item.snapshot.packSize} &times;${item.snapshot.quantity}</span><span class="os-value">$${item.pricing.total}</span></div>`;
     }).join('');
-    document.getElementById('osTotal').textContent = '$'+cartTotal();
+    const subtotal = cartTotal(), packQty = cartPackQty();
+    document.getElementById('osShipping').innerHTML = shippingValueHTML(subtotal, packQty);
+    const promo = shippingPromoHTML(subtotal, packQty);
+    document.getElementById('osPromoNote').className = 'shipping-promo-note ' + promo.cls;
+    document.getElementById('osPromoNote').innerHTML = promo.html;
+    document.getElementById('osTotal').textContent = '$'+(subtotal+shippingFor(subtotal,packQty)).toFixed(2);
     return;
   }
 
@@ -1624,11 +1990,17 @@ function updateOrderSummary(total){
     : 'No';
   const weightClassLabel = order.weightClass==='standard' ? 'Standard' : 'Ultralight';
 
+  const arrowIdParts = [order.arrowBrand, order.arrowModel, order.arrowSpine ? order.arrowSpine+' spine' : ''].filter(Boolean);
+  const yourArrowValue = arrowIdParts.length
+    ? arrowIdParts.join(' ') + (order.shaftSizeSource==='matched' ? ' <span style="color:var(--good);">(matched)</span>' : '')
+    : null;
+
   const rows = [
     ['Shape', shapeName],
     ['Color', `<span class="os-swatch" style="background:${order.color}"></span>${colorName}`],
     ['Vane Length', order.vaneLength + 'mm'],
-    ['Shaft OD', order.shaftOD + 'mm'],
+    ...(yourArrowValue ? [['Your Arrow', yourArrowValue]] : []),
+    ['Shaft Size', order.shaftSizeSource==='unset' ? '<span style="color:var(--accent);">Not entered yet</span>' : order.shaftOD + 'mm'],
     ['Arrow Wraps', wrapText],
     ['Number of Vanes', order.fletchCount],
     ['Weight Class', weightClassLabel],
@@ -1639,7 +2011,12 @@ function updateOrderSummary(total){
   grid.innerHTML = rows.map(([label,value]) =>
     `<div class="os-row"><span class="os-label">${label}</span><span class="os-value">${value}</span></div>`
   ).join('');
-  document.getElementById('osTotal').textContent = '$'+total;
+  const packQty = Math.max(1, parseInt(order.quantity)||1);
+  document.getElementById('osShipping').innerHTML = shippingValueHTML(total, packQty);
+  const promo = shippingPromoHTML(total, packQty);
+  document.getElementById('osPromoNote').className = 'shipping-promo-note ' + promo.cls;
+  document.getElementById('osPromoNote').innerHTML = promo.html;
+  document.getElementById('osTotal').textContent = '$'+(total+shippingFor(total,packQty)).toFixed(2);
 }
 
 /* =====================================================================
@@ -1648,6 +2025,7 @@ function updateOrderSummary(total){
 let cart = [];
 
 function cartTotal(){ return cart.reduce((s,item)=>s+item.pricing.total, 0); }
+function cartPackQty(){ return cart.reduce((s,item)=>s+(item.snapshot.quantity||1), 0); }
 
 function updateCartBadge(){
   const badge = document.getElementById('cartBadge');
@@ -1655,7 +2033,45 @@ function updateCartBadge(){
   badge.classList.toggle('show', cart.length>0);
 }
 
+/* Shared by both addToCart() and the final checkout in submitOrder() --
+   one rule, checked in both places, so they can never drift out of sync.
+   Works on any order-shaped object: the live `order` state, or a frozen
+   cart item snapshot. */
+function validateItemSnapshot(s){
+  if(s.vaneLength < LENGTH_MIN || s.vaneLength > LENGTH_MAX){
+    return `Vane length must be between ${LENGTH_MIN}mm and ${LENGTH_MAX}mm.`;
+  }
+  if(s.shaftSizeSource === 'unset'){
+    return `Enter a Shaft Size, or make sure Brand/Model/Spine exactly match one we know.`;
+  }
+  if(s.shaftOD < SHAFT_OD_REASONABLE_MIN || s.shaftOD > SHAFT_OD_REASONABLE_MAX){
+    return `Shaft size of ${s.shaftOD.toFixed(2)}mm isn't realistic for an arrow shaft — check the field and unit.`;
+  }
+  return null;
+}
+function validateOrderForCart(){
+  const problem = validateItemSnapshot(order);
+  if(!problem) return null;
+  // field guess for scroll/focus -- shaft-related problems always point
+  // at the Shaft Size box, since that's the one field that resolves them.
+  const field = problem.startsWith('Vane length') ? 'vaneLength' : 'shaftOD';
+  return { msg: problem + ' This can\'t be added to your cart until it\'s fixed.', field };
+}
 function addToCart(){
+  const problem = validateOrderForCart();
+  const msg = document.getElementById('addToCartMsg');
+  if(problem){
+    msg.style.color = 'var(--accent)';
+    msg.textContent = problem.msg;
+    const fieldEl = document.getElementById(problem.field);
+    if(fieldEl){
+      fieldEl.scrollIntoView({behavior:'smooth', block:'center'});
+      fieldEl.focus();
+    }
+    return;
+  }
+  msg.style.color = 'var(--good)';
+
   const pricing = updatePricing();
   const snapshot = JSON.parse(JSON.stringify(order));
   const item = {
@@ -1669,7 +2085,6 @@ function addToCart(){
   updatePricing(); // refresh sticky bar / totals now that cart has changed
   bumpCartIcon();
 
-  const msg = document.getElementById('addToCartMsg');
   msg.textContent = `Added ${shapeDisplayName(snapshot)} to your cart.`;
   setTimeout(()=>{ if(msg.textContent.startsWith('Added')) msg.textContent=''; }, 3500);
 }
@@ -1730,7 +2145,13 @@ function renderCartItems(){
         </div>`;
     }).join('');
   }
-  document.getElementById('cartSubtotal').textContent = '$'+cartTotal();
+  const cartSub = cartTotal(), cartQty = cartPackQty();
+  document.getElementById('cartSubtotal').textContent = '$'+cartSub;
+  document.getElementById('cartShipping').innerHTML = shippingValueHTML(cartSub, cartQty);
+  document.getElementById('cartGrandTotal').textContent = '$'+(cartSub+shippingFor(cartSub,cartQty)).toFixed(2);
+  const cartPromo = shippingPromoHTML(cartSub, cartQty);
+  document.getElementById('cartPromoNote').className = 'shipping-promo-note ' + cartPromo.cls;
+  document.getElementById('cartPromoNote').innerHTML = cartPromo.html;
   list.querySelectorAll('.cart-item-remove').forEach(btn=>{
     btn.addEventListener('click', ()=> removeFromCart(btn.dataset.id));
   });
@@ -1787,11 +2208,21 @@ function miniCurveSVG(nodes, rounding){
    UI BUILD — shape cards
 ===================================================================== */
 const shapeGrid = document.getElementById('shapeGrid');
+// True height off the actual shaft surface = the node's local curve height,
+// plus half the 0.525mm glue gap, plus the tube wall (minus the small
+// overlap fused into the tube -- see buildFin/Rin/Rout above). Standard
+// wall (0.60mm) is assumed here since weight class isn't chosen yet at
+// this point in the flow; ultralight (0.35mm) runs about 0.1mm less.
+const WALL_STANDARD = 0.60;
+function trueHeightOffShaft(nodes, wall){
+  const peak = Math.max(...nodes.map(n=>n.h));
+  return peak + 0.2625 + wall*0.4;
+}
 function renderShapeCards(){
   shapeGrid.innerHTML = '';
   Object.entries(SHAPES).forEach(([key,s])=>{
     const card = document.createElement('div');
-    const peakHeight = Math.max(...s.nodes.map(n=>n.h));
+    const peakHeight = trueHeightOffShaft(s.nodes, WALL_STANDARD);
     card.className = 'shape-card' + (order.shape===key ? ' selected' : '') + (s.stock ? '' : ' out-of-stock');
     card.dataset.key = key;
     card.title = !s.stock ? `${s.name} (out of stock)` : customizeOpen ? `Load ${s.name}'s curve into the editor to start from` : '';
@@ -1800,7 +2231,7 @@ function renderShapeCards(){
       ${miniCurveSVG(s.nodes, s.rounding)}
       <div class="name">${s.name}</div>
       <div class="desc">${s.desc}</div>
-      <div class="dims">${peakHeight.toFixed(1)}mm peak height</div>`;
+      <div class="dims">${peakHeight.toFixed(2)}mm off the shaft</div>`;
     card.addEventListener('click', ()=>{
       const msgEl = document.getElementById('shapeStockMsg');
       if(!s.stock){
@@ -1875,13 +2306,13 @@ function renderCompareGrid(){
   Object.entries(SHAPES).forEach(([key,s])=>{
     const info = COMPARE_INFO[key];
     const length = s.nodes[s.nodes.length-1].x;
-    const height = Math.max(...s.nodes.map(n=>n.h));
+    const height = trueHeightOffShaft(s.nodes, WALL_STANDARD);
     const card = document.createElement('div');
     card.className = 'compare-card';
     card.innerHTML = `
       ${miniCurveSVG(s.nodes, s.rounding)}
       <div class="cc-name">${s.name}</div>
-      <div class="cc-dims">${length}mm long &middot; ${height.toFixed(1)}mm tall</div>
+      <div class="cc-dims">${length}mm long &middot; ${height.toFixed(2)}mm off the shaft</div>
       <div class="cc-bestfor">${info.bestFor}</div>
       <div class="cc-rating">
         <div class="cc-rating-label"><span>Broadhead Stabilization</span></div>
@@ -2019,24 +2450,105 @@ document.getElementById('vaneLength').addEventListener('blur', e=>{
   if(customizeOpen) drawCPGraph();
 });
 const SHAFT_OD_REASONABLE_MIN = 3, SHAFT_OD_REASONABLE_MAX = 12;
-document.getElementById('shaftOD').addEventListener('input', e=>{
-  const val = parseFloat(e.target.value);
-  order.shaftOD = val || 6.15;
-  const inchesEl = document.getElementById('shaftODInchesReadout');
+/* ---- Arrow identification: Brand / Model / Spine, matched EXACTLY
+   against ARROW_SHAFTS (Isaac's own 274-row dataset). Model suggestions
+   narrow to the typed brand; Spine suggestions narrow to brand+model.
+   Shaft Size is still a fully separate, manual field -- but since this
+   dataset is verified and self-maintained, an exact Brand+Model+Spine
+   match auto-fills it. Manual entry always overrides a match the moment
+   the customer types something themselves. */
+function populateArrowDatalists(){
+  const brands = [...new Set(ARROW_SHAFTS.map(s=>s.brand))].sort();
+  document.getElementById('arrowBrandList').innerHTML = brands.map(b=>`<option value="${b}">`).join('');
+  updateModelDatalist();
+  updateSpineDatalist();
+}
+function updateModelDatalist(){
+  const brandVal = document.getElementById('arrowBrand').value.trim().toLowerCase();
+  const models = [...new Set(
+    ARROW_SHAFTS.filter(s => !brandVal || s.brand.toLowerCase()===brandVal).map(s=>s.model)
+  )].sort();
+  document.getElementById('arrowModelList').innerHTML = models.map(m=>`<option value="${m}">`).join('');
+}
+function updateSpineDatalist(){
+  const brandVal = document.getElementById('arrowBrand').value.trim().toLowerCase();
+  const modelVal = document.getElementById('arrowModel').value.trim().toLowerCase();
+  const spines = [...new Set(
+    ARROW_SHAFTS.filter(s => (!brandVal || s.brand.toLowerCase()===brandVal) && (!modelVal || s.model.toLowerCase()===modelVal)).map(s=>s.spine)
+  )];
+  // numeric spines sort descending (matches how spine charts are usually printed);
+  // non-numeric ones (rare) fall to the end
+  spines.sort((a,b)=>{
+    const na = parseInt(a), nb = parseInt(b);
+    if(!isNaN(na) && !isNaN(nb)) return nb-na;
+    return String(a).localeCompare(String(b));
+  });
+  document.getElementById('arrowSpineList').innerHTML = spines.map(sp=>`<option value="${sp}">`).join('');
+}
+function findExactShaftMatch(){
+  const b = document.getElementById('arrowBrand').value.trim().toLowerCase();
+  const m = document.getElementById('arrowModel').value.trim().toLowerCase();
+  const s = document.getElementById('arrowSpine').value.trim().toLowerCase();
+  if(!b || !m || !s) return null;
+  return ARROW_SHAFTS.find(x => x.brand.toLowerCase()===b && x.model.toLowerCase()===m && x.spine.toLowerCase()===s) || null;
+}
+let shaftUnit = 'mm';
+function recomputeShaftSizing(){
+  order.arrowBrand = document.getElementById('arrowBrand').value.trim();
+  order.arrowModel = document.getElementById('arrowModel').value.trim();
+  order.arrowSpine = document.getElementById('arrowSpine').value.trim();
+
+  const manualRaw = document.getElementById('shaftOD').value.trim();
+  const manualVal = parseFloat(manualRaw);
   const msgEl = document.getElementById('shaftODMsg');
-  if(!isNaN(val)){
-    inchesEl.textContent = '= ' + (val/25.4).toFixed(3) + 'in';
-  }
-  // Real arrow shafts run roughly 3-12mm. A value way outside that is a
-  // strong signal someone entered their spec in inches (e.g. their known
-  // "0.242in" shaft) directly into this mm field by mistake.
-  if(!isNaN(val) && (val < SHAFT_OD_REASONABLE_MIN || val > SHAFT_OD_REASONABLE_MAX)){
-    msgEl.innerHTML = `<b style="color:var(--accent);">That doesn't look like a millimeter measurement for an arrow shaft — did you enter your diameter in inches by mistake? A typical shaft is 5.7–6.5mm (roughly 0.22–0.26in). If you know your shaft as "${val}in", enter ${(val*25.4).toFixed(2)}mm here instead.</b>`;
+  const match = findExactShaftMatch();
+  const defaultMsg = "Check your shaft's spec sheet — most hunting/target shafts run about 5.7–7.5mm (0.22–0.30in).";
+
+  if(manualRaw && !isNaN(manualVal) && manualVal > 0){
+    // Manual entry always wins, whatever the toggle is currently set to --
+    // even over an exact database match.
+    const mm = shaftUnit==='in' ? manualVal*25.4 : manualVal;
+    order.shaftOD = mm;
+    order.shaftSizeSource = 'manual';
+    if(mm < SHAFT_OD_REASONABLE_MIN || mm > SHAFT_OD_REASONABLE_MAX){
+      const altVal = shaftUnit==='in' ? (manualVal*25.4).toFixed(2)+'mm' : (manualVal/25.4).toFixed(3)+'in';
+      msgEl.innerHTML = `<b style="color:var(--accent);">That doesn't look right for an arrow shaft in ${shaftUnit} — did you mean ${altVal}?</b>`;
+    } else {
+      msgEl.textContent = defaultMsg;
+    }
+  } else if(match){
+    order.shaftOD = match.od;
+    order.shaftSizeSource = 'matched';
+    msgEl.innerHTML = `<b style="color:var(--good);">Using our spec for ${match.brand} ${match.model}, ${match.spine} spine — no need to enter a size.</b>`;
   } else {
-    msgEl.textContent = 'Most standard hunting/target shafts run 5.7–6.5mm. Know your shaft in inches instead? Check the number above — it converts live, so you can confirm you\'ve got the right value before ordering.';
+    order.shaftSizeSource = 'unset';
+    msgEl.textContent = defaultMsg;
   }
   render();
+}
+document.getElementById('arrowBrand').addEventListener('input', ()=>{ updateModelDatalist(); updateSpineDatalist(); recomputeShaftSizing(); });
+document.getElementById('arrowModel').addEventListener('input', ()=>{ updateSpineDatalist(); recomputeShaftSizing(); });
+document.getElementById('arrowSpine').addEventListener('input', recomputeShaftSizing);
+document.getElementById('shaftOD').addEventListener('input', recomputeShaftSizing);
+document.querySelectorAll('.unitbtn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    if(btn.dataset.unit === shaftUnit) return;
+    const input = document.getElementById('shaftOD');
+    const cur = parseFloat(input.value);
+    // Convert whatever's currently typed so switching units doesn't
+    // silently change the number they meant to enter.
+    if(!isNaN(cur) && cur > 0){
+      input.value = shaftUnit==='mm' ? (cur/25.4).toFixed(3) : (cur*25.4).toFixed(2);
+    }
+    shaftUnit = btn.dataset.unit;
+    document.querySelectorAll('.unitbtn').forEach(b=>b.classList.toggle('active', b===btn));
+    input.step = shaftUnit==='mm' ? '0.01' : '0.001';
+    input.placeholder = shaftUnit==='mm' ? 'e.g. 6.15' : 'e.g. 0.242';
+    recomputeShaftSizing();
+  });
 });
+populateArrowDatalists();
+recomputeShaftSizing();
 document.getElementById('wrapThickness').addEventListener('input', e=>{ order.wrapThickness = e.target.value; render(); });
 document.getElementById('wrapBrand').addEventListener('input', e=>{ order.wrapBrand = e.target.value; });
 document.getElementById('quantity').addEventListener('input', e=>{ order.quantity = parseInt(e.target.value)||1; updatePricing(); });
@@ -2249,6 +2761,10 @@ function buildItemProfileData(name, s){
     customRounding: s.shape==='custom' ? s.customRounding : undefined,
     vaneLength: s.vaneLength,
     shaftOD: s.shaftOD,
+    arrowBrand: s.arrowBrand || undefined,
+    arrowModel: s.arrowModel || undefined,
+    arrowSpine: s.arrowSpine || undefined,
+    shaftSizeSource: s.shaftSizeSource,
     usingWraps: s.usingWraps,
     wrapThickness: s.wrapThickness,
     wrapBrand: s.wrapBrand,
@@ -2267,13 +2783,19 @@ function buildItemLines(s, pricing, index, total){
     ? 'Yes' + (s.wrapThickness ? ' (' + s.wrapThickness + 'mm)' : '') + (s.wrapBrand ? ' [brand: ' + s.wrapBrand + ']' : (s.wrapThickness ? '' : ' [thickness/brand not provided — confirm before printing]'))
     : 'No';
   const divider = '------------------------------------';
+  const arrowIdParts = [s.arrowBrand, s.arrowModel, s.arrowSpine ? s.arrowSpine+' spine' : ''].filter(Boolean);
+  const arrowIdLine = arrowIdParts.length ? arrowIdParts.join(' ') : '(not provided)';
+  const sourceNote = s.shaftSizeSource==='manual' ? 'customer-entered size'
+    : s.shaftSizeSource==='matched' ? 'from our shaft database — exact match'
+    : 'UNSET — should not happen, checkout should have blocked this';
   return [
     divider,
     `ITEM ${index} of ${total} — ${shapeName.toUpperCase()}`,
     divider,
     '  Shape:          ' + shapeName + (s.shape==='custom' ? ' (see profile data below for exact curve)' : ''),
     '  Vane Length:    ' + s.vaneLength + 'mm',
-    '  Shaft OD:       ' + s.shaftOD + 'mm',
+    '  Arrow:          ' + arrowIdLine,
+    '  Shaft OD:       ' + s.shaftOD + 'mm (' + sourceNote + ')',
     '  Arrow Wraps:    ' + wrapLine,
     '  Fin Count:      ' + s.fletchCount,
     '  Weight Class:   ' + s.weightClass,
@@ -2292,8 +2814,13 @@ function buildItemLines(s, pricing, index, total){
 function buildStudioCopyLines(s, index, total){
   const lines = [
     `>>> STUDIO COPY-PASTE — ITEM ${index} of ${total} (paste top to bottom) <<<`,
-    'Shape: ' + s.shape,
   ];
+  if(s.shaftSizeSource==='matched'){
+    lines.push('Arrow (matched to database): ' + [s.arrowBrand, s.arrowModel, s.arrowSpine ? s.arrowSpine+' spine' : ''].filter(Boolean).join(' '));
+  } else if(s.arrowBrand || s.arrowModel || s.arrowSpine){
+    lines.push('Arrow (customer-entered, size given separately): ' + [s.arrowBrand, s.arrowModel, s.arrowSpine ? s.arrowSpine+' spine' : ''].filter(Boolean).join(' '));
+  }
+  lines.push('Shape: ' + s.shape);
   if(s.shape==='custom'){
     lines.push('Custom Nodes: ' + JSON.stringify(s.customNodes));
     lines.push('Custom Rounding: ' + s.customRounding);
@@ -2344,22 +2871,19 @@ function submitOrder(){
     checkoutItems = [{ snapshot: JSON.parse(JSON.stringify(order)), pricing }];
   }
 
-  // Absolute guarantee, independent of the input field's own clamping:
-  // nothing outside 35-100mm can ever actually be checked out.
-  const badLength = checkoutItems.find(item => item.snapshot.vaneLength < LENGTH_MIN || item.snapshot.vaneLength > LENGTH_MAX);
-  if(badLength){
-    errEl.textContent = `One of your items has a vane length outside the 35–100mm range we can produce (${badLength.snapshot.vaneLength}mm). Please fix it before checking out.`;
-    errEl.style.display = 'block';
-    return;
-  }
-
-  // Same guarantee for shaft OD -- catches the inches-typed-as-mm mistake
-  // even if someone skipped past the live warning without noticing it.
-  const badOD = checkoutItems.find(item => item.snapshot.shaftOD < SHAFT_OD_REASONABLE_MIN || item.snapshot.shaftOD > SHAFT_OD_REASONABLE_MAX);
-  if(badOD){
-    errEl.textContent = `One of your items has a shaft diameter of ${badOD.snapshot.shaftOD}mm, which isn't realistic for an arrow shaft — this usually means inches got entered where millimeters were expected. Please double check that field before checking out.`;
-    errEl.style.display = 'block';
-    return;
+  // Absolute guarantee, independent of anything the input fields or
+  // add-to-cart already checked: every single item -- whether it came
+  // from the cart or the current live design -- gets re-validated here
+  // with the exact same rule used when it was added. Nothing with an
+  // unresolved shaft size or an out-of-range length can reach an order
+  // email, no matter how it got into checkoutItems.
+  for(const item of checkoutItems){
+    const problem = validateItemSnapshot(item.snapshot);
+    if(problem){
+      errEl.textContent = `One of your items has a problem: ${problem} Please fix it before checking out.`;
+      errEl.style.display = 'block';
+      return;
+    }
   }
 
   // Same guarantee for shape stock -- catches a shape that was in the cart
@@ -2378,7 +2902,10 @@ function submitOrder(){
   const orderRef = 'MA-' + new Date().toISOString().slice(2,10).replace(/-/g,'') + '-' +
     Math.random().toString(36).slice(2,6).toUpperCase();
 
-  const grandTotal = checkoutItems.reduce((sum,item)=>sum+item.pricing.total, 0);
+  const itemsSubtotal = checkoutItems.reduce((sum,item)=>sum+item.pricing.total, 0);
+  const checkoutPackQty = checkoutItems.reduce((sum,item)=>sum+(item.snapshot.quantity||1), 0);
+  const shippingCharged = shippingFor(itemsSubtotal, checkoutPackQty);
+  const grandTotal = itemsSubtotal + shippingCharged;
   const allProfiles = checkoutItems.map(item => buildItemProfileData(name, item.snapshot));
   const firstShapeName = shapeDisplayName(checkoutItems[0].snapshot);
   const itemCount = checkoutItems.length;
@@ -2406,7 +2933,9 @@ function submitOrder(){
     `ORDER DETAILS (${itemCount} item${itemCount===1?'':'s'})`,
     ...itemLines,
     divider,
-    'GRAND TOTAL: $' + grandTotal,
+    'Items Subtotal: $' + itemsSubtotal,
+    'Shipping:        $' + shippingCharged.toFixed(2) + (shippingCharged===0 ? '  (free shipping promo applied)' : ''),
+    'GRAND TOTAL:     $' + grandTotal.toFixed(2),
     divider,
     '',
     ...studioLines,
@@ -2423,6 +2952,8 @@ function submitOrder(){
     orderRef, name, email,
     address: address || '',
     notes: notes || '',
+    itemsSubtotal,
+    shipping: shippingCharged,
     grandTotal,
     itemCount,
     items: checkoutItems.map(item => ({
