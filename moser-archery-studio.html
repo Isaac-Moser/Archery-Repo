@@ -1,0 +1,1515 @@
+<!DOCTYPE html>
+<!--
+=================================================================================
+ MOSER ARCHERY — DESIGN STUDIO (INTERNAL) — FILE INDEX
+ Ctrl+F any of the CAPITALIZED terms below to jump toward that part of the file.
+=================================================================================
+
+   NAMED_PRESETS         - preset shape data (GHOST/IMPACT/TARGET/COMPACT/LONGRANGE/DRIFT/ARC/CROSSOVER)
+   applyNamedPreset()     - loads a preset's shape + sets Vane Length to match
+   CHANGE_SHAPE_STOCK_HERE - grey out / disable a preset button, same keyword as the storefront
+
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Moser Archery — Design Studio (Internal)</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  :root{
+    --bg:#12151a;
+    --panel:#1a1f26;
+    --panel2:#20262f;
+    --line:#2a323d;
+    --text:#e7ebef;
+    --muted:#8a95a3;
+    --accent:#ff7a3d;
+    --accent2:#5c9a5f;
+    --mono:'SF Mono', 'Consolas', monospace;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; height:100vh; display:flex; background:var(--bg); color:var(--text);
+    font-family:-apple-system, 'Segoe UI', Roboto, sans-serif; overflow:hidden;
+  }
+  #panel{
+    width:330px; min-width:330px; background:var(--panel); border-right:1px solid var(--line);
+    padding:20px; overflow-y:auto;
+    scrollbar-width:thin; scrollbar-color: var(--line) var(--panel);
+  }
+  #panel::-webkit-scrollbar{ width:9px; }
+  #panel::-webkit-scrollbar-track{ background:var(--panel); }
+  #panel::-webkit-scrollbar-thumb{ background:var(--line); border-radius:5px; }
+  #panel::-webkit-scrollbar-thumb:hover{ background:#3a4453; }
+  * { scrollbar-width:thin; scrollbar-color: var(--line) var(--panel2); }
+  ::-webkit-scrollbar{ width:9px; height:9px; }
+  ::-webkit-scrollbar-track{ background:var(--panel2); }
+  ::-webkit-scrollbar-thumb{ background:var(--line); border-radius:5px; }
+  ::-webkit-scrollbar-thumb:hover{ background:#3a4453; }
+  #panel h1{ font-size:16px; margin:0 0 4px 0; letter-spacing:0.3px; }
+  #panel .sub{ color:var(--muted); font-size:12px; margin-bottom:16px; }
+  .group{ margin-bottom:14px; }
+  .group label{
+    display:block; font-size:10.5px; text-transform:uppercase; letter-spacing:0.6px;
+    color:var(--muted); margin-bottom:6px;
+  }
+  input[type=number], input[type=text]{
+    width:100%; background:var(--panel2); border:1px solid var(--line); color:var(--text);
+    padding:8px 10px; border-radius:6px; font-family:var(--mono); font-size:13px;
+  }
+  textarea{
+    width:100%; background:var(--panel2); border:1px solid var(--line); color:var(--text);
+    padding:8px 10px; border-radius:6px; font-family:var(--mono); font-size:11px;
+    resize:vertical; box-sizing:border-box;
+  }
+  textarea:focus{ outline:none; border-color:var(--accent); }
+  input:focus{ outline:none; border-color:var(--accent); }
+  select{
+    width:100%; background:var(--panel2); border:1px solid var(--line); color:var(--text);
+    padding:8px 10px; border-radius:6px; font-size:12.5px;
+  }
+  .btnrow{ display:flex; gap:6px; flex-wrap:wrap; }
+  .btn{
+    background:var(--panel2); border:1px solid var(--line); color:var(--text);
+    padding:8px 10px; border-radius:6px; font-size:12.5px; cursor:pointer; flex:1;
+    text-align:center; transition:all .12s; user-select:none;
+  }
+  .btn:hover{ border-color:#3a4453; }
+  .btn.active{ background:var(--accent); border-color:var(--accent); color:#1a1200; font-weight:600; }
+  .btn.active.green{ background:var(--accent2); border-color:var(--accent2); color:#08130a; }
+  .btn.small{ font-size:11.5px; padding:7px 8px; }
+  .slider-row{ display:flex; align-items:center; gap:10px; }
+  input[type=range]{ flex:1; accent-color:var(--accent); }
+  .val{ font-family:var(--mono); font-size:12px; color:var(--accent); min-width:36px; text-align:right; }
+  #generateBtn{
+    width:100%; padding:12px; background:var(--accent); border:none; border-radius:8px;
+    color:#1a1200; font-weight:700; font-size:13.5px; cursor:pointer; margin-top:4px;
+  }
+  #generateBtn:hover{ filter:brightness(1.08); }
+  #stats{
+    margin-top:12px; padding:11px; background:var(--panel2); border-radius:8px;
+    font-size:12px; color:var(--muted); line-height:1.7;
+  }
+  #stats b{ color:var(--text); }
+  #warn{ margin-top:8px; font-size:11.5px; color:#ffb37a; line-height:1.5; display:none; }
+  hr{ border:none; border-top:1px solid var(--line); margin:16px 0; }
+  #status{ font-size:11.5px; color:var(--accent2); min-height:14px; margin-top:6px; }
+
+  #right{ flex:1; display:flex; flex-direction:column; min-width:0; }
+  #viewer{ flex:1; position:relative; min-height:120px; }
+  #canvasHost{ width:100%; height:100%; }
+  #hint{
+    position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
+    font-size:11px; color:var(--muted); background:rgba(20,24,29,0.7); padding:5px 12px; border-radius:20px;
+  }
+
+  #resizeHandle{
+    height:14px; flex-shrink:0; background:var(--panel); border-top:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; cursor:ns-resize; user-select:none;
+  }
+  #resizeHandle:hover{ background:var(--panel2); }
+  #resizeHandle.dragging{ background:var(--panel2); }
+  #resizeGrip{ width:44px; height:4px; border-radius:3px; background:var(--line); transition:background .12s; }
+  #resizeHandle:hover #resizeGrip, #resizeHandle.dragging #resizeGrip{ background:var(--accent); }
+
+  #profileEditor{
+    min-height:180px; background:var(--panel);
+    padding:14px 20px 12px; display:flex; flex-direction:column; flex-shrink:0;
+  }
+  #peHeader{ flex-shrink:0; }
+  #peTitleRow{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  #peTitle{ font-size:15px; font-weight:700; letter-spacing:0.2px; }
+  #peTitle .tag{
+    display:inline-block; margin-left:8px; font-size:10px; font-weight:600; letter-spacing:0.4px;
+    border:1px solid var(--accent); color:var(--accent); border-radius:20px; padding:2px 9px; vertical-align:middle;
+    text-transform:uppercase;
+  }
+  #peSectionLabel{
+    font-size:10.5px; text-transform:uppercase; letter-spacing:0.6px; color:var(--muted); margin-bottom:7px;
+  }
+  #presetRow{ margin-bottom:10px; }
+  #presetRow .presetbtn{ min-width:78px; text-align:center; font-weight:600; letter-spacing:0.2px; }
+  #customModeToggle{
+    display:inline-block; font-size:11.5px; font-weight:600; color:var(--muted);
+    border:1px solid var(--line); border-radius:6px; padding:5px 11px; cursor:pointer;
+    background:transparent; transition:all .12s;
+  }
+  #customModeToggle:hover{ border-color:var(--accent); color:var(--text); }
+  #customModeToggle.active{ background:var(--accent); border-color:var(--accent); color:#1a1200; }
+
+  #peControls{
+    display:none; align-items:center; gap:14px; flex-wrap:wrap; font-size:12.5px; color:var(--muted);
+    background:var(--panel2); border:1px solid var(--line); border-radius:8px;
+    padding:9px 14px; margin:2px 0 10px;
+  }
+  #peControlsGroup{ display:flex; align-items:center; gap:8px; }
+  .peDivider{ width:1px; height:20px; background:var(--line); }
+  .ctrlLabel{ display:flex; align-items:center; gap:6px; white-space:nowrap; }
+  .ctrlVal{ font-family:var(--mono); color:var(--accent); min-width:32px; display:inline-block; }
+  #peControls input[type=number]{ width:64px; padding:5px 7px; font-size:12.5px; display:inline-block; }
+  #peControls input[type=range]{ width:80px; vertical-align:middle; }
+  #peControls .presetbtn{ font-weight:600; }
+  .accentbtn{ background:var(--accent2)!important; border-color:var(--accent2)!important; color:#08130a!important; }
+
+  #peHintLocked, #peHintCustom{ font-size:11.5px; color:var(--muted); line-height:1.5; margin-bottom:6px; }
+  #peHintCustom{ display:none; }
+  #peWarn{ color:#ff8a6a; font-size:12px; margin-bottom:4px; min-height:0; }
+  #graphWrap{ flex:1; min-height:0; }
+  svg#graph{ width:100%; height:100%; display:block; }
+  .presetbtn{
+    background:var(--panel2); border:1px solid var(--line); color:var(--text);
+    padding:6px 11px; border-radius:6px; font-size:11.5px; cursor:pointer; transition:all .12s;
+  }
+  .presetbtn:hover{ border-color:var(--accent); }
+  .presetbtn.active{ background:var(--accent); border-color:var(--accent); color:#1a1200; font-weight:700; }
+  .presetbtn.out-of-stock{ opacity:0.35; cursor:not-allowed; position:relative; }
+  .presetbtn.out-of-stock:hover{ border-color:var(--line); }
+  .presetbtn.out-of-stock::after{
+    content:''; position:absolute; left:6px; right:6px; top:50%; height:1px; background:var(--text);
+  }
+  .swatch{ width:12px; height:12px; border-radius:3px; display:inline-block; margin-right:5px; vertical-align:middle; border:1px solid rgba(255,255,255,0.25); }
+</style>
+</head>
+<body>
+
+<div id="panel">
+  <h1>Moser Archery <span style="color:var(--muted); font-weight:400; font-size:12px;">— Design Studio</span></h1>
+  <div class="sub">Internal tool · not for customer use · enter order specs → preview → export STL</div>
+
+  <div class="group" id="priceBox">
+    <label>Live Price</label>
+    <div style="display:flex; align-items:flex-start; gap:12px;">
+      <div>
+        <div id="priceVal" style="font-size:26px; font-weight:800; color:var(--accent); line-height:1;">$--</div>
+        <div style="font-size:11px; color:var(--muted); margin-top:4px;">pack of <span id="packLabelSmall">18</span> · updates as you design</div>
+      </div>
+      <div style="background:var(--panel2); border:1px solid var(--line); border-radius:6px; padding:6px 10px; font-size:10.5px; color:var(--muted); text-align:center; white-space:nowrap;">
+        EST. WEIGHT<br><span id="weightVal" style="color:var(--text); font-family:var(--mono); font-size:13px;">--</span> grains/vane
+      </div>
+    </div>
+    <div class="btnrow" style="margin-top:8px;">
+      <div class="btn active" data-group="packSize" data-val="18">Pack of 18</div>
+      <div class="btn" data-group="packSize" data-val="24">Pack of 24</div>
+    </div>
+    <div class="group" style="margin-top:10px;">
+      <label>Quantity (packs for this order)</label>
+      <input type="number" id="orderQuantity" value="1" min="1" step="1">
+    </div>
+    <div style="font-size:10px; color:var(--muted); margin-top:6px; line-height:1.4;">Weight assumes ~1.21 g/cm³ density, typical for 95A TPU</div>
+  </div>
+
+  <hr>
+
+  <div class="group">
+    <label>Paste Order From Email</label>
+    <textarea id="orderPasteBox" rows="4" placeholder="Paste the &quot;raw profile JSON (backup only)&quot; block from the bottom of the order email here"></textarea>
+    <div class="btnrow" style="margin-top:6px;">
+      <div class="btn small accentbtn" id="loadOrderBtn">Load Order</div>
+    </div>
+    <div id="orderNavRow" style="display:none; align-items:center; justify-content:space-between; margin-top:8px; gap:8px;">
+      <div class="btn small" id="prevItemBtn">&#9664; Prev</div>
+      <div id="orderItemLabel" style="font-size:11px; color:var(--muted); text-align:center; flex:2;"></div>
+      <div class="btn small" id="nextItemBtn">Next &#9654;</div>
+    </div>
+    <div id="unmatchedArrowBanner" style="display:none; margin-top:8px; padding:9px 11px; background:rgba(255,138,106,0.12); border:1px solid #ff8a6a; border-radius:6px; font-size:11.5px; color:#ff8a6a; line-height:1.4;"></div>
+  </div>
+
+  <hr>
+
+  <div class="group">
+    <label>Order / Profile Name</label>
+    <input type="text" id="profileName" placeholder="e.g. Smith - Victory VAP 300">
+    <div class="btnrow" style="margin-top:6px;">
+      <div class="btn small" id="exportBtn">Export Profile</div>
+      <div class="btn small" id="importBtn">Import Profile</div>
+    </div>
+    <input type="file" id="importFile" accept=".json" style="display:none;">
+    <div id="status"></div>
+  </div>
+
+  <div class="group">
+    <label>Color</label>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <div id="colorSwatchPreview" style="width:34px; height:34px; border-radius:6px; border:1px solid var(--line); flex-shrink:0;"></div>
+      <select id="colorSelect" style="flex:1;"></select>
+    </div>
+  </div>
+
+  <hr>
+
+  <div class="group">
+    <label>Vane Length (mm)</label>
+    <input type="number" id="vaneLength" value="70" step="1">
+  </div>
+
+  <div class="group">
+    <label>Vane Type</label>
+    <div class="btnrow">
+      <div class="btn active" data-group="vaneType" data-val="standard">Standard (0.60mm)</div>
+      <div class="btn" data-group="vaneType" data-val="ultralight">Ultralight (0.35mm)</div>
+    </div>
+  </div>
+
+  <div class="group">
+    <label>Arrow Lookup <span style="font-weight:400; color:var(--muted);">(from your 277-arrow spreadsheet)</span></label>
+    <div style="display:grid; grid-template-columns:1fr 1fr 90px; gap:6px;">
+      <input type="text" id="lookupBrand" list="lookupBrandList" placeholder="Manufacturer" autocomplete="off">
+      <input type="text" id="lookupModel" list="lookupModelList" placeholder="Model" autocomplete="off">
+      <input type="text" id="lookupSpine" list="lookupSpineList" placeholder="Spine" autocomplete="off">
+    </div>
+    <datalist id="lookupBrandList"></datalist>
+    <datalist id="lookupModelList"></datalist>
+    <datalist id="lookupSpineList"></datalist>
+    <div id="lookupResultMsg" style="font-size:10.5px; color:var(--muted); margin-top:6px; line-height:1.4;">Type all three fields to auto-fill the exact OD below — this data comes from your own spreadsheet, so it's trusted directly, no manual confirmation needed.</div>
+  </div>
+
+  <div class="group">
+    <label>Shaft Outside Diameter (mm)</label>
+    <input type="number" id="shaftOD" value="6.15" step="0.01">
+  </div>
+
+  <div class="group">
+    <label>Arrow Wraps?</label>
+    <div class="btnrow">
+      <div class="btn active" data-group="usingWraps" data-val="no">Not using wraps</div>
+      <div class="btn" data-group="usingWraps" data-val="yes">I use wraps</div>
+    </div>
+    <div id="wrapThicknessRow" style="display:none; margin-top:8px;">
+      <label>Wrap Thickness (mm)</label>
+      <input type="number" id="wrapThickness" value="0.15" step="0.01">
+      <div style="font-size:10px; color:var(--muted); margin-top:4px; line-height:1.4;">Most arrow wraps run about 0.1&ndash;0.2mm thick. Not sure? The default (0.15mm) is a safe middle-of-the-road guess. This adds to the shaft's effective diameter on both sides, separately from fit clearance below.</div>
+    </div>
+  </div>
+
+  <div class="group">
+    <label>Fit Clearance (mm)</label>
+    <input type="number" id="clearance" value="0.525" step="0.01">
+  </div>
+
+  <div class="group">
+    <label>Fin Tip Taper</label>
+    <div class="slider-row">
+      <input type="range" id="tipTaper" min="0" max="100" step="1" value="100">
+      <div class="val" id="tipTaperVal">Off</div>
+    </div>
+    <div style="font-size:10px; color:var(--muted); margin-top:4px; line-height:1.4;" id="tipTaperNote">100% = uniform thickness. Lower values thin the outer edge, but never below ~0.35mm -- your printer's realistic minimum -- regardless of the slider.</div>
+  </div>
+
+  <div class="group">
+    <label>Number of Fletches</label>
+    <div class="btnrow">
+      <div class="btn active" data-group="fletchCount" data-val="3">3</div>
+      <div class="btn" data-group="fletchCount" data-val="4">4</div>
+    </div>
+  </div>
+
+  <div class="group">
+    <label>Helical Twist (degrees, flat total) <span style="font-weight:400; color:var(--muted);">— matches the live customer-facing range, 0-30°</span></label>
+    <div class="slider-row">
+      <input type="range" id="helical" min="0" max="30" step="1" value="0">
+      <div class="val" id="helicalVal">0°</div>
+    </div>
+    <div style="font-size:10px; color:var(--muted); margin-top:4px;">Up to 30° is validated and live on the storefront (retested at 28-32° on dry filament with tuned retraction/cooling — printed clean, same quality as the low-twist batches). An earlier failure at 25° traced back to moisture-degraded filament, not the twist angle itself. <b>Always confirm dry filament</b> before printing near the top of this range — that's the one variable that mattered.</div>
+  </div>
+
+  <div class="group">
+    <label>Helical Direction</label>
+    <div class="btnrow">
+      <div class="btn active" data-group="helicalDir" data-val="right">Right</div>
+      <div class="btn" data-group="helicalDir" data-val="left">Left</div>
+    </div>
+  </div>
+
+  <button id="generateBtn">Update Preview</button>
+
+  <div id="stats">
+    <div>Vane OD: <b id="statOD">--</b> mm</div>
+    <div>Vane ID (bore): <b id="statID">--</b> mm</div>
+    <div>Triangles: <b id="statTris">--</b></div>
+  </div>
+  <div id="warn"></div>
+
+  <hr>
+  <button id="downloadBtn" class="btn" style="width:100%; background:var(--accent2); border-color:var(--accent2); color:#08130a; font-weight:700; padding:12px;">Download STL</button>
+
+  <hr>
+  <div style="font-size:11px; color:var(--muted); margin-bottom:8px;">
+    <b>Twist Test Batch</b> -- downloads 6 files (0/5/9/13/17/21°, all IMPACT @ 53mm) to find where twist becomes visible vs. where it starts failing to print. Doesn't touch your current design -- restores it after.
+  </div>
+  <button id="twistTestBtn" class="btn" style="width:100%; padding:10px;">Download Twist Test Batch (6 files)</button>
+</div>
+
+<div id="right">
+  <div id="viewer">
+    <div id="canvasHost"></div>
+    <div id="hint">Drag to rotate · scroll to zoom</div>
+  </div>
+
+  <div id="resizeHandle" title="Drag to resize"><div id="resizeGrip"></div></div>
+
+  <div id="profileEditor">
+    <div id="peHeader">
+      <div id="peTitleRow">
+        <div id="peTitle">Vane Profile <span class="tag" id="peModeTag">preset</span></div>
+      </div>
+      <div id="peSectionLabel">Quick Presets <span style="text-transform:none; font-weight:400;">— shape only, scaled to your current length</span></div>
+      <div id="presetRow" class="btnrow">
+        <div class="presetbtn" id="presetGhost" title="Smooth, back-loaded curve, low-drag quiet shape">GHOST</div>
+        <div class="presetbtn" id="presetImpact" title="Tall rounded profile for broadhead stability">IMPACT</div>
+        <div class="presetbtn" id="presetTarget" title="Low profile, quiet, minimal helical">TARGET</div>
+        <div class="presetbtn" id="presetCompact" title="Small, smooth parabolic, minimal drag">COMPACT</div>
+        <div class="presetbtn" id="presetLongrange" title="Long, smooth parabolic, extra stability">LONGRANGE</div>
+        <div class="presetbtn" id="presetDrift" title="PLACEHOLDER NAME - not trademark-checked. Long 75mm, gradual rise, sharp taper">DRIFT*</div>
+        <div class="presetbtn" id="presetArc" title="PLACEHOLDER NAME - not trademark-checked. 63mm, rounded back-loaded peak">ARC*</div>
+        <div class="presetbtn" id="presetCrossover" title="Double-hump profile, 48mm">CROSSOVER</div>
+      </div>
+      <div id="customModeToggle">🔓 Customize Shape</div>
+    </div>
+
+    <div id="peControls">
+      <div id="peControlsGroup">
+        <div class="presetbtn accentbtn" id="addNodeBtn">+ Add Node</div>
+        <div class="presetbtn" id="deleteNodeBtn">Delete Node</div>
+      </div>
+      <div class="peDivider"></div>
+      <div id="peControlsGroup">
+        <span class="ctrlLabel">Node <input type="number" id="nodeX" step="0.1"> mm &nbsp;·&nbsp; Height <input type="number" id="nodeH" step="0.05"> mm</span>
+      </div>
+      <div class="peDivider"></div>
+      <div id="peControlsGroup">
+        <span class="ctrlLabel" id="nodeRoundingWrap">Rounding <input type="range" id="nodeRounding" min="0" max="100" step="1" value="55"> <span id="nodeRoundingVal" class="ctrlVal">55%</span></span>
+      </div>
+      <div class="peDivider"></div>
+      <div id="peControlsGroup">
+        <span class="ctrlLabel" title="How steep a slope is allowed before it's flagged">Steepness Limit <input type="number" id="overhangLimit" step="1" min="15" max="75" style="width:52px;" value="40">°</span>
+      </div>
+    </div>
+
+    <div id="peHintLocked">Pick a shape above — it already fits your length, fletch count, and helical settings. Want to fine-tune the exact curve yourself? Click <b style="color:var(--text);">Customize Shape</b>.</div>
+    <div id="peHintCustom">Click "+ Add Node" or click empty graph to add a point, then drag it into place. Select a node to set its own rounding — endpoints (front/back tips) don't round since they only have one neighbor. Dashed grey line = your draggable control points; the solid curve is the actual smoothed shape that gets printed.</div>
+    <div id="peWarn"></div>
+    <div id="graphWrap">
+      <svg id="graph" viewBox="0 0 760 260"></svg>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===================== THREE.JS SCENE ===================== */
+const host = document.getElementById('canvasHost');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x12151a);
+const camera = new THREE.PerspectiveCamera(45, host.clientWidth/Math.max(1,host.clientHeight), 0.1, 2000);
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(host.clientWidth, host.clientHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+host.appendChild(renderer.domElement);
+
+const dl1 = new THREE.DirectionalLight(0xffffff,1.0); dl1.position.set(50,80,60); scene.add(dl1);
+const dl2 = new THREE.DirectionalLight(0xffffff,0.4); dl2.position.set(-50,-30,-60); scene.add(dl2);
+scene.add(new THREE.AmbientLight(0x8899aa,0.55));
+
+const modelGroup = new THREE.Group();
+scene.add(modelGroup);
+
+let isDragging=false, prevX=0, prevY=0, rotY=0.6, rotX=-0.25, camDist=90;
+renderer.domElement.addEventListener('pointerdown', e=>{isDragging=true; prevX=e.clientX; prevY=e.clientY;});
+window.addEventListener('pointerup', ()=>isDragging=false);
+window.addEventListener('pointermove', e=>{
+  if(!isDragging) return;
+  const dx=e.clientX-prevX, dy=e.clientY-prevY;
+  rotY -= dx*0.008; rotX += dy*0.008;
+  rotX = Math.max(-1.3, Math.min(1.3, rotX));
+  prevX=e.clientX; prevY=e.clientY;
+});
+renderer.domElement.addEventListener('wheel', e=>{
+  camDist *= (1 + e.deltaY*0.001);
+  camDist = Math.max(15, Math.min(400, camDist));
+  e.preventDefault();
+}, {passive:false});
+function updateCamera(){
+  camera.position.x = camDist*Math.sin(rotY)*Math.cos(rotX);
+  camera.position.z = camDist*Math.cos(rotY)*Math.cos(rotX);
+  camera.position.y = camDist*Math.sin(rotX)+15;
+  camera.lookAt(0,15,0);
+}
+function resizeRenderer(){
+  camera.aspect = host.clientWidth/Math.max(1,host.clientHeight);
+  camera.updateProjectionMatrix();
+  renderer.setSize(host.clientWidth, host.clientHeight);
+}
+window.addEventListener('resize', ()=>{ resizeRenderer(); if(typeof drawGraph==='function' && nodes.length) drawGraph(); });
+function animate(){ requestAnimationFrame(animate); updateCamera(); renderer.render(scene,camera); }
+animate();
+
+/* ===================== UI STATE ===================== */
+const state = { vaneType:'standard', fletchCount:'3', helicalDir:'right', packSize:'18', color:'#2e7d32', usingWraps:'no' };
+
+/* =====================================================================
+   ARROW OD LOOKUP -- from Isaac's own 277-arrow spreadsheet.
+   -----------------------------------------------------------------------
+   Unlike the storefront's arrow ID fields (which never auto-fill a size,
+   since a wrong guess there ships a bad fit to a customer), this table is
+   trusted directly -- it's Isaac's own measured/verified data, used by
+   Isaac himself, so an exact Brand+Model+Spine match auto-fills the OD
+   with no extra confirmation step. This is a STARTER SET (18 rows,
+   transcribed from a spreadsheet screenshot) -- replace/extend this array
+   with the full 277-row set once the actual file is available. Keep the
+   same {brand, model, spine, od} shape for each entry.
+===================================================================== */
+const ARROW_OD_LOOKUP = [
+  {brand:'Altra Arrows', model:'166 Centrum / Novum', spine:'300', od:6.248},
+  {brand:'Altra Arrows', model:'166 Centrum / Novum', spine:'350', od:6.071},
+  {brand:'Altra Arrows', model:'166 Centrum / Novum', spine:'400', od:5.918},
+  {brand:'Beman', model:'ICS Hunter Classic', spine:'500', od:7.29},
+  {brand:'Beman', model:'ICS Hunter Classic', spine:'400', od:7.468},
+  {brand:'Beman', model:'ICS Hunter Classic', spine:'340', od:7.569},
+  {brand:'Beman', model:'ICS Hunter Classic', spine:'300', od:7.62},
+  {brand:'Black Eagle', model:'Rampage', spine:'400', od:6.426},
+  {brand:'Black Eagle', model:'Rampage', spine:'350', od:6.629},
+  {brand:'Black Eagle', model:'Rampage', spine:'300', od:6.706},
+  {brand:'Black Eagle', model:'Rampage', spine:'250', od:7.01},
+  {brand:'Black Eagle', model:'Rampage', spine:'200', od:7.239},
+  {brand:'Black Eagle', model:'Rampage', spine:'150', od:7.798},
+  {brand:'Black Eagle', model:'Renegade', spine:'400', od:6.68},
+  {brand:'Black Eagle', model:'Renegade', spine:'350', od:6.782},
+  {brand:'Black Eagle', model:'Renegade', spine:'300', od:6.985},
+  {brand:'Black Eagle', model:'Renegade', spine:'250', od:7.112},
+  {brand:'Black Eagle', model:'Spartan', spine:'500', od:6.807}
+];
+function populateLookupDatalists(){
+  const brands = [...new Set(ARROW_OD_LOOKUP.map(r=>r.brand))].sort();
+  document.getElementById('lookupBrandList').innerHTML = brands.map(b=>`<option value="${b}">`).join('');
+  updateLookupModelList();
+}
+function updateLookupModelList(){
+  const b = document.getElementById('lookupBrand').value.trim().toLowerCase();
+  const models = [...new Set(ARROW_OD_LOOKUP.filter(r=>!b||r.brand.toLowerCase()===b).map(r=>r.model))].sort();
+  document.getElementById('lookupModelList').innerHTML = models.map(m=>`<option value="${m}">`).join('');
+  updateLookupSpineList();
+}
+function updateLookupSpineList(){
+  const b = document.getElementById('lookupBrand').value.trim().toLowerCase();
+  const m = document.getElementById('lookupModel').value.trim().toLowerCase();
+  const spines = [...new Set(ARROW_OD_LOOKUP.filter(r=>(!b||r.brand.toLowerCase()===b)&&(!m||r.model.toLowerCase()===m)).map(r=>r.spine))];
+  document.getElementById('lookupSpineList').innerHTML = spines.map(sp=>`<option value="${sp}">`).join('');
+}
+function tryLookupMatch(){
+  const b = document.getElementById('lookupBrand').value.trim().toLowerCase();
+  const m = document.getElementById('lookupModel').value.trim().toLowerCase();
+  const s = document.getElementById('lookupSpine').value.trim().toLowerCase();
+  const msgEl = document.getElementById('lookupResultMsg');
+  if(!b || !m || !s){
+    msgEl.style.color = 'var(--muted)';
+    msgEl.textContent = 'Type all three fields to auto-fill the exact OD below — this data comes from your own spreadsheet, so it\'s trusted directly, no manual confirmation needed.';
+    return;
+  }
+  const match = ARROW_OD_LOOKUP.find(r=>r.brand.toLowerCase()===b && r.model.toLowerCase()===m && r.spine.toLowerCase()===s);
+  if(match){
+    document.getElementById('shaftOD').value = match.od;
+    msgEl.style.color = 'var(--good)';
+    msgEl.textContent = `✓ Matched: ${match.brand} ${match.model}, ${match.spine} spine — OD set to ${match.od}mm. Click "Update Preview" to apply.`;
+  }else{
+    msgEl.style.color = 'var(--muted)';
+    msgEl.textContent = 'No exact match yet in the lookup table — enter the OD manually below.';
+  }
+}
+document.getElementById('lookupBrand').addEventListener('input', ()=>{ updateLookupModelList(); tryLookupMatch(); });
+document.getElementById('lookupModel').addEventListener('input', ()=>{ updateLookupSpineList(); tryLookupMatch(); });
+document.getElementById('lookupSpine').addEventListener('input', tryLookupMatch);
+populateLookupDatalists();
+
+// Max fletch count is 4 -- clamps any imported/legacy value (old saved
+// profiles or order exports could predate this cap) down to the 3-4 range.
+function clampFletchCount(v){
+  const n = parseInt(v);
+  if(isNaN(n)) return '3';
+  return String(Math.min(4, Math.max(3, n)));
+}
+document.querySelectorAll('.btn[data-group]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const group = btn.dataset.group;
+    document.querySelectorAll(`.btn[data-group="${group}"]`).forEach(b=>b.classList.remove('active','green'));
+    btn.classList.add('active');
+    if(group==='helicalDir'||group==='fletchCount') btn.classList.add('green');
+    state[group] = btn.dataset.val;
+    if(group==='vaneType' && typeof updateTipTaperLabel==='function') updateTipTaperLabel();
+    if(group==='packSize') document.getElementById('packLabelSmall').textContent = btn.dataset.val;
+    if(group==='usingWraps') document.getElementById('wrapThicknessRow').style.display = (btn.dataset.val==='yes') ? 'block' : 'none';
+    generate();
+  });
+});
+document.getElementById('helical').addEventListener('input', e=>{
+  document.getElementById('helicalVal').textContent = e.target.value+'°';
+});
+function updateTipTaperLabel(){
+  const v = parseFloat(document.getElementById('tipTaper').value);
+  const wall = state.vaneType==='standard'?0.60:0.35;
+  const floorFactor = Math.min(1, 0.35/wall);
+  const effective = Math.max(v/100, floorFactor);
+  const mm = (wall*effective).toFixed(2);
+  document.getElementById('tipTaperVal').textContent = v>=100 ? 'Off' : `~${mm}mm tip`;
+}
+document.getElementById('tipTaper').addEventListener('input', ()=>{
+  updateTipTaperLabel();
+});
+document.getElementById('tipTaper').addEventListener('change', ()=>{ generate(); });
+updateTipTaperLabel();
+
+/* ---- colour dropdown ---- */
+const COLORS = [
+  {name:'White',  hex:'#f2f2ee'},
+  {name:'Black',  hex:'#1c1c1c'},
+  {name:'Red',    hex:'#c1272d'},
+  {name:'Orange', hex:'#ff7a1a'},
+  {name:'Yellow', hex:'#f4c430'},
+  {name:'Green',  hex:'#2e7d32'},
+  {name:'Blue',   hex:'#1565c0'},
+  {name:'Purple', hex:'#6a1b9a'}
+];
+const colorSelect = document.getElementById('colorSelect');
+const colorSwatchPreview = document.getElementById('colorSwatchPreview');
+COLORS.forEach(c=>{
+  const opt = document.createElement('option');
+  opt.value = c.hex; opt.textContent = c.name;
+  if(c.hex===state.color) opt.selected = true;
+  colorSelect.appendChild(opt);
+});
+function updateColorSwatchPreview(){ colorSwatchPreview.style.background = state.color; }
+updateColorSwatchPreview();
+colorSelect.addEventListener('change', e=>{
+  state.color = e.target.value;
+  updateColorSwatchPreview();
+  generate();
+});
+
+/* ===================== PROFILE NODES ===================== */
+let nodes = [];
+let currentProfileLabel = 'IMPACT'; // used in the exported STL filename -- set by presets, or CUSTOM once hand-edited
+function markCustom(){ currentProfileLabel = 'CUSTOM'; }
+let selectedIdx = 1;
+let draggingNode = false;
+
+// Named presets built from AAE's own published spec sheet (length/height/cut
+// type) for their MAX Stealth, MAX Hunter, and Hybrid 2.0 vanes, plus their
+// AAE WAV (Olympic recurve / target) vane. Real dimensions, approximated
+// shape based on their PARABOLIC vs SHIELD cut classification and product
+// photos -- not their internal CAD data.
+//
+// Clicking a preset loads its shape AND sets Vane Length to that shape's own
+// native/designed length -- it does not touch shaft OD, clearance, fletch
+// count, helical, color, or anything else you've already set. If you then
+// edit Vane Length afterward, the existing length-change handler rescales
+// the shape from there, same as always -- this only changes what happens at
+// the moment of clicking the preset itself.
+function applyNamedPreset(p, label){
+  if(!p.stock) return; // out of stock via CHANGE_SHAPE_STOCK_HERE -- ignore the click
+  currentProfileLabel = label;
+  const presetLength = p.nodes[p.nodes.length-1].x;
+  document.getElementById('vaneLength').value = presetLength;
+  lastLength = presetLength;
+  const scaled = p.nodes.map(n => ({ x: snapX(n.x), h: n.h, round: p.rounding }));
+  scaled[0].x = 0;
+  scaled[scaled.length-1].x = snapX(presetLength);
+  nodes = scaled;
+  selectedIdx = Math.min(2, nodes.length-1);
+  drawGraph(); generate();
+}
+// To take a preset out of stock/testing, change its "stock:true" to
+// "stock:false" below. The button will grey out, cross itself out, and
+// stop responding to clicks -- same behavior as the storefront's shape and
+// color out-of-stock toggle.                    ******CHANGE_SHAPE_STOCK_HERE******
+const NAMED_PRESETS = {
+  ghost: { rounding:100, stock:true,
+    nodes:[{x:0,h:0},{x:20,h:4},{x:38,h:9},{x:52,h:12.7},{x:63,h:6},{x:71,h:0}] },
+  impact: { rounding:100, stock:true,
+    nodes:[{x:0,h:0},{x:15,h:8},{x:26,h:14.7},{x:38,h:7},{x:53,h:0}] },
+  target: { rounding:100, stock:true,
+    nodes:[{x:0,h:0},{x:14,h:8.4},{x:20,h:8.4},{x:34,h:3},{x:51,h:0}] },
+  compact: { rounding:100, stock:true,
+    nodes:[{x:0,h:0},{x:10,h:5.3},{x:22,h:9.65},{x:34,h:5.3},{x:44,h:0}] },
+  longrange: { rounding:100, stock:true,
+    nodes:[{x:0,h:0},{x:22,h:7},{x:48,h:12.7},{x:74,h:7},{x:97,h:0}] },
+  drift: { rounding:100, stock:true,
+    nodes:[{x:0,h:0},{x:62,h:12},{x:67,h:7.5},{x:70,h:4},{x:73,h:1.5},{x:75,h:0}] },
+  arc: { rounding:100, stock:true,
+    nodes:[{x:0,h:0},{x:3,h:2},{x:47,h:10.5},{x:57,h:7.5},{x:61,h:2},{x:63,h:0}] },
+  crossover: { rounding:100, stock:true,
+    nodes:[{x:0,h:0},{x:9,h:5},{x:22,h:8.5},{x:32,h:9.5},{x:39,h:8.5},{x:43,h:5},{x:46,h:2},{x:48,h:0}] }
+};
+function currentLength(){ return parseFloat(document.getElementById('vaneLength').value)||70; }
+// Helical twist is a flat total in degrees again (0-3), matching EasyVanes'
+// real proven range -- see the storefront's matching comment for why.
+
+function snapX(v){ return Math.round(v); }
+function snapH(v){ return Math.round(v*10)/10; }
+
+
+function interpAt(xmm){
+  const ns = smoothedCurve.length ? smoothedCurve : nodes;
+  if(xmm<=ns[0].x) return ns[0].h;
+  for(let i=0;i<ns.length-1;i++){
+    if(xmm>=ns[i].x && xmm<=ns[i+1].x){
+      const t=(xmm-ns[i].x)/((ns[i+1].x-ns[i].x)||1e-6);
+      return ns[i].h + t*(ns[i+1].h-ns[i].h);
+    }
+  }
+  return ns[ns.length-1].h;
+}
+function maxNodeHeight(){ return nodes.reduce((m,n)=>Math.max(m,n.h),0); }
+
+/* ---- Corner rounding -----------------------------------------------------
+   Sharp V-joints between nodes create real turbulence and noise in flight,
+   not just a printability concern. Rather than change what the draggable
+   control points mean, we keep `nodes` as-is (the control polygon you drag)
+   and derive a separate, smoother curve from it: each interior node carries
+   its own `round` value (0-100, only meaningful when it has both a left and
+   right neighbor) -- that corner gets trimmed back along both adjacent
+   segments and replaced with a quadratic Bezier arc using the original node
+   as the control point. 0% = sharp corner at that node. Higher % = rounder.
+   Endpoints (first/last node) have no left+right pair and are never rounded.
+   This smoothed curve is what actually gets built into the 3D geometry and
+   drawn on the graph -- the raw nodes are just the "control handles."
+*/
+const DEFAULT_NODE_ROUND = 55;
+let smoothedCurve = [];
+
+function rebuildSmoothedCurve(){
+  if(nodes.length<3){ smoothedCurve = nodes.map(n=>({x:n.x,h:n.h})); return; }
+  const out = [nodes[0]];
+  for(let i=1;i<nodes.length-1;i++){
+    const prev=nodes[i-1], cur=nodes[i], next=nodes[i+1];
+    const pct = cur.round!==undefined ? cur.round : DEFAULT_NODE_ROUND;
+    const t = Math.min(0.48, (pct/100)*0.48);
+    if(t<=0.001){
+      if(out[out.length-1].x < cur.x) out.push({x:cur.x, h:cur.h});
+      continue;
+    }
+    const segLenPrev = cur.x-prev.x, segLenNext = next.x-cur.x;
+    const a = { x: cur.x - t*segLenPrev, h: cur.h - t*(cur.h-prev.h) };
+    const b = { x: cur.x + t*segLenNext, h: cur.h + t*(next.h-cur.h) };
+    if(out[out.length-1].x < a.x) out.push(a);
+    const arcSamples = 10;
+    for(let s=1;s<arcSamples;s++){
+      const u = s/arcSamples;
+      const x = (1-u)*(1-u)*a.x + 2*(1-u)*u*cur.x + u*u*b.x;
+      const h = (1-u)*(1-u)*a.h + 2*(1-u)*u*cur.h + u*u*b.h;
+      out.push({x,h});
+    }
+    out.push(b);
+  }
+  out.push(nodes[nodes.length-1]);
+  // enforce strictly increasing x (guards against overlapping rounding on very close nodes)
+  const cleaned=[out[0]];
+  for(let i=1;i<out.length;i++){ if(out[i].x>cleaned[cleaned.length-1].x) cleaned.push(out[i]); }
+  smoothedCurve = cleaned;
+}
+
+/* ---- SVG graph ---- */
+const svg = document.getElementById('graph');
+const padL=55, padR=15, padT=15, padB=32;
+let VBW=760, VBH=260, plotW=VBW-padL-padR, plotH=VBH-padT-padB;
+
+function refreshSvgDims(){
+  const r = svg.getBoundingClientRect();
+  VBW = Math.max(200, r.width);
+  VBH = Math.max(120, r.height);
+  plotW = VBW-padL-padR;
+  plotH = VBH-padT-padB;
+  svg.setAttribute('viewBox', `0 0 ${VBW} ${VBH}`);
+}
+
+function scaleMax(){ return 20; }
+function xPix(xmm){ return padL + (xmm/currentLength())*plotW; }
+function hPix(hmm){ return padT + plotH - (hmm/scaleMax())*plotH; }
+function pixToXmm(px){ return Math.max(0, Math.min(currentLength(), (px-padL)/plotW*currentLength())); }
+function pixToHmm(py){ return Math.max(0, Math.min(scaleMax(), (padT+plotH-py)/plotH*scaleMax())); }
+
+// Grid snap: cursor snaps to 1mm steps along length, 0.1mm steps in height
+// These parts print with the tube's axis vertical (front-to-back = bottom-to-top of
+// the print), so each node-to-node segment IS a real unsupported overhang: for every
+// 1mm the print rises (dx, along length), the fin edge can only extend outward (dh,
+// radially) so far before it's printing into thin air. That overhang angle, measured
+// from vertical, is atan(dh/dx). ~40deg from vertical is a reasonably conservative
+// limit for flexible TPU on a direct-drive printer like the P1S -- TPU is more prone to
+// sagging on overhangs than a rigid filament since it stays pliable a moment longer
+// after extrusion. Steeper than that and the segment gets flagged.
+// This is a caution threshold, not a proven hard limit -- it's a conservative
+// starting guess. Real overhang capability depends on your printer, cooling,
+// speed, and filament, and thin fast-cooling features like a vane tip often
+// handle steeper overhangs than bulkier parts. Print a physical test piece and
+// adjust this number to match what your P1S + TPU combo actually achieves.
+let OVERHANG_LIMIT_DEG = 40;
+function steepThreshold(){ return Math.tan(OVERHANG_LIMIT_DEG * Math.PI/180); }
+document.getElementById('overhangLimit').addEventListener('change', e=>{
+  const v = parseFloat(e.target.value);
+  if(v>0 && v<90){ OVERHANG_LIMIT_DEG = v; drawGraph(); }
+});
+document.getElementById('nodeRounding').addEventListener('input', e=>{
+  const isEndpoint = selectedIdx===0 || selectedIdx===nodes.length-1;
+  if(isEndpoint) return;
+  const v = parseFloat(e.target.value);
+  nodes[selectedIdx].round = v;
+  markCustom();
+  document.getElementById('nodeRoundingVal').textContent = v+'%';
+  drawGraph();
+});
+document.getElementById('nodeRounding').addEventListener('change', ()=>{ generate(); });
+
+function drawGraph(){
+  refreshSvgDims();
+  svg.innerHTML='';
+  const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+  svg.appendChild(g);
+  const len = currentLength();
+  for(let x=0; x<=len+0.001; x+=10){
+    const px = xPix(Math.min(x,len));
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',px); line.setAttribute('x2',px);
+    line.setAttribute('y1',padT); line.setAttribute('y2',padT+plotH);
+    line.setAttribute('stroke','#232a33'); line.setAttribute('stroke-width','1');
+    g.appendChild(line);
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x',px); t.setAttribute('y',padT+plotH+16);
+    t.setAttribute('fill','#5c6675'); t.setAttribute('font-size','10'); t.setAttribute('text-anchor','middle');
+    t.textContent = Math.round(x);
+    g.appendChild(t);
+  }
+  const frontLbl = document.createElementNS('http://www.w3.org/2000/svg','text');
+  frontLbl.setAttribute('x', padL-8); frontLbl.setAttribute('y', padT+32);
+  frontLbl.setAttribute('fill','#8a95a3'); frontLbl.setAttribute('font-size','12'); frontLbl.setAttribute('text-anchor','end');
+  frontLbl.textContent='Front';
+  g.appendChild(frontLbl);
+  const backLbl = document.createElementNS('http://www.w3.org/2000/svg','text');
+  backLbl.setAttribute('x', padL+plotW+8); backLbl.setAttribute('y', padT+32);
+  backLbl.setAttribute('fill','#8a95a3'); backLbl.setAttribute('font-size','12');
+  backLbl.textContent='Back';
+  g.appendChild(backLbl);
+
+  // Y axis (fin height, mm) gridlines every 5mm + labels
+  const yMax = scaleMax();
+  const yStep = 5;
+  for(let y=0; y<=yMax+0.0001; y+=yStep){
+    const py = hPix(y);
+    const yline = document.createElementNS('http://www.w3.org/2000/svg','line');
+    yline.setAttribute('x1',padL); yline.setAttribute('x2',padL+plotW);
+    yline.setAttribute('y1',py); yline.setAttribute('y2',py);
+    yline.setAttribute('stroke','#232a33'); yline.setAttribute('stroke-width','1');
+    g.appendChild(yline);
+    const yt = document.createElementNS('http://www.w3.org/2000/svg','text');
+    yt.setAttribute('x',padL-8); yt.setAttribute('y',py+3);
+    yt.setAttribute('fill','#5c6675'); yt.setAttribute('font-size','10'); yt.setAttribute('text-anchor','end');
+    yt.textContent = (Math.round(y*100)/100);
+    g.appendChild(yt);
+  }
+  const yUnitLbl = document.createElementNS('http://www.w3.org/2000/svg','text');
+  yUnitLbl.setAttribute('x', 4); yUnitLbl.setAttribute('y', padT-2);
+  yUnitLbl.setAttribute('fill','#5c6675'); yUnitLbl.setAttribute('font-size','9.5');
+  yUnitLbl.textContent = 'mm';
+  g.appendChild(yUnitLbl);
+
+  rebuildSmoothedCurve();
+  const sc = smoothedCurve;
+
+  let pts = sc.map(n=>`${xPix(n.x)},${hPix(n.h)}`).join(' ');
+  const poly = document.createElementNS('http://www.w3.org/2000/svg','polygon');
+  poly.setAttribute('points', `${xPix(sc[0].x)},${hPix(0)} ${pts} ${xPix(sc[sc.length-1].x)},${hPix(0)}`);
+  poly.setAttribute('fill','rgba(255,122,61,0.14)');
+  g.appendChild(poly);
+
+  // faint dashed control polygon showing where the draggable nodes actually are,
+  // underneath the smooth curve derived from them
+  const anyRounded = nodes.slice(1,-1).some(n => (n.round!==undefined?n.round:DEFAULT_NODE_ROUND) > 1);
+  if(anyRounded){
+    let cpts = nodes.map(n=>`${xPix(n.x)},${hPix(n.h)}`).join(' ');
+    const cpoly = document.createElementNS('http://www.w3.org/2000/svg','polyline');
+    cpoly.setAttribute('points', cpts);
+    cpoly.setAttribute('fill','none');
+    cpoly.setAttribute('stroke','#4a5563');
+    cpoly.setAttribute('stroke-width','1');
+    cpoly.setAttribute('stroke-dasharray','3 3');
+    g.appendChild(cpoly);
+  }
+
+  for(let i=0;i<sc.length-1;i++){
+    const a=sc[i], b=sc[i+1];
+    const dx = b.x-a.x, dh = Math.abs(b.h-a.h);
+    const steep = dx>0.0001 && (dh/dx) > steepThreshold();
+    const seg = document.createElementNS('http://www.w3.org/2000/svg','line');
+    seg.setAttribute('x1',xPix(a.x)); seg.setAttribute('y1',hPix(a.h));
+    seg.setAttribute('x2',xPix(b.x)); seg.setAttribute('y2',hPix(b.h));
+    seg.setAttribute('stroke', steep? '#ff2b3d' : '#ff7a3d');
+    seg.setAttribute('stroke-width', steep ? '5' : '2.5');
+    if(steep) seg.setAttribute('stroke-dasharray','7 4');
+    g.appendChild(seg);
+  }
+
+  nodes.forEach((n,i)=>{
+    const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('cx', xPix(n.x)); c.setAttribute('cy', hPix(n.h)); c.setAttribute('r', i===selectedIdx&&customMode?7:5.5);
+    c.setAttribute('fill', (i===selectedIdx&&customMode) ? '#ff7a3d' : (customMode? '#e7ebef':'#5c6675'));
+    c.setAttribute('stroke', '#12151a'); c.setAttribute('stroke-width','1.5');
+    c.style.cursor = customMode ? 'pointer' : 'default';
+    c.dataset.idx = i;
+    if(customMode) c.addEventListener('pointerdown', e=>{ e.stopPropagation(); selectNode(i); draggingNode=true; });
+    g.appendChild(c);
+  });
+
+  let worstAngle = 0;
+  for(let i=0;i<sc.length-1;i++){
+    const dx = sc[i+1].x-sc[i].x, dh = Math.abs(sc[i+1].h-sc[i].h);
+    if(dx>0.0001) worstAngle = Math.max(worstAngle, Math.atan(dh/dx)*180/Math.PI);
+  }
+  const anySteep = worstAngle > OVERHANG_LIMIT_DEG;
+  document.getElementById('peWarn').textContent = anySteep
+    ? `This part of the curve is too steep (up to ${worstAngle.toFixed(0)}°, shown in red) — try flattening it or lengthening the vane.`
+    : '';
+
+  updateNodeInputs();
+}
+
+function selectNode(i){ selectedIdx = i; drawGraph(); }
+function updateNodeInputs(){
+  const n = nodes[selectedIdx];
+  document.getElementById('nodeX').value = n.x.toFixed(2);
+  document.getElementById('nodeH').value = n.h.toFixed(2);
+  const isEndpoint = selectedIdx===0 || selectedIdx===nodes.length-1;
+  document.getElementById('nodeX').disabled = isEndpoint;
+  document.getElementById('deleteNodeBtn').style.opacity = (isEndpoint || nodes.length<=2) ? 0.4 : 1;
+
+  const roundingInput = document.getElementById('nodeRounding');
+  const roundingVal = document.getElementById('nodeRoundingVal');
+  const roundingWrap = document.getElementById('nodeRoundingWrap');
+  if(isEndpoint){
+    roundingInput.disabled = true;
+    roundingVal.textContent = 'n/a';
+    roundingWrap.style.opacity = 0.4;
+  } else {
+    roundingInput.disabled = false;
+    roundingWrap.style.opacity = 1;
+    const r = n.round!==undefined ? n.round : DEFAULT_NODE_ROUND;
+    roundingInput.value = r;
+    roundingVal.textContent = r+'%';
+  }
+}
+
+function svgPointFromEvent(e){
+  const pt = svg.createSVGPoint();
+  pt.x = e.clientX; pt.y = e.clientY;
+  const ctm = svg.getScreenCTM().inverse();
+  return pt.matrixTransform(ctm);
+}
+
+svg.addEventListener('pointerdown', e=>{
+  if(!customMode) return;
+  if(e.target.tagName==='circle') return;
+  const p = svgPointFromEvent(e);
+  const xmm = snapX(pixToXmm(p.x)), hmm = snapH(pixToHmm(p.y));
+  let insertAt = nodes.length-1;
+  for(let i=0;i<nodes.length-1;i++){ if(xmm>=nodes[i].x && xmm<=nodes[i+1].x){ insertAt=i+1; break; } }
+  nodes.splice(insertAt, 0, {x:xmm, h:hmm, round:DEFAULT_NODE_ROUND});
+  selectedIdx = insertAt;
+  draggingNode = true;
+  markCustom();
+  drawGraph();
+});
+window.addEventListener('pointermove', e=>{
+  if(!draggingNode) return;
+  const p = svgPointFromEvent(e);
+  let xmm = snapX(pixToXmm(p.x)), hmm = snapH(pixToHmm(p.y));
+  const i = selectedIdx;
+  if(i>0 && i<nodes.length-1){
+    xmm = Math.max(nodes[i-1].x+1, Math.min(nodes[i+1].x-1, xmm));
+  } else if(i===0){ xmm = 0; }
+  else { xmm = currentLength(); }
+  nodes[i] = {x:xmm, h:hmm, round: nodes[i].round};
+  markCustom();
+  drawGraph();
+});
+window.addEventListener('pointerup', ()=>{
+  if(draggingNode){ draggingNode=false; generate(); }
+});
+
+document.getElementById('nodeX').addEventListener('change', e=>{
+  const i=selectedIdx; if(i===0||i===nodes.length-1) return;
+  let v = snapX(parseFloat(e.target.value));
+  v = Math.max(nodes[i-1].x+1, Math.min(nodes[i+1].x-1, v));
+  nodes[i].x = v; markCustom(); drawGraph(); generate();
+});
+document.getElementById('nodeH').addEventListener('change', e=>{
+  let v = Math.max(0, snapH(parseFloat(e.target.value)));
+  nodes[selectedIdx].h = v; markCustom(); drawGraph(); generate();
+});
+document.getElementById('deleteNodeBtn').addEventListener('click', ()=>{
+  if(selectedIdx===0 || selectedIdx===nodes.length-1 || nodes.length<=2) return;
+  nodes.splice(selectedIdx,1);
+  selectedIdx = Math.max(0, selectedIdx-1);
+  markCustom();
+  drawGraph(); generate();
+});
+document.getElementById('addNodeBtn').addEventListener('click', ()=>{
+  // Insert into the widest gap between existing nodes (most useful spot to
+  // add detail), starting the new point's height from wherever the current
+  // curve already sits there -- so it doesn't jump in as a jarring 0.
+  let widestIdx = 0, widest = -1;
+  for(let i=0;i<nodes.length-1;i++){
+    const gap = nodes[i+1].x - nodes[i].x;
+    if(gap>widest){ widest=gap; widestIdx=i; }
+  }
+  const xmm = snapX((nodes[widestIdx].x + nodes[widestIdx+1].x)/2);
+  rebuildSmoothedCurve();
+  const hmm = snapH(interpAt(xmm));
+  nodes.splice(widestIdx+1, 0, {x:xmm, h:hmm, round:DEFAULT_NODE_ROUND});
+  selectedIdx = widestIdx+1;
+  markCustom();
+  drawGraph(); generate();
+});
+document.getElementById('presetGhost').addEventListener('click', ()=> applyNamedPreset(NAMED_PRESETS.ghost, 'GHOST'));
+document.getElementById('presetImpact').addEventListener('click', ()=> applyNamedPreset(NAMED_PRESETS.impact, 'IMPACT'));
+document.getElementById('presetTarget').addEventListener('click', ()=> applyNamedPreset(NAMED_PRESETS.target, 'TARGET'));
+document.getElementById('presetCompact').addEventListener('click', ()=> applyNamedPreset(NAMED_PRESETS.compact, 'COMPACT'));
+document.getElementById('presetLongrange').addEventListener('click', ()=> applyNamedPreset(NAMED_PRESETS.longrange, 'LONGRANGE'));
+document.getElementById('presetDrift').addEventListener('click', ()=> applyNamedPreset(NAMED_PRESETS.drift, 'DRIFT (placeholder)'));
+document.getElementById('presetArc').addEventListener('click', ()=> applyNamedPreset(NAMED_PRESETS.arc, 'ARC (placeholder)'));
+document.getElementById('presetCrossover').addEventListener('click', ()=> applyNamedPreset(NAMED_PRESETS.crossover, 'CROSSOVER'));
+// Grey out any preset button whose NAMED_PRESETS entry has stock:false --
+// see CHANGE_SHAPE_STOCK_HERE at the top of NAMED_PRESETS.
+const PRESET_BUTTON_IDS = {
+  ghost:'presetGhost', impact:'presetImpact', target:'presetTarget', compact:'presetCompact',
+  longrange:'presetLongrange', drift:'presetDrift', arc:'presetArc', crossover:'presetCrossover'
+};
+Object.entries(PRESET_BUTTON_IDS).forEach(([key,id])=>{
+  const btn = document.getElementById(id);
+  if(btn && NAMED_PRESETS[key] && !NAMED_PRESETS[key].stock){
+    btn.classList.add('out-of-stock');
+    btn.title = (btn.title ? btn.title + ' -- ' : '') + 'Out of stock';
+  }
+});
+
+/* ===================== CUSTOM MODE LOCK ===================== */
+// Locked by default: customers pick a preset and the shape is fixed. Nodes
+// aren't draggable and the editing controls are hidden, so there's nothing
+// to accidentally break or be confused by. Clicking "Customize Shape"
+// unlocks full manual editing for anyone who wants it.
+let customMode = false;
+function applyCustomModeUI(){
+  const toggle = document.getElementById('customModeToggle');
+  const controls = document.getElementById('peControls');
+  const hintLocked = document.getElementById('peHintLocked');
+  const hintCustom = document.getElementById('peHintCustom');
+  const modeTag = document.getElementById('peModeTag');
+  if(customMode){
+    toggle.textContent = '🔒 Lock Shape (back to presets)';
+    toggle.classList.add('active');
+    controls.style.display = 'flex';
+    hintLocked.style.display = 'none';
+    hintCustom.style.display = 'block';
+    modeTag.textContent = 'custom';
+  } else {
+    toggle.textContent = '🔓 Customize Shape';
+    toggle.classList.remove('active');
+    controls.style.display = 'none';
+    hintLocked.style.display = 'block';
+    hintCustom.style.display = 'none';
+    modeTag.textContent = 'preset';
+  }
+  drawGraph();
+}
+document.getElementById('customModeToggle').addEventListener('click', ()=>{
+  customMode = !customMode;
+  applyCustomModeUI();
+});
+
+let lastLength = 70;
+document.getElementById('vaneLength').addEventListener('change', e=>{
+  const newLen = parseFloat(e.target.value)||70;
+  const scale = newLen/lastLength;
+  nodes = nodes.map(n=>({x:snapX(n.x*scale), h:n.h}));
+  nodes[0].x = 0; nodes[nodes.length-1].x = newLen;
+  lastLength = newLen;
+  drawGraph(); generate();
+});
+
+/* ===================== GEOMETRY ===================== */
+let allTriangles = [];
+function pushTri(p1,p2,p3){ allTriangles.push([p1,p2,p3]); }
+function pushQuad(p1,p2,p3,p4){ pushTri(p1,p2,p3); pushTri(p1,p3,p4); }
+
+function buildTube(Rin,Rout,length,segments){
+  for(let i=0;i<segments;i++){
+    const a0=i/segments*Math.PI*2, a1=(i+1)/segments*Math.PI*2;
+    const o0=[Rout*Math.cos(a0),Rout*Math.sin(a0),0], o1=[Rout*Math.cos(a1),Rout*Math.sin(a1),0];
+    const o0b=[Rout*Math.cos(a0),Rout*Math.sin(a0),length], o1b=[Rout*Math.cos(a1),Rout*Math.sin(a1),length];
+    const i0=[Rin*Math.cos(a0),Rin*Math.sin(a0),0], i1=[Rin*Math.cos(a1),Rin*Math.sin(a1),0];
+    const i0b=[Rin*Math.cos(a0),Rin*Math.sin(a0),length], i1b=[Rin*Math.cos(a1),Rin*Math.sin(a1),length];
+    pushQuad(o0,o1,o1b,o0b);
+    pushQuad(i1,i0,i0b,i1b);
+    pushQuad(i0,i1,o1,o0);
+    pushQuad(o0b,o1b,i1b,i0b);
+  }
+}
+
+function buildBlade(baseAngle0, twistTotalRad, dirSign, outerR, thickness, overlap, length, segments, tipThickFactor){
+  const baseR = outerR - overlap;
+  // tipThickFactor is passed in already clamped to a printable floor -- see
+  // the caller in generate(), which enforces a hard minimum of ~0.35mm
+  // absolute tip thickness regardless of what the taper slider requests.
+  // A blade tapering to an EXACT knife-edge coincidence with the tube surface
+  // (h=0 precisely) is fragile: two independently-generated solids meeting at
+  // a razor-thin, floating-point-exact boundary can confuse a slicer's mesh
+  // resolution right at that seam. Instead, truncate the taper at a small but
+  // real minimum height (well under printable resolution, so no visible
+  // change) and close it with an actual non-degenerate cap face there. The
+  // untruncated sliver near each tip is already hidden inside the tube's own
+  // solid material (baseR sits inside the tube's outer radius), so nothing
+  // is lost -- this just avoids ever asking the slicer to resolve a
+  // zero-thickness boundary.
+  const MIN_H = 0.05;
+
+  const cross = [];
+  for(let i=0;i<=segments;i++){
+    const t=i/segments, z=t*length;
+    const twist = twistTotalRad*t*dirSign;
+    const ang = baseAngle0+twist;
+    const rad=[Math.cos(ang),Math.sin(ang)], tan=[-Math.sin(ang),Math.cos(ang)];
+    const h = interpAt(z);
+    const tipR = baseR+h;
+    const halfT=thickness/2, halfTtip=halfT*tipThickFactor;
+    cross.push({
+      h,
+      baseL:[rad[0]*baseR+tan[0]*halfT, rad[1]*baseR+tan[1]*halfT, z],
+      baseRp:[rad[0]*baseR-tan[0]*halfT, rad[1]*baseR-tan[1]*halfT, z],
+      tipL:[rad[0]*tipR+tan[0]*halfTtip, rad[1]*tipR+tan[1]*halfTtip, z],
+      tipRp:[rad[0]*tipR-tan[0]*halfTtip, rad[1]*tipR-tan[1]*halfTtip, z]
+    });
+  }
+
+  let start = cross.findIndex(c => c.h > MIN_H);
+  let end = cross.length-1 - [...cross].reverse().findIndex(c => c.h > MIN_H);
+  if(start===-1 || start>end) return; // fin never rises above the minimum -- nothing to draw
+
+  const first = cross[start], last = cross[end];
+  pushQuad(first.baseRp, first.baseL, first.tipL, first.tipRp); // real front cap
+  let prev = first;
+  for(let i=start+1; i<=end; i++){
+    const cur = cross[i];
+    pushQuad(prev.baseL,cur.baseL,cur.tipL,prev.tipL);
+    pushQuad(prev.tipRp,cur.tipRp,cur.baseRp,prev.baseRp);
+    pushQuad(prev.tipL,cur.tipL,cur.tipRp,prev.tipRp);
+    pushQuad(prev.baseRp,cur.baseRp,cur.baseL,prev.baseL);
+    prev = cur;
+  }
+  pushQuad(last.tipRp,last.tipL,last.baseL,last.baseRp); // real back cap
+}
+
+function generate(){
+  allTriangles=[];
+  rebuildSmoothedCurve();
+  const length = currentLength();
+  const shaftOD = parseFloat(document.getElementById('shaftOD').value);
+  const clearance = parseFloat(document.getElementById('clearance').value);
+  const wrapThickness = state.usingWraps==='yes' ? (parseFloat(document.getElementById('wrapThickness').value)||0) : 0;
+  const effectiveShaftOD = shaftOD + 2*wrapThickness;
+  const wall = state.vaneType==='standard'?0.60:0.35;
+  const fletchThickness = wall;
+  const numFletches = parseInt(state.fletchCount);
+  const helicalDeg = parseFloat(document.getElementById('helical').value);
+  const dirSign = state.helicalDir==='right'?1:-1;
+
+  // Tip taper: 100 on the slider = no taper (uniform thickness). Below that,
+  // thin the tip -- but never past a ~0.35mm absolute floor, which is a
+  // realistic minimum reliable wall thickness on a 0.4mm nozzle. The floor is
+  // enforced in mm, not as a raw percentage, so it stays safe no matter what
+  // wall thickness is selected.
+  const MIN_TIP_MM = 0.35;
+  const taperSliderFrac = parseFloat(document.getElementById('tipTaper').value)/100;
+  const floorFactor = Math.min(1, MIN_TIP_MM/wall);
+  const tipThickFactor = Math.max(taperSliderFrac, floorFactor);
+
+  const Rin=(effectiveShaftOD+clearance)/2, Rout=Rin+wall, overlap=wall*0.6;
+  buildTube(Rin,Rout,length,56);
+  const twistRad = helicalDeg*Math.PI/180;
+  for(let f=0; f<numFletches; f++){
+    const baseAngle = f*(Math.PI*2/numFletches);
+    buildBlade(baseAngle, twistRad, dirSign, Rout, fletchThickness, overlap, length, 90, tipThickFactor);
+  }
+
+  modelGroup.clear();
+  const positions=[], normals=[];
+  for(const [p1,p2,p3] of allTriangles){
+    const ux=p2[0]-p1[0], uy=p2[1]-p1[1], uz=p2[2]-p1[2];
+    const vx=p3[0]-p1[0], vy=p3[1]-p1[1], vz=p3[2]-p1[2];
+    let nx=uy*vz-uz*vy, ny=uz*vx-ux*vz, nz=ux*vy-uy*vx;
+    const len=Math.hypot(nx,ny,nz)||1; nx/=len; ny/=len; nz/=len;
+    positions.push(...p1,...p2,...p3);
+    normals.push(nx,ny,nz, nx,ny,nz, nx,ny,nz);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions,3));
+  geo.setAttribute('normal', new THREE.Float32BufferAttribute(normals,3));
+  const mat = new THREE.MeshStandardMaterial({color: parseInt(state.color.replace('#',''),16), metalness:0.15, roughness:0.55, side:THREE.DoubleSide});
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.z = -length/2;
+  modelGroup.add(mesh);
+
+  document.getElementById('statOD').textContent = (Rout*2).toFixed(2);
+  document.getElementById('statID').textContent = (Rin*2).toFixed(2);
+  document.getElementById('statTris').textContent = allTriangles.length;
+
+  updatePricing();
+
+  const warnEl = document.getElementById('warn');
+  if(fletchThickness < 0.32){
+    warnEl.style.display='block';
+    warnEl.textContent = 'Warning: fletch thickness under ~0.32mm may not print reliably — consider a smaller nozzle/line width, or increase thickness.';
+  } else warnEl.style.display='none';
+}
+
+/* ===================== PRICING & WEIGHT ===================== */
+// Weight: computed from actual mesh volume (signed tetrahedron sum) x TPU density.
+// Pricing: modeled off EasyVanes.com.au's published catalog (observed range ~$54-$70
+// per pack of 24 depending on length/fletch count), scaled here by length, fletch
+// count, helical twist and fin height. Treat as an estimate, not a real quote.
+function meshVolumeMm3(){
+  let vol=0;
+  for(const [p1,p2,p3] of allTriangles){
+    vol += (p1[0]*(p2[1]*p3[2]-p2[2]*p3[1])
+          - p1[1]*(p2[0]*p3[2]-p2[2]*p3[0])
+          + p1[2]*(p2[0]*p3[1]-p2[1]*p3[0]))/6;
+  }
+  return Math.abs(vol);
+}
+function updatePricing(){
+  const length = currentLength();
+  const numFletches = parseInt(state.fletchCount);
+  const pack = state.packSize==='24' ? 24 : 18;
+
+  // Calibrated to match the storefront exactly: length + fletch count set
+  // the base 18-pack price ($38-$50), and switching to 24 scales that
+  // price up proportionally: 24-pack = (18-pack/18*3) + 18-pack.
+  const lengthTerm = 8 * (length - 35) / (100 - 35);
+  const fletchTerm = 4 * Math.max(0, numFletches - 3);
+  const price18 = Math.min(50, Math.max(38, 38 + lengthTerm + fletchTerm));
+  const total = Math.round(pack === 24 ? (price18/18*3) + price18 : price18);
+
+  const volumeMm3 = meshVolumeMm3();
+  const grams = volumeMm3/1000*1.21; // ~1.21 g/cm3, typical 95A TPU filament
+  const grains = grams*15.4324;
+
+  document.getElementById('priceVal').textContent = '$'+total;
+  document.getElementById('packLabelSmall').textContent = pack;
+  document.getElementById('weightVal').textContent = grains.toFixed(0);
+}
+
+document.getElementById('generateBtn').addEventListener('click', generate);
+
+/* ===================== STL EXPORT ===================== */
+function exportSTL(filenameOverride){
+  let out='solid custom_vane\n';
+  for(const [p1,p2,p3] of allTriangles){
+    const ux=p2[0]-p1[0], uy=p2[1]-p1[1], uz=p2[2]-p1[2];
+    const vx=p3[0]-p1[0], vy=p3[1]-p1[1], vz=p3[2]-p1[2];
+    let nx=uy*vz-uz*vy, ny=uz*vx-ux*vz, nz=ux*vy-uy*vx;
+    const len=Math.hypot(nx,ny,nz)||1; nx/=len; ny/=len; nz/=len;
+    out += `facet normal ${nx.toFixed(6)} ${ny.toFixed(6)} ${nz.toFixed(6)}\n outer loop\n`;
+    for(const p of [p1,p2,p3]) out += `  vertex ${p[0].toFixed(5)} ${p[1].toFixed(5)} ${p[2].toFixed(5)}\n`;
+    out += ' endloop\nendfacet\n';
+  }
+  out += 'endsolid custom_vane\n';
+  downloadBlob(out, filenameOverride || buildSTLFilename(), 'text/plain');
+}
+
+// Filename format: (#vanes)-(length)-(shaft diameter)-(profile)-(color)-(pack size)-(quantity).stl
+function buildSTLFilename(){
+  const fletchCount = state.fletchCount;
+  const length = document.getElementById('vaneLength').value;
+  const shaftOD = document.getElementById('shaftOD').value;
+  const profile = currentProfileLabel; // GHOST/IMPACT/TARGET/COMPACT/LONGRANGE/DRIFT/ARC/CROSSOVER, or CUSTOM once hand-edited
+  const colorName = (COLORS.find(c => c.hex === state.color) || {name:'Color'}).name;
+  const packSize = state.packSize;
+  const quantity = document.getElementById('orderQuantity').value || '1';
+
+  // Keep the filename filesystem-safe: strip anything that isn't a letter,
+  // number, dot, or dash, and collapse whitespace to nothing.
+  const clean = s => String(s).replace(/\s+/g,'').replace(/[^a-zA-Z0-9.\-]/g,'');
+
+  const parts = [fletchCount, length, shaftOD, profile, colorName, packSize, quantity].map(clean);
+  return parts.join('-') + '.stl';
+}
+function downloadBlob(content, filename, type){
+  const blob = new Blob([content], {type});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// Twist test batch: 6 fixed IMPACT-profile files at 0/5/9/13/17/21deg,
+// all on the same 53mm length, so they're a true apples-to-apples set for
+// figuring out where visible twist starts and where it starts failing to
+// print. Saves your current working state first and restores it after,
+// so running this doesn't disturb whatever you're actively designing.
+function downloadTwistTestBatch(){
+  const savedNodes = JSON.parse(JSON.stringify(nodes));
+  const savedLength = document.getElementById('vaneLength').value;
+  const savedHelical = document.getElementById('helical').value;
+  const savedLabel = currentProfileLabel;
+
+  const testLevels = [[0,0],[1,5],[2,9],[3,13],[4,17],[5,21]];
+  let i = 0;
+  function next(){
+    if(i>=testLevels.length){
+      nodes = savedNodes;
+      document.getElementById('vaneLength').value = savedLength;
+      lastLength = parseFloat(savedLength);
+      document.getElementById('helical').value = savedHelical;
+      document.getElementById('helicalVal').textContent = savedHelical+'°';
+      currentProfileLabel = savedLabel;
+      drawGraph(); generate();
+      return;
+    }
+    const [level, deg] = testLevels[i];
+    document.getElementById('vaneLength').value = 53;
+    lastLength = 53;
+    applyNamedPreset(NAMED_PRESETS.impact, 'IMPACT');
+    document.getElementById('helical').value = deg;
+    document.getElementById('helicalVal').textContent = deg+'°';
+    generate();
+    exportSTL(`twist-test-level${level}-${deg}deg-IMPACT.stl`);
+    i++;
+    setTimeout(next, 400); // stagger so the browser doesn't treat rapid downloads as spam
+  }
+  next();
+}
+document.getElementById('downloadBtn').addEventListener('click', ()=>exportSTL());
+document.getElementById('twistTestBtn').addEventListener('click', downloadTwistTestBatch);
+
+/* ===================== PROFILE EXPORT / IMPORT ===================== */
+function statusMsg(msg, isError){
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.style.color = isError ? '#ff8a6a' : '#5c9a5f';
+  setTimeout(()=>{ if(el.textContent===msg) el.textContent=''; }, 4000);
+}
+function currentProfileData(name){
+  return {
+    displayName: name,
+    vaneLength: currentLength(),
+    shaftOD: parseFloat(document.getElementById('shaftOD').value),
+    clearance: parseFloat(document.getElementById('clearance').value),
+    usingWraps: state.usingWraps,
+    wrapThickness: parseFloat(document.getElementById('wrapThickness').value),
+    vaneType: state.vaneType,
+    fletchCount: state.fletchCount,
+    helical: document.getElementById('helical').value,
+    helicalDir: state.helicalDir,
+    color: state.color,
+    packSize: state.packSize,
+    tipTaper: document.getElementById('tipTaper').value,
+    nodes: nodes
+  };
+}
+function applyProfileData(data){
+  document.getElementById('vaneLength').value = data.vaneLength;
+  lastLength = data.vaneLength;
+  document.getElementById('shaftOD').value = data.shaftOD;
+  document.getElementById('clearance').value = data.clearance;
+  document.getElementById('helical').value = data.helical;
+  document.getElementById('helicalVal').textContent = data.helical+'°';
+  // Max fletch count is 4 -- clamp here too, in case this is an older saved
+  // profile from before that cap existed.
+  state.vaneType = data.vaneType; state.fletchCount = clampFletchCount(data.fletchCount); state.helicalDir = data.helicalDir;
+  if(data.color) state.color = data.color;
+  if(data.packSize) state.packSize = data.packSize;
+  if(data.tipTaper!==undefined){ document.getElementById('tipTaper').value = data.tipTaper; updateTipTaperLabel(); }
+  if(data.usingWraps!==undefined){
+    state.usingWraps = data.usingWraps;
+    document.querySelectorAll('.btn[data-group="usingWraps"]').forEach(b=>b.classList.toggle('active', b.dataset.val===data.usingWraps));
+    document.getElementById('wrapThicknessRow').style.display = (data.usingWraps==='yes') ? 'block' : 'none';
+  }
+  if(data.wrapThickness!==undefined) document.getElementById('wrapThickness').value = data.wrapThickness;
+  document.querySelectorAll('.btn[data-group="vaneType"]').forEach(b=>b.classList.toggle('active', b.dataset.val===data.vaneType));
+  document.querySelectorAll('.btn[data-group="fletchCount"]').forEach(b=>{ b.classList.toggle('active', b.dataset.val===data.fletchCount); b.classList.toggle('green', b.dataset.val===data.fletchCount); });
+  document.querySelectorAll('.btn[data-group="helicalDir"]').forEach(b=>{ b.classList.toggle('active', b.dataset.val===data.helicalDir); b.classList.toggle('green', b.dataset.val===data.helicalDir); });
+  if(data.packSize) document.querySelectorAll('.btn[data-group="packSize"]').forEach(b=>b.classList.toggle('active', b.dataset.val===data.packSize));
+  if(data.color){ colorSelect.value = data.color; updateColorSwatchPreview(); }
+  // Backward compatibility: older exported files stored one global rounding
+  // value instead of per-node. If nodes don't already carry their own
+  // .round, fall back to that old global value (or the default).
+  const legacyRound = data.cornerRounding!==undefined ? data.cornerRounding : DEFAULT_NODE_ROUND;
+  nodes = data.nodes.map(n => ({ x:n.x, h:n.h, round: n.round!==undefined ? n.round : legacyRound }));
+  selectedIdx = Math.min(selectedIdx, nodes.length-1);
+  customMode = true;
+  applyCustomModeUI();
+  drawGraph(); generate();
+}
+
+document.getElementById('exportBtn').addEventListener('click', ()=>{
+  const name = document.getElementById('profileName').value.trim() || 'vane_profile';
+  const data = currentProfileData(name);
+  downloadBlob(JSON.stringify(data,null,2), name.replace(/[^a-z0-9_-]+/gi,'_')+'.json', 'application/json');
+  statusMsg('Exported "'+name+'.json"');
+});
+document.getElementById('importBtn').addEventListener('click', ()=> document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = evt=>{
+    try{
+      const data = JSON.parse(evt.target.result);
+      document.getElementById('profileName').value = data.displayName || file.name.replace('.json','');
+      applyProfileData(data);
+      statusMsg('Imported "'+(data.displayName||file.name)+'"');
+    }catch(err){ statusMsg('Invalid profile file', true); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+/* ===================== ORDER IMPORT (paste from checkout email) =====================
+   The storefront's checkout email ends with a "raw profile JSON (backup only)" block --
+   an array of per-item objects, one per vane config in that order. This lets you paste
+   that block directly instead of retyping every field from the email by hand. Field
+   names are matched to the storefront's export (see index.html buildItemProfileData) --
+   if that shape ever changes, update the mapping in applyOrderItem below to match. */
+let orderItems = [];
+let orderItemIndex = 0;
+
+function applyOrderItem(item, index, total){
+  // vaneLength has to be set before generating the preset curve, since the
+  // preset scaler reads the current length off the input live.
+  document.getElementById('vaneLength').value = item.vaneLength;
+  lastLength = item.vaneLength;
+  document.getElementById('shaftOD').value = item.shaftOD;
+
+  const presetKey = String(item.shape||'').toLowerCase();
+  const preset = NAMED_PRESETS[presetKey];
+  if(preset){
+    applyNamedPreset(preset, presetKey.toUpperCase());
+  }else{
+    statusMsg('Unrecognized shape "'+item.shape+'" -- curve left as-is, check manually', true);
+  }
+
+  // Max fletch count is 4 -- clamp here too, in case this is an older order
+  // export from before that cap existed.
+  state.fletchCount = clampFletchCount(item.fletchCount!==undefined ? item.fletchCount : state.fletchCount);
+  state.helicalDir = item.helicalDir || 'right';
+  state.vaneType = item.weightClass || 'standard'; // storefront calls this weightClass, Studio calls it vaneType
+  if(item.packSize) state.packSize = String(item.packSize);
+  if(item.color) state.color = item.color;
+  state.usingWraps = item.usingWraps || 'no';
+
+  document.getElementById('helical').value = item.helical!==undefined ? item.helical : 0;
+  document.getElementById('helicalVal').textContent = document.getElementById('helical').value+'°';
+
+  document.querySelectorAll('.btn[data-group="vaneType"]').forEach(b=>b.classList.toggle('active', b.dataset.val===state.vaneType));
+  document.querySelectorAll('.btn[data-group="fletchCount"]').forEach(b=>{ b.classList.toggle('active', b.dataset.val===state.fletchCount); b.classList.toggle('green', b.dataset.val===state.fletchCount); });
+  document.querySelectorAll('.btn[data-group="helicalDir"]').forEach(b=>{ b.classList.toggle('active', b.dataset.val===state.helicalDir); b.classList.toggle('green', b.dataset.val===state.helicalDir); });
+  document.querySelectorAll('.btn[data-group="packSize"]').forEach(b=>b.classList.toggle('active', b.dataset.val===state.packSize));
+  document.querySelectorAll('.btn[data-group="usingWraps"]').forEach(b=>b.classList.toggle('active', b.dataset.val===state.usingWraps));
+  document.getElementById('wrapThicknessRow').style.display = (state.usingWraps==='yes') ? 'block' : 'none';
+  if(item.wrapThickness) document.getElementById('wrapThickness').value = item.wrapThickness;
+  if(item.packSize) document.getElementById('packLabelSmall').textContent = item.packSize;
+
+  if(state.color){ colorSelect.value = state.color; updateColorSwatchPreview(); }
+  if(typeof updateTipTaperLabel==='function') updateTipTaperLabel();
+
+  document.getElementById('profileName').value = item.displayName || ('Order item '+(index+1));
+
+  drawGraph(); generate();
+
+  const qtyNote = item.quantity && item.quantity>1 ? ' -- customer ordered '+item.quantity+' pack(s), remember to print enough' : '';
+  const navNote = total>1 ? ' (item '+(index+1)+' of '+total+')' : '';
+
+  const banner = document.getElementById('unmatchedArrowBanner');
+  if(item.unlistedArrow){
+    // Not in the storefront's shaft database -- whatever OD is sitting in
+    // the field right now is just a leftover default, not a real
+    // measurement. This banner stays up (unlike statusMsg, which clears
+    // itself) until you load a different item, so it can't get missed.
+    banner.style.display = 'block';
+    banner.innerHTML = '⚠ Not matched to the shaft database — customer shoots: <b>"'+item.unlistedArrow+'"</b>. Confirm the real OD before generating this STL; the '+item.shaftOD+'mm currently loaded is only a placeholder.';
+    statusMsg('⚠ UNMATCHED ARROW -- confirm real OD before printing!'+navNote, true);
+  }else{
+    banner.style.display = 'none';
+    statusMsg('Loaded "'+(item.displayName||presetKey)+'"'+navNote+qtyNote);
+  }
+
+  document.getElementById('orderItemLabel').textContent = total>1
+    ? 'Item '+(index+1)+' of '+total+' — '+(item.displayName||presetKey)
+    : '';
+}
+
+function loadOrderFromPaste(){
+  const raw = document.getElementById('orderPasteBox').value.trim();
+  if(!raw){ statusMsg('Paste an order JSON block first', true); return; }
+  let data;
+  try{ data = JSON.parse(raw); }
+  catch(err){ statusMsg('Could not read that as JSON -- check you copied the whole block', true); return; }
+
+  orderItems = Array.isArray(data) ? data : [data];
+  if(orderItems.length===0){ statusMsg('That JSON had no items in it', true); return; }
+  orderItemIndex = 0;
+  applyOrderItem(orderItems[0], 0, orderItems.length);
+  document.getElementById('orderNavRow').style.display = orderItems.length>1 ? 'flex' : 'none';
+}
+
+document.getElementById('loadOrderBtn').addEventListener('click', loadOrderFromPaste);
+document.getElementById('prevItemBtn').addEventListener('click', ()=>{
+  if(orderItems.length<2) return;
+  orderItemIndex = (orderItemIndex-1+orderItems.length) % orderItems.length;
+  applyOrderItem(orderItems[orderItemIndex], orderItemIndex, orderItems.length);
+});
+document.getElementById('nextItemBtn').addEventListener('click', ()=>{
+  if(orderItems.length<2) return;
+  orderItemIndex = (orderItemIndex+1) % orderItems.length;
+  applyOrderItem(orderItems[orderItemIndex], orderItemIndex, orderItems.length);
+});
+
+/* ===================== PANEL RESIZE (drag handle) ===================== */
+const profileEditorEl = document.getElementById('profileEditor');
+const resizeHandleEl = document.getElementById('resizeHandle');
+let panelHeightPct = 34;
+const PANEL_MIN_VH = 16, PANEL_MAX_VH = 62;
+
+function setPanelHeightPercent(pct){
+  panelHeightPct = Math.max(PANEL_MIN_VH, Math.min(PANEL_MAX_VH, pct));
+  profileEditorEl.style.height = panelHeightPct+'vh';
+  requestAnimationFrame(()=>{
+    resizeRenderer();
+    drawGraph();
+  });
+}
+
+let resizingPanel = false, resizeStartY = 0, resizeStartPct = 34;
+resizeHandleEl.addEventListener('pointerdown', e=>{
+  resizingPanel = true;
+  resizeStartY = e.clientY;
+  resizeStartPct = panelHeightPct;
+  resizeHandleEl.classList.add('dragging');
+  document.body.style.userSelect = 'none';
+});
+window.addEventListener('pointermove', e=>{
+  if(!resizingPanel) return;
+  const deltaY = e.clientY - resizeStartY;
+  const deltaPct = -(deltaY / window.innerHeight) * 100;
+  setPanelHeightPercent(resizeStartPct + deltaPct);
+});
+window.addEventListener('pointerup', ()=>{
+  if(resizingPanel){
+    resizingPanel = false;
+    resizeHandleEl.classList.remove('dragging');
+    document.body.style.userSelect = '';
+  }
+});
+
+/* ===================== INIT ===================== */
+setPanelHeightPercent(panelHeightPct);
+resizeRenderer();
+applyNamedPreset(NAMED_PRESETS.impact);
+applyCustomModeUI();
+</script>
+</body>
+</html>
