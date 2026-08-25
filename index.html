@@ -880,7 +880,7 @@
     <div class="field-grid">
       <div class="field">
         <label>Offset <span class="opt" id="offsetSliderVal">0°</span></label>
-        <input type="range" id="offsetSlider" min="0" max="6" step="0.1" value="0" style="width:100%;">
+        <input type="range" id="offsetSlider" min="0" max="3" step="0.1" value="0" style="width:100%;">
         <div class="help">A rotation around the shaft, same as Helical Twist, specified as one flat total angle instead of scaling with vane length. At this range it reads visually as a near-straight tilt rather than an obvious spiral. Combines with Helical Twist below into one total twist.</div>
       </div>
       <div class="field">
@@ -1040,7 +1040,7 @@
       <div class="step-eyebrow">A Third and Fourth Dial</div>
       <h2>Offset &amp; Helical Twist</h2>
       <p>Where shape gives you a fixed amount of steering, <b>offset</b> and <b>helical twist</b> are the dials you turn to add more — both spin the arrow in flight, which helps drive a broadhead back on line faster than a straight fletch alone. They do it two different ways, and you can use either one alone or combine them.</p>
-      <p><b>Offset</b> is a rotation around the shaft, same as helical twist, just expressed as one flat total angle instead of scaling with vane length. It's a single angle, from <b>0° up to 6°</b>, that stays the same no matter how long the vane is. At the lower end of that range it reads visually as a near-straight tilt rather than an obvious spiral — picture a straight line drawn on a piece of paper wrapped around a tube: at a shallow angle it still looks straight from the side, even though it's technically following the tube's curve.</p>
+      <p><b>Offset</b> is a rotation around the shaft, same as helical twist, just expressed as one flat total angle instead of scaling with vane length. It's a single angle, from <b>0° up to 3°</b>, that stays the same no matter how long the vane is. At that small a range it reads visually as a near-straight tilt rather than an obvious spiral — picture a straight line drawn on a piece of paper wrapped around a tube: at a shallow angle it still looks straight from the side, even though it's technically following the tube's curve.</p>
       <p><b>Helical twist</b> is the same kind of rotation, just usually a bigger one and specified per inch of vane length instead of as a flat total: from <b>Straight (0°/in) up to 25°/in</b>. Because it's specified as a rate, the total amount of twist scales with how long a vane you've picked — a longer vane ends up with more total twist at the same setting than a shorter one does. Offset and helical combine into one continuous twist along the vane, so you can dial in either alone or both together.</p>
       <p>Both tradeoff the same way — more of either means more correction, but also more drag and more noise off the string. Higher settings lean harder into correction; lower settings lean toward speed and quiet. Set them independently, or dial in both together for a stronger effect than either gives alone — every order is printed to your exact combination, shape by shape.</p>
       <p>One more thing worth knowing: some vane makers and jig manufacturers use a flat, length-independent angle for what we call helical twist (Bohning's system works this way), which isn't directly comparable to our degrees-per-inch number. If you're used to comparing flat-degree specs from another vane, don't assume the numbers translate directly — ask if you're not sure how a given setting will come out on your specific vane length.</p>
@@ -1219,7 +1219,7 @@
 <footer>
   <div class="fmark">MOSER ARCHERY</div>
   <div>Custom-fit vanes, printed to order.</div>
-  <div class="footer-contact"><a href="mailto:isaacmoser6@gmail.com" id="footerContactLink">Contact Us</a></div>
+  <div class="footer-contact"><a href="mailto:moserarchery.orders@gmail.com" id="footerContactLink">Contact Us</a></div>
 </footer>
 
 <div id="stickyBar">
@@ -1931,7 +1931,7 @@ function activeRounding(){
 // This is our own simple linear scaling for helical (not necessarily
 // identical to any specific jig manufacturer's own per-inch formula, which
 // can be diameter-dependent) -- chosen because it's the setup validated on
-// our own print testing. Range is 0-25 deg/in for helical, 0-6 deg for
+// our own print testing. Range is 0-25 deg/in for helical, 0-3 deg for
 // offset. See the How To page's Helical Twist section for the
 // customer-facing version of this note.
 //
@@ -1942,13 +1942,14 @@ function activeRounding(){
 // offset existed as a parameter and before the offset-as-rotation fix
 // (offset was briefly a raw sideways shear, which detached the fins from
 // the tube -- see buildFin). Ranges were bumped repeatedly after that at
-// Isaac's request -- most recently 0-10 -> 0-25 deg/in for helical (offset
-// stayed at 0-6). At the new max, total twist runs 55-96deg depending on
-// vane length -- 2-3x the validated 28-32deg ceiling, confirmed explicitly
-// by Isaac after being shown those numbers. NOTHING near this range has
-// been printed. Run Studio's twist-test batch (needs updating to the new
-// max -- it currently only sweeps up to the prior ceiling) before treating
-// any of this as viable, let alone shippable.
+// Isaac's request -- offset went 0-3 -> 0-6 -> back to 0-3, helical went
+// 0-5 -> 0-10 -> 0-25 deg/in. At the current max (offset 3 + helical 25),
+// total twist runs 52-93deg depending on vane length -- well past the
+// validated 28-32deg ceiling, confirmed explicitly by Isaac after being
+// shown those numbers. NOTHING near this range has been printed. Run
+// Studio's twist-test batch (needs updating to the new max -- it currently
+// only sweeps up to the prior ceiling) before treating any of this as
+// viable, let alone shippable.
 
 /* =====================================================================
    3D GEOMETRY (visual preview only)
