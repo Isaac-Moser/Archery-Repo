@@ -1859,6 +1859,14 @@ const SHAPES = {
   vandor: { name:'VANDOR', desc:'Rounded, back-loaded peak for steady correction.', rounding:100, stock:true,
     nodes:[{x:0,h:2.3},{x:8,h:8.3},{x:20,h:12},{x:65,h:0.4}] }
 };
+// Shared reference dimensions for miniCurveSVG -- computed once across all
+// stock shapes so every silhouette on the shape-picker and Compare cards
+// scales against the SAME length/height, instead of each shape stretching
+// to fill its own box independently (which made a 50mm shape and a 91mm
+// shape render at identical visual width -- exactly backwards for a page
+// meant to show how the shapes actually differ).
+const SHAPE_MAX_LEN = Math.max(...Object.values(SHAPES).map(s => s.nodes[s.nodes.length-1].x));
+const SHAPE_MAX_H = Math.max(...Object.values(SHAPES).map(s => Math.max(...s.nodes.map(n=>n.h))));
 // To take a color out of stock, change its "stock:true" to "stock:false" below.                                  ******CHANGE_STOCK_HERE******
 // It'll gray out and cross itself out automatically on the site.
 const COLORS = [
@@ -2382,14 +2390,22 @@ document.getElementById('cartCheckoutBtn').addEventListener('click', ()=>{
 function miniCurveSVG(nodes, rounding){
   const curve = smoothCurve(nodes, rounding);
   const len = nodes[nodes.length-1].x;
-  const maxH = Math.max(...nodes.map(n=>n.h)) || 1;
   const W=100, H=32, pad=2;
+  // Scale against the shared SHAPE_MAX_LEN/SHAPE_MAX_H (all 8 stock shapes),
+  // not this shape's own length/height -- so a short vane actually renders
+  // narrower than a long one instead of both stretching to fill the box.
+  // Falls back to this curve's own dimensions if the globals aren't defined
+  // yet (e.g. called before SHAPES finishes loading) or for a custom curve
+  // that might exceed them.
+  const refLen = (typeof SHAPE_MAX_LEN!=='undefined' ? Math.max(SHAPE_MAX_LEN, len) : len) || 1;
+  const refH = (typeof SHAPE_MAX_H!=='undefined' ? Math.max(SHAPE_MAX_H, Math.max(...nodes.map(n=>n.h))) : Math.max(...nodes.map(n=>n.h))) || 1;
   const pts = curve.map(n=>{
-    const x = pad + (n.x/len)*(W-2*pad);
-    const y = H-pad - (n.h/maxH)*(H-2*pad);
+    const x = pad + (n.x/refLen)*(W-2*pad);
+    const y = H-pad - (n.h/refH)*(H-2*pad);
     return `${x.toFixed(1)},${y.toFixed(1)}`;
   }).join(' ');
-  const baseline = `${pad},${H-pad} ${pts} ${W-pad},${H-pad}`;
+  const xEnd = pad + (len/refLen)*(W-2*pad);
+  const baseline = `${pad},${H-pad} ${pts} ${xEnd.toFixed(1)},${H-pad}`;
   return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><polygon points="${baseline}" fill="var(--accent-soft)" stroke="var(--steel)" stroke-width="1.4" stroke-linejoin="round"/></svg>`;
 }
 
