@@ -5,7 +5,7 @@
  Ctrl+F any of the CAPITALIZED terms below to jump toward that part of the file.
 =================================================================================
 
-   NAMED_PRESETS         - preset shape data (GHOST/IMPACT/TARGET/COMPACT/LONGRANGE/DRIFT/ARC/CROSSOVER)
+   NAMED_PRESETS         - preset shape data (GHOST/IMPACT/TARGET/COMPACT/LONGRANGE/DRIFT/VANDOR/CROSSOVER)
    applyNamedPreset()     - loads a preset's shape + sets Vane Length to match
    CHANGE_SHAPE_STOCK_HERE - grey out / disable a preset button, same keyword as the storefront
 
@@ -304,12 +304,21 @@
   </div>
 
   <div class="group">
-    <label>Helical Twist (degrees, flat total) <span style="font-weight:400; color:var(--muted);">— matches the live customer-facing range, 0-30°</span></label>
+    <label>Offset (deg, flat) <span style="font-weight:400; color:var(--muted);">— matches the live customer-facing range, 0-3°</span></label>
     <div class="slider-row">
-      <input type="range" id="helical" min="0" max="30" step="1" value="0">
-      <div class="val" id="helicalVal">0°</div>
+      <input type="range" id="offset" min="0" max="3" step="0.1" value="0">
+      <div class="val" id="offsetVal">0°</div>
     </div>
-    <div style="font-size:10px; color:var(--muted); margin-top:4px;">Up to 30° is validated and live on the storefront (retested at 28-32° on dry filament with tuned retraction/cooling — printed clean, same quality as the low-twist batches). An earlier failure at 25° traced back to moisture-degraded filament, not the twist angle itself. <b>Always confirm dry filament</b> before printing near the top of this range — that's the one variable that mattered.</div>
+    <div style="font-size:10px; color:var(--muted); margin-top:4px;">A rotation around the shaft, same as Helical Twist below, just as one flat total angle instead of deg/in (not scaled by vane length). Combines with Helical Twist into a single total sweep -- both use the same direction toggle. <b>Range went 0-3 &rarr; 0-6 &rarr; back to 0-3&deg; per Isaac's request.</b></div>
+  </div>
+
+  <div class="group">
+    <label>Helical Twist (deg/in) <span style="font-weight:400; color:var(--muted);">— matches the live customer-facing range, 0-25°/in</span></label>
+    <div class="slider-row">
+      <input type="range" id="helical" min="0" max="25" step="0.1" value="0">
+      <div class="val" id="helicalVal">0°/in</div>
+    </div>
+    <div style="font-size:10px; color:var(--muted); margin-top:4px;">Degrees per inch of vane length -- actual total twist = this value &times; vane length in inches. <b>Range bumped from 0-10&deg;/in to 0-25&deg;/in per Isaac's explicit confirmation, having been shown the numbers.</b> At the new max, total twist runs 55-96&deg; depending on vane length -- 2-3x the 28-32&deg; ceiling validated on dry filament. <b>Nothing near this range has been printed.</b> Use the twist-test batch button below (update its levels to the new max first) before treating any of this as viable.</div>
   </div>
 
   <div class="group">
@@ -354,14 +363,14 @@
       </div>
       <div id="peSectionLabel">Quick Presets <span style="text-transform:none; font-weight:400;">— shape only, scaled to your current length</span></div>
       <div id="presetRow" class="btnrow">
-        <div class="presetbtn" id="presetGhost" title="Smooth, back-loaded curve, low-drag quiet shape">GHOST</div>
-        <div class="presetbtn" id="presetImpact" title="Tall rounded profile for broadhead stability">IMPACT</div>
-        <div class="presetbtn" id="presetTarget" title="Low profile, quiet, minimal helical">TARGET</div>
-        <div class="presetbtn" id="presetCompact" title="Small, smooth parabolic, minimal drag">COMPACT</div>
-        <div class="presetbtn" id="presetLongrange" title="Long, smooth parabolic, extra stability">LONGRANGE</div>
-        <div class="presetbtn" id="presetDrift" title="PLACEHOLDER NAME - not trademark-checked. Long 75mm, gradual rise, sharp taper">DRIFT*</div>
-        <div class="presetbtn" id="presetArc" title="PLACEHOLDER NAME - not trademark-checked. 63mm, rounded back-loaded peak">ARC*</div>
-        <div class="presetbtn" id="presetCrossover" title="Double-hump profile, 48mm">CROSSOVER</div>
+        <div class="presetbtn" id="presetGhost" title="Smooth curve, peak 27% from nock, blunt both ends">GHOST</div>
+        <div class="presetbtn" id="presetImpact" title="Peak 28% from nock, 57mm">IMPACT</div>
+        <div class="presetbtn" id="presetTarget" title="Peak 21% from nock, 70mm">TARGET</div>
+        <div class="presetbtn" id="presetCompact" title="Sharp triangular peak 34% from nock, 50mm">COMPACT</div>
+        <div class="presetbtn" id="presetLongrange" title="Peak 19% from nock, long 91mm plateau taper">LONGRANGE</div>
+        <div class="presetbtn" id="presetDrift" title="Peak 21% from nock, 75mm">DRIFT</div>
+        <div class="presetbtn" id="presetVandor" title="Peak 31% from nock, 65mm">VANDOR</div>
+        <div class="presetbtn" id="presetCrossover" title="Peak 46% from nock, 50mm">CROSSOVER</div>
       </div>
       <div id="customModeToggle">🔓 Customize Shape</div>
     </div>
@@ -540,7 +549,10 @@ document.querySelectorAll('.btn[data-group]').forEach(btn=>{
   });
 });
 document.getElementById('helical').addEventListener('input', e=>{
-  document.getElementById('helicalVal').textContent = e.target.value+'°';
+  document.getElementById('helicalVal').textContent = e.target.value+'°/in';
+});
+document.getElementById('offset').addEventListener('input', e=>{
+  document.getElementById('offsetVal').textContent = e.target.value+'°';
 });
 function updateTipTaperLabel(){
   const v = parseFloat(document.getElementById('tipTaper').value);
@@ -620,26 +632,54 @@ function applyNamedPreset(p, label){
 // stop responding to clicks -- same behavior as the storefront's shape and
 // color out-of-stock toggle.                    ******CHANGE_SHAPE_STOCK_HERE******
 const NAMED_PRESETS = {
+  // GHOST -- MIRRORED to fix the nock/point orientation bug (see note above
+  // frontLbl/backLbl): x=0 must be the nock end, x=length the point end.
+  // Peak (12.7mm) now sits at x=19 (27% from nock) instead of x=52.
   ghost: { rounding:100, stock:true,
-    nodes:[{x:0,h:0},{x:20,h:4},{x:38,h:9},{x:52,h:12.7},{x:63,h:6},{x:71,h:0}] },
+    nodes:[{x:0,h:0.4},{x:8,h:6},{x:19,h:12.7},{x:33,h:9},{x:51,h:4},{x:71,h:0.4}] },
+  // IMPACT -- MIRRORED, same orientation fix. Peak (9.8mm) now at x=16
+  // (28% from nock).
   impact: { rounding:100, stock:true,
-    nodes:[{x:0,h:0},{x:15,h:8},{x:26,h:14.7},{x:38,h:7},{x:53,h:0}] },
+    nodes:[{x:0,h:3},{x:6,h:7.1},{x:16,h:9.8},{x:57,h:0.4}] },
+  // TARGET -- MIRRORED again to fix the nock/point orientation bug. This
+  // undoes the earlier left-right mirror (done for a different reason, shape
+  // accuracy vs. source photo) -- net result is back to REF-08's original
+  // orientation. Peak (10mm) now at x=15 (21% from nock).
   target: { rounding:100, stock:true,
-    nodes:[{x:0,h:0},{x:14,h:8.4},{x:20,h:8.4},{x:34,h:3},{x:51,h:0}] },
+    nodes:[{x:0,h:3.2},{x:3,h:5.5},{x:15,h:10},{x:40,h:6.5},{x:60,h:2.5},{x:70,h:0.4}] },
+  // COMPACT -- MIRRORED, same orientation fix. Peak (12mm) now at x=17
+  // (34% from nock). NOTE: shares its last two nodes and overall length
+  // (50mm) with CROSSOVER below -- rms similarity 0.099, closest pair
+  // remaining in the lineup (flag unchanged by the mirror).
   compact: { rounding:100, stock:true,
-    nodes:[{x:0,h:0},{x:10,h:5.3},{x:22,h:9.65},{x:34,h:5.3},{x:44,h:0}] },
+    nodes:[{x:0,h:3},{x:4,h:6.2},{x:17,h:12},{x:50,h:0.4}] },
+  // LONGRANGE -- unchanged, already correctly oriented (peak at x=17, 19%
+  // from nock) -- this was one of the two shapes rendering correctly on the
+  // 3D arrow before the fix.
   longrange: { rounding:100, stock:true,
-    nodes:[{x:0,h:0},{x:22,h:7},{x:48,h:12.7},{x:74,h:7},{x:97,h:0}] },
+    nodes:[{x:0,h:2.5},{x:17,h:11.4},{x:50,h:9.5},{x:91,h:0.4}] },
+  // DRIFT -- unchanged, already correctly oriented (peak at x=16, 21% from
+  // nock) -- the other shape that was already rendering correctly.
   drift: { rounding:100, stock:true,
-    nodes:[{x:0,h:0},{x:62,h:12},{x:67,h:7.5},{x:70,h:4},{x:73,h:1.5},{x:75,h:0}] },
-  arc: { rounding:100, stock:true,
-    nodes:[{x:0,h:0},{x:3,h:2},{x:47,h:10.5},{x:57,h:7.5},{x:61,h:2},{x:63,h:0}] },
+    nodes:[{x:0,h:0.4},{x:4,h:3},{x:9,h:7},{x:16,h:12},{x:75,h:0.4}] },
+  // VANDOR -- MIRRORED, same orientation fix. Peak (12mm) now at x=20 (31%
+  // from nock).
+  vandor: { rounding:100, stock:true,
+    nodes:[{x:0,h:2.3},{x:8,h:8.3},{x:20,h:12},{x:65,h:0.4}] },
+  // CROSSOVER -- MIRRORED, same orientation fix. Peak (13mm) now at x=23
+  // (46% from nock). See COMPACT note above re: similarity flag.
   crossover: { rounding:100, stock:true,
-    nodes:[{x:0,h:0},{x:9,h:5},{x:22,h:8.5},{x:32,h:9.5},{x:39,h:8.5},{x:43,h:5},{x:46,h:2},{x:48,h:0}] }
+    nodes:[{x:0,h:3},{x:4,h:6.2},{x:23,h:13},{x:50,h:0.4}] }
 };
 function currentLength(){ return parseFloat(document.getElementById('vaneLength').value)||70; }
-// Helical twist is a flat total in degrees again (0-3), matching EasyVanes'
-// real proven range -- see the storefront's matching comment for why.
+// Helical twist (the 'helical' slider/field) is degrees PER INCH of vane
+// length, not a flat total -- actual total twist = this value * vane length
+// in inches, matching the storefront's render() logic. This is our own
+// simple linear scaling (not necessarily any specific jig manufacturer's
+// exact per-inch formula, which can be diameter-dependent) -- chosen
+// because it's the setup validated on our own print testing. Range 0-5
+// deg/in. See the storefront's matching comment near render() for the
+// customer-facing version.
 
 function snapX(v){ return Math.round(v); }
 function snapH(v){ return Math.round(v*10)/10; }
@@ -775,15 +815,21 @@ function drawGraph(){
     t.textContent = Math.round(x);
     g.appendChild(t);
   }
+  // NOTE: x=0 is the NOCK end (rear edge, sits at NOCK_GAP next to the nock
+  // in the storefront's 3D "See on Arrow" view) and x=length is the POINT
+  // end (front edge, toward the arrowhead) -- this was mislabeled "Front"/
+  // "Back" backwards for a while, which is why several shapes rendered
+  // mounted backwards on the 3D arrow. Fixed -- see NAMED_PRESETS below,
+  // all mirrored to match.
   const frontLbl = document.createElementNS('http://www.w3.org/2000/svg','text');
   frontLbl.setAttribute('x', padL-8); frontLbl.setAttribute('y', padT+32);
   frontLbl.setAttribute('fill','#8a95a3'); frontLbl.setAttribute('font-size','12'); frontLbl.setAttribute('text-anchor','end');
-  frontLbl.textContent='Front';
+  frontLbl.textContent='Nock';
   g.appendChild(frontLbl);
   const backLbl = document.createElementNS('http://www.w3.org/2000/svg','text');
   backLbl.setAttribute('x', padL+plotW+8); backLbl.setAttribute('y', padT+32);
   backLbl.setAttribute('fill','#8a95a3'); backLbl.setAttribute('font-size','12');
-  backLbl.textContent='Back';
+  backLbl.textContent='Point';
   g.appendChild(backLbl);
 
   // Y axis (fin height, mm) gridlines every 5mm + labels
@@ -970,13 +1016,13 @@ document.getElementById('presetTarget').addEventListener('click', ()=> applyName
 document.getElementById('presetCompact').addEventListener('click', ()=> applyNamedPreset(NAMED_PRESETS.compact, 'COMPACT'));
 document.getElementById('presetLongrange').addEventListener('click', ()=> applyNamedPreset(NAMED_PRESETS.longrange, 'LONGRANGE'));
 document.getElementById('presetDrift').addEventListener('click', ()=> applyNamedPreset(NAMED_PRESETS.drift, 'DRIFT (placeholder)'));
-document.getElementById('presetArc').addEventListener('click', ()=> applyNamedPreset(NAMED_PRESETS.arc, 'ARC (placeholder)'));
+document.getElementById('presetVandor').addEventListener('click', ()=> applyNamedPreset(NAMED_PRESETS.vandor, 'VANDOR'));
 document.getElementById('presetCrossover').addEventListener('click', ()=> applyNamedPreset(NAMED_PRESETS.crossover, 'CROSSOVER'));
 // Grey out any preset button whose NAMED_PRESETS entry has stock:false --
 // see CHANGE_SHAPE_STOCK_HERE at the top of NAMED_PRESETS.
 const PRESET_BUTTON_IDS = {
   ghost:'presetGhost', impact:'presetImpact', target:'presetTarget', compact:'presetCompact',
-  longrange:'presetLongrange', drift:'presetDrift', arc:'presetArc', crossover:'presetCrossover'
+  longrange:'presetLongrange', drift:'presetDrift', vandor:'presetVandor', crossover:'presetCrossover'
 };
 Object.entries(PRESET_BUTTON_IDS).forEach(([key,id])=>{
   const btn = document.getElementById(id);
@@ -1128,7 +1174,16 @@ function generate(){
 
   const Rin=(effectiveShaftOD+clearance)/2, Rout=Rin+wall, overlap=wall*0.6;
   buildTube(Rin,Rout,length,56);
-  const twistRad = helicalDeg*Math.PI/180;
+  // helicalDeg is deg/in -- scale by vane length in inches for the actual
+  // helicalDeg is deg/in -- scale by vane length in inches for the total
+  // helical rotation, matching the storefront's render(). offsetDeg is a
+  // flat total angle (not deg/in). Both are rotations and combine into one
+  // total angular sweep -- offset was briefly a raw sideways shear instead,
+  // which detached the fins from the tube (a linear shift doesn't stay on a
+  // curved surface the way a rotation does). See buildBlade.
+  const totalTwistDeg = helicalDeg * (length/25.4);
+  const offsetDeg = parseFloat(document.getElementById('offset').value);
+  const twistRad = (totalTwistDeg + offsetDeg)*Math.PI/180;
   for(let f=0; f<numFletches; f++){
     const baseAngle = f*(Math.PI*2/numFletches);
     buildBlade(baseAngle, twistRad, dirSign, Rout, fletchThickness, overlap, length, 90, tipThickFactor);
@@ -1224,7 +1279,7 @@ function buildSTLFilename(){
   const fletchCount = state.fletchCount;
   const length = document.getElementById('vaneLength').value;
   const shaftOD = document.getElementById('shaftOD').value;
-  const profile = currentProfileLabel; // GHOST/IMPACT/TARGET/COMPACT/LONGRANGE/DRIFT/ARC/CROSSOVER, or CUSTOM once hand-edited
+  const profile = currentProfileLabel; // GHOST/IMPACT/TARGET/COMPACT/LONGRANGE/DRIFT/VANDOR/CROSSOVER, or CUSTOM once hand-edited
   const colorName = (COLORS.find(c => c.hex === state.color) || {name:'Color'}).name;
   const packSize = state.packSize;
   const quantity = document.getElementById('orderQuantity').value || '1';
@@ -1254,9 +1309,14 @@ function downloadTwistTestBatch(){
   const savedNodes = JSON.parse(JSON.stringify(nodes));
   const savedLength = document.getElementById('vaneLength').value;
   const savedHelical = document.getElementById('helical').value;
+  const savedOffset = document.getElementById('offset').value;
   const savedLabel = currentProfileLabel;
 
-  const testLevels = [[0,0],[1,5],[2,9],[3,13],[4,17],[5,21]];
+  // Levels 0-25: helical alone, offset held at 0 to isolate the variable.
+  // Level 'combo': max offset (3deg) + max helical (25deg/in) together --
+  // this exact combination hasn't been print-tested yet (see the Helical
+  // slider's help text), so it's included here rather than left untested.
+  const testLevels = [[0,0,0],[5,5,0],[10,10,0],[15,15,0],[20,20,0],[25,25,0],['combo',25,3]];
   let i = 0;
   function next(){
     if(i>=testLevels.length){
@@ -1264,19 +1324,23 @@ function downloadTwistTestBatch(){
       document.getElementById('vaneLength').value = savedLength;
       lastLength = parseFloat(savedLength);
       document.getElementById('helical').value = savedHelical;
-      document.getElementById('helicalVal').textContent = savedHelical+'°';
+      document.getElementById('helicalVal').textContent = savedHelical+'°/in';
+      document.getElementById('offset').value = savedOffset;
+      document.getElementById('offsetVal').textContent = savedOffset+'°';
       currentProfileLabel = savedLabel;
       drawGraph(); generate();
       return;
     }
-    const [level, deg] = testLevels[i];
+    const [level, helDeg, offDeg] = testLevels[i];
     document.getElementById('vaneLength').value = 53;
     lastLength = 53;
     applyNamedPreset(NAMED_PRESETS.impact, 'IMPACT');
-    document.getElementById('helical').value = deg;
-    document.getElementById('helicalVal').textContent = deg+'°';
+    document.getElementById('helical').value = helDeg;
+    document.getElementById('helicalVal').textContent = helDeg+'°/in';
+    document.getElementById('offset').value = offDeg;
+    document.getElementById('offsetVal').textContent = offDeg+'°';
     generate();
-    exportSTL(`twist-test-level${level}-${deg}deg-IMPACT.stl`);
+    exportSTL(`twist-test-level${level}-${helDeg}degperin-${offDeg}degoffset-IMPACT.stl`);
     i++;
     setTimeout(next, 400); // stagger so the browser doesn't treat rapid downloads as spam
   }
@@ -1304,6 +1368,7 @@ function currentProfileData(name){
     fletchCount: state.fletchCount,
     helical: document.getElementById('helical').value,
     helicalDir: state.helicalDir,
+    offset: document.getElementById('offset').value,
     color: state.color,
     packSize: state.packSize,
     tipTaper: document.getElementById('tipTaper').value,
@@ -1316,7 +1381,9 @@ function applyProfileData(data){
   document.getElementById('shaftOD').value = data.shaftOD;
   document.getElementById('clearance').value = data.clearance;
   document.getElementById('helical').value = data.helical;
-  document.getElementById('helicalVal').textContent = data.helical+'°';
+  document.getElementById('helicalVal').textContent = data.helical+'°/in';
+  document.getElementById('offset').value = data.offset!==undefined ? data.offset : 0;
+  document.getElementById('offsetVal').textContent = document.getElementById('offset').value+'°';
   // Max fletch count is 4 -- clamp here too, in case this is an older saved
   // profile from before that cap existed.
   state.vaneType = data.vaneType; state.fletchCount = clampFletchCount(data.fletchCount); state.helicalDir = data.helicalDir;
@@ -1402,7 +1469,9 @@ function applyOrderItem(item, index, total){
   state.usingWraps = item.usingWraps || 'no';
 
   document.getElementById('helical').value = item.helical!==undefined ? item.helical : 0;
-  document.getElementById('helicalVal').textContent = document.getElementById('helical').value+'°';
+  document.getElementById('helicalVal').textContent = document.getElementById('helical').value+'°/in';
+  document.getElementById('offset').value = item.offset!==undefined ? item.offset : 0;
+  document.getElementById('offsetVal').textContent = document.getElementById('offset').value+'°';
 
   document.querySelectorAll('.btn[data-group="vaneType"]').forEach(b=>b.classList.toggle('active', b.dataset.val===state.vaneType));
   document.querySelectorAll('.btn[data-group="fletchCount"]').forEach(b=>{ b.classList.toggle('active', b.dataset.val===state.fletchCount); b.classList.toggle('green', b.dataset.val===state.fletchCount); });
