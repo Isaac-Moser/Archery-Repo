@@ -191,10 +191,6 @@
       <div class="btn active" data-group="packSize" data-val="18">Pack of 18</div>
       <div class="btn" data-group="packSize" data-val="24">Pack of 24</div>
     </div>
-    <div class="group" style="margin-top:10px;">
-      <label>Quantity (packs for this order)</label>
-      <input type="number" id="orderQuantity" value="1" min="1" step="1">
-    </div>
     <div style="font-size:10px; color:var(--muted); margin-top:6px; line-height:1.4;">Weight assumes ~1.21 g/cm³ density, typical for 95A TPU</div>
   </div>
 
@@ -251,19 +247,6 @@
   </div>
 
   <div class="group">
-    <label>Arrow Lookup <span style="font-weight:400; color:var(--muted);">(from your 277-arrow spreadsheet)</span></label>
-    <div style="display:grid; grid-template-columns:1fr 1fr 90px; gap:6px;">
-      <input type="text" id="lookupBrand" list="lookupBrandList" placeholder="Manufacturer" autocomplete="off">
-      <input type="text" id="lookupModel" list="lookupModelList" placeholder="Model" autocomplete="off">
-      <input type="text" id="lookupSpine" list="lookupSpineList" placeholder="Spine" autocomplete="off">
-    </div>
-    <datalist id="lookupBrandList"></datalist>
-    <datalist id="lookupModelList"></datalist>
-    <datalist id="lookupSpineList"></datalist>
-    <div id="lookupResultMsg" style="font-size:10.5px; color:var(--muted); margin-top:6px; line-height:1.4;">Type all three fields to auto-fill the exact OD below — this data comes from your own spreadsheet, so it's trusted directly, no manual confirmation needed.</div>
-  </div>
-
-  <div class="group">
     <label>Shaft Outside Diameter (mm)</label>
     <input type="number" id="shaftOD" value="6.15" step="0.01">
   </div>
@@ -284,15 +267,6 @@
   <div class="group">
     <label>Fit Clearance (mm)</label>
     <input type="number" id="clearance" value="0.525" step="0.01">
-  </div>
-
-  <div class="group">
-    <label>Fin Tip Taper</label>
-    <div class="slider-row">
-      <input type="range" id="tipTaper" min="0" max="100" step="1" value="100">
-      <div class="val" id="tipTaperVal">Off</div>
-    </div>
-    <div style="font-size:10px; color:var(--muted); margin-top:4px; line-height:1.4;" id="tipTaperNote">100% = uniform thickness. Lower values thin the outer edge, but never below ~0.35mm -- your printer's realistic minimum -- regardless of the slider.</div>
   </div>
 
   <div class="group">
@@ -452,81 +426,7 @@ function animate(){ requestAnimationFrame(animate); updateCamera(); renderer.ren
 animate();
 
 /* ===================== UI STATE ===================== */
-const state = { vaneType:'standard', fletchCount:'3', helicalDir:'right', packSize:'18', color:'#2e7d32', usingWraps:'no' };
-
-/* =====================================================================
-   ARROW OD LOOKUP -- from Isaac's own 277-arrow spreadsheet.
-   -----------------------------------------------------------------------
-   Unlike the storefront's arrow ID fields (which never auto-fill a size,
-   since a wrong guess there ships a bad fit to a customer), this table is
-   trusted directly -- it's Isaac's own measured/verified data, used by
-   Isaac himself, so an exact Brand+Model+Spine match auto-fills the OD
-   with no extra confirmation step. This is a STARTER SET (18 rows,
-   transcribed from a spreadsheet screenshot) -- replace/extend this array
-   with the full 277-row set once the actual file is available. Keep the
-   same {brand, model, spine, od} shape for each entry.
-===================================================================== */
-const ARROW_OD_LOOKUP = [
-  {brand:'Altra Arrows', model:'166 Centrum / Novum', spine:'300', od:6.248},
-  {brand:'Altra Arrows', model:'166 Centrum / Novum', spine:'350', od:6.071},
-  {brand:'Altra Arrows', model:'166 Centrum / Novum', spine:'400', od:5.918},
-  {brand:'Beman', model:'ICS Hunter Classic', spine:'500', od:7.29},
-  {brand:'Beman', model:'ICS Hunter Classic', spine:'400', od:7.468},
-  {brand:'Beman', model:'ICS Hunter Classic', spine:'340', od:7.569},
-  {brand:'Beman', model:'ICS Hunter Classic', spine:'300', od:7.62},
-  {brand:'Black Eagle', model:'Rampage', spine:'400', od:6.426},
-  {brand:'Black Eagle', model:'Rampage', spine:'350', od:6.629},
-  {brand:'Black Eagle', model:'Rampage', spine:'300', od:6.706},
-  {brand:'Black Eagle', model:'Rampage', spine:'250', od:7.01},
-  {brand:'Black Eagle', model:'Rampage', spine:'200', od:7.239},
-  {brand:'Black Eagle', model:'Rampage', spine:'150', od:7.798},
-  {brand:'Black Eagle', model:'Renegade', spine:'400', od:6.68},
-  {brand:'Black Eagle', model:'Renegade', spine:'350', od:6.782},
-  {brand:'Black Eagle', model:'Renegade', spine:'300', od:6.985},
-  {brand:'Black Eagle', model:'Renegade', spine:'250', od:7.112},
-  {brand:'Black Eagle', model:'Spartan', spine:'500', od:6.807}
-];
-function populateLookupDatalists(){
-  const brands = [...new Set(ARROW_OD_LOOKUP.map(r=>r.brand))].sort();
-  document.getElementById('lookupBrandList').innerHTML = brands.map(b=>`<option value="${b}">`).join('');
-  updateLookupModelList();
-}
-function updateLookupModelList(){
-  const b = document.getElementById('lookupBrand').value.trim().toLowerCase();
-  const models = [...new Set(ARROW_OD_LOOKUP.filter(r=>!b||r.brand.toLowerCase()===b).map(r=>r.model))].sort();
-  document.getElementById('lookupModelList').innerHTML = models.map(m=>`<option value="${m}">`).join('');
-  updateLookupSpineList();
-}
-function updateLookupSpineList(){
-  const b = document.getElementById('lookupBrand').value.trim().toLowerCase();
-  const m = document.getElementById('lookupModel').value.trim().toLowerCase();
-  const spines = [...new Set(ARROW_OD_LOOKUP.filter(r=>(!b||r.brand.toLowerCase()===b)&&(!m||r.model.toLowerCase()===m)).map(r=>r.spine))];
-  document.getElementById('lookupSpineList').innerHTML = spines.map(sp=>`<option value="${sp}">`).join('');
-}
-function tryLookupMatch(){
-  const b = document.getElementById('lookupBrand').value.trim().toLowerCase();
-  const m = document.getElementById('lookupModel').value.trim().toLowerCase();
-  const s = document.getElementById('lookupSpine').value.trim().toLowerCase();
-  const msgEl = document.getElementById('lookupResultMsg');
-  if(!b || !m || !s){
-    msgEl.style.color = 'var(--muted)';
-    msgEl.textContent = 'Type all three fields to auto-fill the exact OD below — this data comes from your own spreadsheet, so it\'s trusted directly, no manual confirmation needed.';
-    return;
-  }
-  const match = ARROW_OD_LOOKUP.find(r=>r.brand.toLowerCase()===b && r.model.toLowerCase()===m && r.spine.toLowerCase()===s);
-  if(match){
-    document.getElementById('shaftOD').value = match.od;
-    msgEl.style.color = 'var(--good)';
-    msgEl.textContent = `✓ Matched: ${match.brand} ${match.model}, ${match.spine} spine — OD set to ${match.od}mm. Click "Update Preview" to apply.`;
-  }else{
-    msgEl.style.color = 'var(--muted)';
-    msgEl.textContent = 'No exact match yet in the lookup table — enter the OD manually below.';
-  }
-}
-document.getElementById('lookupBrand').addEventListener('input', ()=>{ updateLookupModelList(); tryLookupMatch(); });
-document.getElementById('lookupModel').addEventListener('input', ()=>{ updateLookupSpineList(); tryLookupMatch(); });
-document.getElementById('lookupSpine').addEventListener('input', tryLookupMatch);
-populateLookupDatalists();
+const state = { vaneType:'standard', fletchCount:'3', helicalDir:'right', packSize:'18', color:'#8BC34A', usingWraps:'no' };
 
 // Max fletch count is 4 -- clamps any imported/legacy value (old saved
 // profiles or order exports could predate this cap) down to the 3-4 range.
@@ -542,7 +442,6 @@ document.querySelectorAll('.btn[data-group]').forEach(btn=>{
     btn.classList.add('active');
     if(group==='helicalDir'||group==='fletchCount') btn.classList.add('green');
     state[group] = btn.dataset.val;
-    if(group==='vaneType' && typeof updateTipTaperLabel==='function') updateTipTaperLabel();
     if(group==='packSize') document.getElementById('packLabelSmall').textContent = btn.dataset.val;
     if(group==='usingWraps') document.getElementById('wrapThicknessRow').style.display = (btn.dataset.val==='yes') ? 'block' : 'none';
     generate();
@@ -554,19 +453,6 @@ document.getElementById('helical').addEventListener('input', e=>{
 document.getElementById('offset').addEventListener('input', e=>{
   document.getElementById('offsetVal').textContent = e.target.value+'°';
 });
-function updateTipTaperLabel(){
-  const v = parseFloat(document.getElementById('tipTaper').value);
-  const wall = state.vaneType==='standard'?0.60:0.35;
-  const floorFactor = Math.min(1, 0.35/wall);
-  const effective = Math.max(v/100, floorFactor);
-  const mm = (wall*effective).toFixed(2);
-  document.getElementById('tipTaperVal').textContent = v>=100 ? 'Off' : `~${mm}mm tip`;
-}
-document.getElementById('tipTaper').addEventListener('input', ()=>{
-  updateTipTaperLabel();
-});
-document.getElementById('tipTaper').addEventListener('change', ()=>{ generate(); });
-updateTipTaperLabel();
 
 /* ---- colour dropdown ---- */
 const COLORS = [
@@ -575,7 +461,7 @@ const COLORS = [
   {name:'Red',    hex:'#c1272d'},
   {name:'Orange', hex:'#ff7a1a'},
   {name:'Yellow', hex:'#f4c430'},
-  {name:'Green',  hex:'#2e7d32'},
+  {name:'Light Green', hex:'#8BC34A'},
   {name:'Blue',   hex:'#1565c0'},
   {name:'Purple', hex:'#6a1b9a'}
 ];
@@ -1162,19 +1048,8 @@ function generate(){
   const helicalDeg = parseFloat(document.getElementById('helical').value);
   const dirSign = state.helicalDir==='right'?1:-1;
 
-  // Tip taper: 100 on the slider = no taper (uniform thickness). Below that,
-  // thin the tip -- but never past a ~0.35mm absolute floor, which is a
-  // realistic minimum reliable wall thickness on a 0.4mm nozzle. The floor is
-  // enforced in mm, not as a raw percentage, so it stays safe no matter what
-  // wall thickness is selected.
-  const MIN_TIP_MM = 0.35;
-  const taperSliderFrac = parseFloat(document.getElementById('tipTaper').value)/100;
-  const floorFactor = Math.min(1, MIN_TIP_MM/wall);
-  const tipThickFactor = Math.max(taperSliderFrac, floorFactor);
-
   const Rin=(effectiveShaftOD+clearance)/2, Rout=Rin+wall, overlap=wall*0.6;
   buildTube(Rin,Rout,length,56);
-  // helicalDeg is deg/in -- scale by vane length in inches for the actual
   // helicalDeg is deg/in -- scale by vane length in inches for the total
   // helical rotation, matching the storefront's render(). offsetDeg is a
   // flat total angle (not deg/in). Both are rotations and combine into one
@@ -1184,6 +1059,11 @@ function generate(){
   const totalTwistDeg = helicalDeg * (length/25.4);
   const offsetDeg = parseFloat(document.getElementById('offset').value);
   const twistRad = (totalTwistDeg + offsetDeg)*Math.PI/180;
+  // Fin Tip Taper control was removed -- always full/uniform thickness now
+  // (equivalent to the old slider's "100%/Off" setting). buildBlade still
+  // accepts a tipThickFactor param for the untaper-to-a-point safety logic
+  // (see its own comment), so this stays at 1.
+  const tipThickFactor = 1;
   for(let f=0; f<numFletches; f++){
     const baseAngle = f*(Math.PI*2/numFletches);
     buildBlade(baseAngle, twistRad, dirSign, Rout, fletchThickness, overlap, length, 90, tipThickFactor);
@@ -1274,7 +1154,7 @@ function exportSTL(filenameOverride){
   downloadBlob(out, filenameOverride || buildSTLFilename(), 'text/plain');
 }
 
-// Filename format: (#vanes)-(length)-(shaft diameter)-(profile)-(color)-(pack size)-(quantity).stl
+// Filename format: (#vanes)-(length)-(shaft diameter)-(profile)-(color)-(pack size).stl
 function buildSTLFilename(){
   const fletchCount = state.fletchCount;
   const length = document.getElementById('vaneLength').value;
@@ -1282,13 +1162,12 @@ function buildSTLFilename(){
   const profile = currentProfileLabel; // GHOST/IMPACT/TARGET/COMPACT/LONGRANGE/DRIFT/VANDOR/CROSSOVER, or CUSTOM once hand-edited
   const colorName = (COLORS.find(c => c.hex === state.color) || {name:'Color'}).name;
   const packSize = state.packSize;
-  const quantity = document.getElementById('orderQuantity').value || '1';
 
   // Keep the filename filesystem-safe: strip anything that isn't a letter,
   // number, dot, or dash, and collapse whitespace to nothing.
   const clean = s => String(s).replace(/\s+/g,'').replace(/[^a-zA-Z0-9.\-]/g,'');
 
-  const parts = [fletchCount, length, shaftOD, profile, colorName, packSize, quantity].map(clean);
+  const parts = [fletchCount, length, shaftOD, profile, colorName, packSize].map(clean);
   return parts.join('-') + '.stl';
 }
 function downloadBlob(content, filename, type){
@@ -1371,7 +1250,6 @@ function currentProfileData(name){
     offset: document.getElementById('offset').value,
     color: state.color,
     packSize: state.packSize,
-    tipTaper: document.getElementById('tipTaper').value,
     nodes: nodes
   };
 }
@@ -1389,7 +1267,6 @@ function applyProfileData(data){
   state.vaneType = data.vaneType; state.fletchCount = clampFletchCount(data.fletchCount); state.helicalDir = data.helicalDir;
   if(data.color) state.color = data.color;
   if(data.packSize) state.packSize = data.packSize;
-  if(data.tipTaper!==undefined){ document.getElementById('tipTaper').value = data.tipTaper; updateTipTaperLabel(); }
   if(data.usingWraps!==undefined){
     state.usingWraps = data.usingWraps;
     document.querySelectorAll('.btn[data-group="usingWraps"]').forEach(b=>b.classList.toggle('active', b.dataset.val===data.usingWraps));
@@ -1483,7 +1360,6 @@ function applyOrderItem(item, index, total){
   if(item.packSize) document.getElementById('packLabelSmall').textContent = item.packSize;
 
   if(state.color){ colorSelect.value = state.color; updateColorSwatchPreview(); }
-  if(typeof updateTipTaperLabel==='function') updateTipTaperLabel();
 
   document.getElementById('profileName').value = item.displayName || ('Order item '+(index+1));
 
