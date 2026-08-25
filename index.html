@@ -29,7 +29,7 @@
 
  JS (inside the main SCRIPT block, near the bottom of the file):
    3D PREVIEW SCENE       - Three.js camera/lighting/render loop
-   SHAPE LIBRARY          - SHAPES data: GHOST/IMPACT/CROSSOVER/TARGET/COMPACT/LONGRANGE/DRIFT/ARC
+   SHAPE LIBRARY          - SHAPES data: GHOST/IMPACT/CROSSOVER/TARGET/COMPACT/LONGRANGE/DRIFT/VANDOR
    CURVE MATH             - corner-rounding + curve sampling shared by preview/icons/editor
    3D GEOMETRY             - tube + fin mesh construction (preview only, not print-grade)
    PRICING                 - updatePricing(): the live price formula
@@ -800,9 +800,9 @@
     <div class="step-sub">Tell us what you shoot — we'll handle the sizing on our end.</div>
     <div class="field-grid">
       <div class="field">
-        <label>Vane Length (mm)</label>
-        <input type="number" id="vaneLength" value="55" step="1" min="35" max="100">
-        <div class="help" id="lengthErrorMsg">Must be between 35mm and 100mm.</div>
+        <label>Vane Length (in)</label>
+        <input type="number" id="vaneLength" value="2.17" step="0.01" min="1.38" max="3.94">
+        <div class="help" id="lengthErrorMsg">Must be between 1.38in and 3.94in.</div>
       </div>
     </div>
     <div class="field-grid" style="grid-template-columns:1fr 1fr 1fr;">
@@ -879,9 +879,14 @@
     </div>
     <div class="field-grid">
       <div class="field">
-        <label>Helical Twist <span class="opt" id="helicalSliderVal">20°</span></label>
-        <input type="range" id="helicalSlider" min="0" max="30" step="1" value="20" style="width:100%;">
-        <div class="help">More twist = more spin stabilization, especially useful with broadheads.</div>
+        <label>Offset <span class="opt" id="offsetSliderVal">0°</span></label>
+        <input type="range" id="offsetSlider" min="0" max="6" step="0.1" value="0" style="width:100%;">
+        <div class="help">A rotation around the shaft, same as Helical Twist, specified as one flat total angle instead of scaling with vane length. At this range it reads visually as a near-straight tilt rather than an obvious spiral. Combines with Helical Twist below into one total twist.</div>
+      </div>
+      <div class="field">
+        <label>Helical Twist <span class="opt" id="helicalSliderVal">2.5°/in</span></label>
+        <input type="range" id="helicalSlider" min="0" max="25" step="0.1" value="2.5" style="width:100%;">
+        <div class="help">The same rotation as Offset, specified as degrees per inch of vane length instead of a flat total — so total twist scales with your vane's length. Combines with Offset above (both use the same Twist Direction).</div>
       </div>
       <div class="field">
         <label>Twist Direction</label>
@@ -1032,11 +1037,13 @@
     </section>
 
     <section class="about-block reveal">
-      <div class="step-eyebrow">A Third Dial</div>
-      <h2>Helical Twist</h2>
-      <p>Where shape gives you a fixed amount of steering, <b>helical twist</b> is the dial you turn to add more — it spins the arrow in flight, which helps drive a broadhead back on line faster than a straight fletch alone. More twist means more of that correction.</p>
-      <p>It's not free, though. More twist also means more drag and more noise off the string — the same tradeoff height makes, just on a different axis. Higher settings lean harder into correction; lower settings lean toward speed and quiet.</p>
-      <p>Every order is printed to your exact twist setting, from <b>Straight (0°)</b> up to <b>30°</b>, in either direction — so you can dial it in for a stubborn broadhead or back off for a quieter target setup, shape by shape.</p>
+      <div class="step-eyebrow">A Third and Fourth Dial</div>
+      <h2>Offset &amp; Helical Twist</h2>
+      <p>Where shape gives you a fixed amount of steering, <b>offset</b> and <b>helical twist</b> are the dials you turn to add more — both spin the arrow in flight, which helps drive a broadhead back on line faster than a straight fletch alone. They do it two different ways, and you can use either one alone or combine them.</p>
+      <p><b>Offset</b> is a rotation around the shaft, same as helical twist, just expressed as one flat total angle instead of scaling with vane length. It's a single angle, from <b>0° up to 6°</b>, that stays the same no matter how long the vane is. At the lower end of that range it reads visually as a near-straight tilt rather than an obvious spiral — picture a straight line drawn on a piece of paper wrapped around a tube: at a shallow angle it still looks straight from the side, even though it's technically following the tube's curve.</p>
+      <p><b>Helical twist</b> is the same kind of rotation, just usually a bigger one and specified per inch of vane length instead of as a flat total: from <b>Straight (0°/in) up to 25°/in</b>. Because it's specified as a rate, the total amount of twist scales with how long a vane you've picked — a longer vane ends up with more total twist at the same setting than a shorter one does. Offset and helical combine into one continuous twist along the vane, so you can dial in either alone or both together.</p>
+      <p>Both tradeoff the same way — more of either means more correction, but also more drag and more noise off the string. Higher settings lean harder into correction; lower settings lean toward speed and quiet. Set them independently, or dial in both together for a stronger effect than either gives alone — every order is printed to your exact combination, shape by shape.</p>
+      <p>One more thing worth knowing: some vane makers and jig manufacturers use a flat, length-independent angle for what we call helical twist (Bohning's system works this way), which isn't directly comparable to our degrees-per-inch number. If you're used to comparing flat-degree specs from another vane, don't assume the numbers translate directly — ask if you're not sure how a given setting will come out on your specific vane length.</p>
     </section>
 
     <section class="about-block reveal">
@@ -1229,7 +1236,7 @@
 /* =====================================================================
    BUSINESS CONFIG — edit before going live
 ===================================================================== */
-const BUSINESS_EMAIL = "isaacmoser6@gmail.com"; // <-- CHANGE THIS to your real order inbox
+const BUSINESS_EMAIL = "moserarchery.orders@gmail.com"; // <-- CHANGE THIS to your real order inbox
 document.getElementById('footerContactLink').href = 'mailto:' + BUSINESS_EMAIL;
 
 /* =====================================================================
@@ -1827,23 +1834,30 @@ function shippingValueHTML(itemsSubtotal, packQty){
     : '$'+shipping.toFixed(2);
 }
 
+// NOTE: x=0 is the vane's NOCK-end node, x=length is the POINT-end node --
+// see buildFin/render() below where mesh.position.z=NOCK_GAP places local
+// z=0 next to the nock. All 8 shapes below are oriented so their
+// distinguishing feature lands correctly relative to the nock on the 3D
+// "See on Arrow" preview -- 6 of these were previously mirrored the wrong
+// way (a mislabeled "Front"/"Back" convention in Studio's 2D editor), which
+// is why they rendered backwards on the arrow. Fixed here.
 const SHAPES = {
   ghost: { name:'GHOST', desc:'Smooth, low-drag, quiet in flight.', rounding:100, stock:true,
-    nodes:[{x:0,h:0},{x:20,h:4},{x:38,h:9},{x:52,h:12.7},{x:63,h:6},{x:71,h:0}] },
-  impact: { name:'IMPACT', desc:'Tall profile for broadhead stability.', rounding:100, stock:true,
-    nodes:[{x:0,h:0},{x:15,h:8},{x:26,h:14.7},{x:38,h:7},{x:53,h:0}] },
-  crossover: { name:'CROSSOVER', desc:'Compact, all-around favorite.', rounding:100, stock:true,
-    nodes:[{x:0,h:0},{x:9,h:5},{x:22,h:8.5},{x:32,h:9.5},{x:39,h:8.5},{x:43,h:5},{x:46,h:2},{x:48,h:0}] },
-  target: { name:'TARGET', desc:'Low profile, minimal drag, quiet.', rounding:100, stock:true,
-    nodes:[{x:0,h:0},{x:14,h:8.4},{x:20,h:8.4},{x:34,h:3},{x:51,h:0}] },
-  compact: { name:'COMPACT', desc:'Small and smooth, minimal drag.', rounding:100, stock:true,
-    nodes:[{x:0,h:0},{x:10,h:5.3},{x:22,h:9.65},{x:34,h:5.3},{x:44,h:0}] },
-  longrange: { name:'LONGRANGE', desc:'Long, smooth, extra stability.', rounding:100, stock:true,
-    nodes:[{x:0,h:0},{x:22,h:7},{x:48,h:12.7},{x:74,h:7},{x:97,h:0}] },
-  drift: { name:'DRIFT', desc:'Long, gradual rise with a sharp taper.', rounding:100, stock:true,
-    nodes:[{x:0,h:0},{x:62,h:12},{x:67,h:7.5},{x:70,h:4},{x:73,h:1.5},{x:75,h:0}] },
-  arc: { name:'ARC', desc:'Rounded, back-loaded peak for steady correction.', rounding:100, stock:true,
-    nodes:[{x:0,h:0},{x:3,h:2},{x:47,h:10.5},{x:57,h:7.5},{x:61,h:2},{x:63,h:0}] }
+    nodes:[{x:0,h:0.4},{x:8,h:6},{x:19,h:12.7},{x:33,h:9},{x:51,h:4},{x:71,h:0.4}] },
+  impact: { name:'IMPACT', desc:'Back-loaded correction in a shorter package.', rounding:100, stock:true,
+    nodes:[{x:0,h:3},{x:6,h:7.1},{x:16,h:9.8},{x:57,h:0.4}] },
+  crossover: { name:'CROSSOVER', desc:'Back-loaded peak, compact 50mm length.', rounding:100, stock:true,
+    nodes:[{x:0,h:3},{x:4,h:6.2},{x:23,h:13},{x:50,h:0.4}] },
+  target: { name:'TARGET', desc:'Back-loaded taper, low noise off the shelf.', rounding:100, stock:true,
+    nodes:[{x:0,h:3.2},{x:3,h:5.5},{x:15,h:10},{x:40,h:6.5},{x:60,h:2.5},{x:70,h:0.4}] },
+  compact: { name:'COMPACT', desc:'Sharp triangular peak, quick correction, short package.', rounding:100, stock:true,
+    nodes:[{x:0,h:3},{x:4,h:6.2},{x:17,h:12},{x:50,h:0.4}] },
+  longrange: { name:'LONGRANGE', desc:'Front-loaded nose, extended stability plateau.', rounding:100, stock:true,
+    nodes:[{x:0,h:2.5},{x:17,h:11.4},{x:50,h:9.5},{x:91,h:0.4}] },
+  drift: { name:'DRIFT', desc:'Sharp front rise, long gradual taper to the nock.', rounding:100, stock:true,
+    nodes:[{x:0,h:0.4},{x:4,h:3},{x:9,h:7},{x:16,h:12},{x:75,h:0.4}] },
+  vandor: { name:'VANDOR', desc:'Rounded, back-loaded peak for steady correction.', rounding:100, stock:true,
+    nodes:[{x:0,h:2.3},{x:8,h:8.3},{x:20,h:12},{x:65,h:0.4}] }
 };
 // To take a color out of stock, change its "stock:true" to "stock:false" below.                                  ******CHANGE_STOCK_HERE******
 // It'll gray out and cross itself out automatically on the site.
@@ -1861,7 +1875,7 @@ const COLORS = [
 const order = {
   shape:'impact', customNodes:null, customRounding:55,
   vaneLength:55, shaftOD:6.15, arrowBrand:'', arrowModel:'', arrowSpine:'', shaftSizeSource:'unset', usingWraps:'no', wrapThickness:'', wrapBrand:'',
-  fletchCount:'4', weightClass:'standard', helical:'20', helicalDir:'right',
+  fletchCount:'4', weightClass:'standard', helical:'2.5', helicalDir:'right', offset:'0',
   color:'#2e7d32', packSize:'18', quantity:1
 };
 // Declared early (not down near the rest of the custom-editor code) because
@@ -1910,17 +1924,31 @@ function activeRounding(){
   return order.shape==='custom' ? order.customRounding : SHAPES[order.shape].rounding;
 }
 
-// Helical twist is a flat total in degrees, applied as a direct rotational
-// sweep around the shaft axis (not scaled by vane length, not the "degrees
-// per inch" convention some sites use, and not the arctan(offset/length)
-// value a physical vane-angle tool reports -- those are different
-// measurements that don't correspond 1:1 to this number).
-// An earlier 25deg test print failed (fins drooped outward/pinwheeled), but
-// that batch ran on filament that had absorbed moisture. A retest at
-// 28-32deg on dry filament, with tuned retraction/cooling, printed cleanly
-// at the same quality as the lower-twist batches -- so 25deg was a filament
-// issue, not a geometry ceiling. 30deg is the current validated max; always
-// confirm dry filament before printing anywhere near that top end.
+// Helical twist (order.helical) is degrees PER INCH of vane length; offset
+// (order.offset) is a flat total angle. Both are rotations around the shaft
+// axis and combine into one total angular sweep before being applied (see
+// render() below) -- total_degrees = offset + helical*length_in_inches.
+// This is our own simple linear scaling for helical (not necessarily
+// identical to any specific jig manufacturer's own per-inch formula, which
+// can be diameter-dependent) -- chosen because it's the setup validated on
+// our own print testing. Range is 0-25 deg/in for helical, 0-6 deg for
+// offset. See the How To page's Helical Twist section for the
+// customer-facing version of this note.
+//
+// Print history: an earlier 25deg helical-alone test failed (fins drooped
+// outward/pinwheeled), traced to moisture-degraded filament, not the twist
+// angle itself. A retest at 28-32deg total on dry filament, tuned
+// retraction/cooling, printed clean. That testing was helical alone, before
+// offset existed as a parameter and before the offset-as-rotation fix
+// (offset was briefly a raw sideways shear, which detached the fins from
+// the tube -- see buildFin). Ranges were bumped repeatedly after that at
+// Isaac's request -- most recently 0-10 -> 0-25 deg/in for helical (offset
+// stayed at 0-6). At the new max, total twist runs 55-96deg depending on
+// vane length -- 2-3x the validated 28-32deg ceiling, confirmed explicitly
+// by Isaac after being shown those numbers. NOTHING near this range has
+// been printed. Run Studio's twist-test batch (needs updating to the new
+// max -- it currently only sweeps up to the prior ceiling) before treating
+// any of this as viable, let alone shippable.
 
 /* =====================================================================
    3D GEOMETRY (visual preview only)
@@ -1997,7 +2025,21 @@ function render(){
 
   buildTube(Rin, Rout, length, 48);
   const numFletches = parseInt(order.fletchCount);
-  const twistRad = parseFloat(order.helical) * Math.PI/180;
+  // order.helical is deg/in -- multiply by length in inches for the total
+  // helical rotation. order.offset is a flat total angle (not deg/in).
+  // Both are ROTATIONS around the shaft axis and combine into one total
+  // sweep -- an earlier version tried to implement offset as a raw sideways
+  // shear instead of a rotation, which detached the fins from the tube at
+  // any real offset angle (a linear shift doesn't stay on a curved surface
+  // the way a rotation does). Folding both into a single angular sweep
+  // keeps every vertex correctly fused to the tube's actual circular
+  // cross-section, and still reads visually as a near-straight tilt at
+  // small combined angles (see the How To page) versus an obvious spiral
+  // at larger ones -- same reason a helix looks straight from the side at
+  // a shallow pitch.
+  const totalTwistDeg = parseFloat(order.helical) * (length/25.4);
+  const offsetDeg = parseFloat(order.offset);
+  const twistRad = (totalTwistDeg + offsetDeg) * Math.PI/180;
   const dirSign = order.helicalDir==='right'?1:-1;
   for(let f=0; f<numFletches; f++){
     buildFin(f*(Math.PI*2/numFletches), twistRad, dirSign, Rout, wall, overlap, length, curve, 70);
@@ -2024,9 +2066,11 @@ function render(){
   });
   const mesh = new THREE.Mesh(geo, mat);
   if(arrowViewMode){
-    // Rear edge of the vane sits NOCK_GAP forward of the arrow's rear tip --
-    // local mesh geometry already spans z=[0,length], so this positions the
-    // rear edge exactly at world z=NOCK_GAP with no extra offset math needed.
+    // Nock-end of the vane sits NOCK_GAP forward of the arrow's rear tip --
+    // local mesh geometry spans z=[0,length] with z=0 = node x=0 = the
+    // NOCK end (see SHAPES comment above), so this positions the nock end
+    // exactly at world z=NOCK_GAP with no extra offset math needed. All 8
+    // shapes' node data is oriented x=0->nock, x=length->point to match.
     mesh.position.z = NOCK_GAP;
     modelGroup.add(mesh);
     buildArrowShaftAndNock(effOD/2);
@@ -2084,6 +2128,23 @@ function shapeDisplayName(ord){
 function colorDisplayName(hex){
   return (COLORS.find(c=>c.hex===hex)||{}).name || '--';
 }
+// order.helical is deg/in, order.offset is a flat deg angle; show both plus
+// the actual total helical degrees for this vane's length so it's
+// unambiguous either way.
+function helicalSummaryText(ord){
+  ord = ord || order;
+  const perIn = parseFloat(ord.helical);
+  const off = parseFloat(ord.offset||0);
+  const dir = ord.helicalDir==='right' ? 'Right' : 'Left';
+  const parts = [];
+  if(off>0) parts.push(`${off}° offset`);
+  if(perIn>0){
+    const totalDeg = Math.round(perIn * (ord.vaneLength/25.4) * 10)/10;
+    parts.push(`${perIn}°/in helical (${totalDeg}° total on this ${ord.vaneLength}mm vane)`);
+  }
+  if(!parts.length) return 'Straight (0°)';
+  return parts.join(' + ') + ' ' + dir;
+}
 
 function updateOrderSummary(total){
   const grid = document.getElementById('orderSummaryGrid');
@@ -2125,13 +2186,13 @@ function updateOrderSummary(total){
   const rows = [
     ['Shape', shapeName],
     ['Color', `<span class="os-swatch" style="background:${order.color}"></span>${colorName}`],
-    ['Vane Length', order.vaneLength + 'mm'],
+    ['Vane Length', (Math.round(order.vaneLength/25.4*100)/100) + 'in'],
     ...(yourArrowValue ? [['Your Arrow', yourArrowValue]] : []),
     ['Shaft Size', order.shaftSizeSource==='unset' ? '<span style="color:var(--accent);">Not entered yet</span>' : order.shaftOD + 'mm'],
     ['Arrow Wraps', wrapText],
     ['Number of Vanes', order.fletchCount],
     ['Weight Class', weightClassLabel],
-    ['Helical', `${order.helical==='0' ? 'Straight (0°)' : order.helical+'° '+(order.helicalDir==='right'?'Right':'Left')}`],
+    ['Helical', helicalSummaryText()],
     ['Pack Size', 'Pack of ' + order.packSize],
     ['Quantity', order.quantity + ' pack' + (order.quantity==1?'':'s')],
   ];
@@ -2166,7 +2227,7 @@ function updateCartBadge(){
    cart item snapshot. */
 function validateItemSnapshot(s){
   if(s.vaneLength < LENGTH_MIN || s.vaneLength > LENGTH_MAX){
-    return `Vane length must be between ${LENGTH_MIN}mm and ${LENGTH_MAX}mm.`;
+    return `Vane length must be between ${Math.round(LENGTH_MIN/25.4*100)/100}in and ${Math.round(LENGTH_MAX/25.4*100)/100}in.`;
   }
   if(s.shaftSizeSource === 'unset'){
     return `Enter a Shaft Size, or make sure Brand/Model/Spine exactly match one we know.`;
@@ -2258,7 +2319,7 @@ function renderCartItems(){
           <div class="cart-item-swatch" style="background:${s.color}"></div>
           <div class="cart-item-body">
             <div class="cart-item-title">${shapeName} &middot; ${colorName}</div>
-            <div class="cart-item-specs">${s.vaneLength}mm &middot; ${s.fletchCount} vanes &middot; Pack of ${s.packSize}</div>
+            <div class="cart-item-specs">${Math.round(s.vaneLength/25.4*100)/100}in &middot; ${s.fletchCount} vanes &middot; Pack of ${s.packSize}</div>
             <div class="cart-item-qty-row">
               <div class="cart-qty-stepper">
                 <button class="cart-qty-minus" data-id="${item.id}" aria-label="Decrease quantity">&minus;</button>
@@ -2358,7 +2419,7 @@ function renderShapeCards(){
       ${miniCurveSVG(s.nodes, s.rounding)}
       <div class="name">${s.name}</div>
       <div class="desc">${s.desc}</div>
-      <div class="dims">${peakHeight.toFixed(2)}mm off the shaft</div>`;
+      <div class="dims">${(peakHeight/25.4).toFixed(3)}in off the shaft</div>`;
     card.addEventListener('click', ()=>{
       const msgEl = document.getElementById('shapeStockMsg');
       if(!s.stock){
@@ -2378,7 +2439,7 @@ function renderShapeCards(){
       const nativeLength = s.nodes[s.nodes.length-1].x;
       const clampedLength = Math.min(LENGTH_MAX, Math.max(LENGTH_MIN, nativeLength));
       order.vaneLength = clampedLength;
-      document.getElementById('vaneLength').value = clampedLength;
+      document.getElementById('vaneLength').value = Math.round(clampedLength/25.4*100)/100;
       document.getElementById('lengthErrorMsg').classList.remove('field-error');
       document.getElementById('customizeLink').classList.remove('active');
       document.getElementById('customizePanel').style.display = 'none';
@@ -2412,14 +2473,14 @@ function loadShapeIntoEditor(s){
    relative rankings across these eight shapes, not absolute measurements.
 ===================================================================== */
 const COMPARE_INFO = {
-  ghost:      { stab:4, quiet:3, speed:2, bestFor:'Quiet hunting shots where you still want real correction — long enough to stay quiet, tall enough to steer.' },
-  impact:     { stab:5, quiet:2, speed:3, bestFor:'Fixed-blade broadheads that need maximum correction in a shorter package.' },
-  crossover:  { stab:2, quiet:5, speed:5, bestFor:'An everyday all-around vane for mixed target and light hunting use.' },
-  target:     { stab:2, quiet:5, speed:5, bestFor:'Field points and indoor/3D target work — minimal drag, minimal noise.' },
-  compact:    { stab:3, quiet:4, speed:4, bestFor:'Small-diameter or speed-focused builds that still want dependable steering.' },
-  longrange:  { stab:4, quiet:4, speed:1, bestFor:'Longer shots or heavier hunting arrows needing sustained correction in flight.' },
-  drift:      { stab:4, quiet:3, speed:2, bestFor:'Long, gradual correction with a sharp taper near the nock — steady steering without excess bulk.' },
-  arc:        { stab:3, quiet:4, speed:3, bestFor:'A rounded, back-loaded profile for smooth, sustained correction across mixed hunting and target use.' },
+  ghost:      { stab:5, quiet:2, speed:2, bestFor:'Quiet hunting shots where you still want real correction — long enough to stay quiet, tall enough to steer.' },
+  impact:     { stab:1, quiet:5, speed:4, bestFor:'Light corrective touch in a short, fast package — lowest-profile shape in the lineup.' },
+  crossover:  { stab:5, quiet:1, speed:4, bestFor:'Maximum correction in a compact 50mm length — expect more noise for that stability.' },
+  target:     { stab:1, quiet:5, speed:3, bestFor:'Field points and indoor/3D target work — minimal correction, minimal noise.' },
+  compact:    { stab:4, quiet:2, speed:4, bestFor:'Small-diameter or speed-focused builds that still want dependable steering.' },
+  longrange:  { stab:3, quiet:4, speed:1, bestFor:'Longer shots or heavier hunting arrows needing sustained correction in flight.' },
+  drift:      { stab:4, quiet:3, speed:2, bestFor:'Sharp early correction near the front, then a long quiet taper to the nock.' },
+  vandor:     { stab:4, quiet:2, speed:3, bestFor:'A rounded, back-loaded profile for smooth, sustained correction across mixed hunting and target use.' },
 };
 function ratingBar(score){
   let html = '<div class="cc-bar">';
@@ -2433,13 +2494,14 @@ function renderCompareGrid(){
   Object.entries(SHAPES).forEach(([key,s])=>{
     const info = COMPARE_INFO[key];
     const length = s.nodes[s.nodes.length-1].x;
+    const lengthIn = Math.round(length/25.4*100)/100;
     const height = trueHeightOffShaft(s.nodes, WALL_STANDARD);
     const card = document.createElement('div');
     card.className = 'compare-card';
     card.innerHTML = `
       ${miniCurveSVG(s.nodes, s.rounding)}
       <div class="cc-name">${s.name}</div>
-      <div class="cc-dims">${length}mm long &middot; ${height.toFixed(2)}mm off the shaft</div>
+      <div class="cc-dims">${lengthIn}in long &middot; ${(height/25.4).toFixed(3)}in off the shaft</div>
       <div class="cc-bestfor">${info.bestFor}</div>
       <div class="cc-rating">
         <div class="cc-rating-label"><span>Broadhead Stabilization</span></div>
@@ -2548,15 +2610,22 @@ document.querySelectorAll('.segbtn[data-group]').forEach(btn=>{
 
 document.getElementById('helicalSlider').addEventListener('input', e=>{
   order.helical = e.target.value;
-  document.getElementById('helicalSliderVal').textContent = e.target.value+'°';
+  document.getElementById('helicalSliderVal').textContent = e.target.value+'°/in';
   render();
 });
 
-const LENGTH_MIN = 35, LENGTH_MAX = 100;
+document.getElementById('offsetSlider').addEventListener('input', e=>{
+  order.offset = e.target.value;
+  document.getElementById('offsetSliderVal').textContent = e.target.value+'°';
+  render();
+});
+
+const LENGTH_MIN = 35, LENGTH_MAX = 100; // mm -- internal storage/geometry always stays in mm
 document.getElementById('vaneLength').addEventListener('input', e=>{
-  const raw = parseFloat(e.target.value);
+  const rawIn = parseFloat(e.target.value);
+  const rawMM = rawIn * 25.4;
   const errEl = document.getElementById('lengthErrorMsg');
-  if(!isNaN(raw) && (raw < LENGTH_MIN || raw > LENGTH_MAX)){
+  if(!isNaN(rawMM) && (rawMM < LENGTH_MIN || rawMM > LENGTH_MAX)){
     errEl.classList.add('field-error');
   } else {
     errEl.classList.remove('field-error');
@@ -2564,14 +2633,16 @@ document.getElementById('vaneLength').addEventListener('input', e=>{
   // Live preview stays responsive while typing (so "8" on the way to "80"
   // doesn't visibly break), but geometry/pricing math always works off a
   // clamped value -- nothing out of range ever actually renders or prices.
-  order.vaneLength = Math.min(LENGTH_MAX, Math.max(LENGTH_MIN, isNaN(raw) ? 55 : raw));
+  // Field itself is inches; order.vaneLength is always stored in mm.
+  order.vaneLength = Math.min(LENGTH_MAX, Math.max(LENGTH_MIN, isNaN(rawMM) ? 55 : rawMM));
   render();
   if(customizeOpen) drawCPGraph();
 });
 document.getElementById('vaneLength').addEventListener('blur', e=>{
-  const clamped = Math.min(LENGTH_MAX, Math.max(LENGTH_MIN, parseFloat(e.target.value)||55));
-  e.target.value = clamped;
-  order.vaneLength = clamped;
+  const rawMM = parseFloat(e.target.value) * 25.4;
+  const clampedMM = Math.min(LENGTH_MAX, Math.max(LENGTH_MIN, isNaN(rawMM) ? 55 : rawMM));
+  e.target.value = Math.round(clampedMM/25.4*100)/100;
+  order.vaneLength = clampedMM;
   document.getElementById('lengthErrorMsg').classList.remove('field-error');
   render();
   if(customizeOpen) drawCPGraph();
@@ -2899,6 +2970,7 @@ function buildItemProfileData(name, s){
     weightClass: s.weightClass,
     helical: s.helical,
     helicalDir: s.helicalDir,
+    offset: s.offset,
     color: s.color,
     packSize: s.packSize,
     quantity: s.quantity
@@ -2926,7 +2998,7 @@ function buildItemLines(s, pricing, index, total){
     '  Arrow Wraps:    ' + wrapLine,
     '  Fin Count:      ' + s.fletchCount,
     '  Weight Class:   ' + s.weightClass,
-    '  Helical:        ' + (s.helical==='0' ? 'Straight (0°)' : s.helical+'° '+s.helicalDir),
+    '  Helical:        ' + helicalSummaryText(s),
     '  Color:          ' + colorDisplayName(s.color) + ' (' + s.color + ')',
     '  Pack Size:      ' + pricing.pack,
     '  Quantity:       ' + pricing.qty + ' pack(s)',
@@ -2960,7 +3032,8 @@ function buildStudioCopyLines(s, index, total){
     (s.usingWraps==='yes' ? 'Wrap Brand: ' + (s.wrapBrand || '(not provided)') : null),
     'Fin Count: ' + s.fletchCount,
     'Weight Class: ' + s.weightClass,
-    'Helical (deg): ' + s.helical,
+    'Helical (deg/in): ' + s.helical,
+    'Offset (deg): ' + (s.offset || '0'),
     'Helical Dir: ' + s.helicalDir,
     'Color (hex): ' + s.color,
     'Pack Size: ' + s.packSize,
