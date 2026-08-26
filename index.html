@@ -20,7 +20,7 @@
    PRODUCT STAGE         - 3D preview backdrop
    SECTIONS              - general .step section spacing/eyebrows
    BENEFITS SECTION      - "Why Switch" 3-card row
-   SHAPE CARDS           - the 8 shape-preset picker cards
+   SHAPE CARDS           - the 9 shape-preset picker cards
    CUSTOMIZE PANEL       - custom shape node editor styling
    FIELDS                - form inputs, segmented buttons, color swatches
    PRICE                 - price card
@@ -29,7 +29,7 @@
 
  JS (inside the main SCRIPT block, near the bottom of the file):
    3D PREVIEW SCENE       - Three.js camera/lighting/render loop
-   SHAPE LIBRARY          - SHAPES data: GHOST/IMPACT/CROSSOVER/TARGET/COMPACT/LONGRANGE/DRIFT/VANDOR
+   SHAPE LIBRARY          - SHAPES data: GHOST/IMPACT/CROSSOVER/TARGET/COMPACT/LONGRANGE/DRIFT/VANDOR/RIPTIDE
    CURVE MATH             - corner-rounding + curve sampling shared by preview/icons/editor
    3D GEOMETRY             - tube + fin mesh construction (preview only, not print-grade)
    PRICING                 - updatePricing(): the live price formula
@@ -357,6 +357,23 @@
 
   /* ---- product stage ---- */
   .stage-frame{ padding:40px 24px 0; }
+  /* Sticky live preview -- desktop only (see 900px breakpoint below). Keeps
+     the 3D preview in view while editing fields further down the page,
+     instead of it scrolling out of sight. Shrinks to a compact strip once
+     stuck so it doesn't eat the whole viewport -- see #stageSentinel's
+     IntersectionObserver in the INIT section of the script for the JS half
+     of this (toggles .stuck and calls resizeRenderer()). */
+  @media (min-width:900px){
+    .stage-frame{
+      position:sticky; top:var(--header-h, 74px); z-index:30;
+      background:var(--bg); padding-top:16px; padding-bottom:10px;
+      transition:padding .2s ease;
+    }
+    .stage-frame.stuck{ padding-top:10px; padding-bottom:6px; }
+    .stage-frame.stuck .stage{ box-shadow:0 20px 40px -18px rgba(0,0,0,0.65); }
+    .stage-frame.stuck #canvasHost{ height:190px; min-height:190px; max-height:190px; }
+    .stage-frame.stuck .stage-hint{ display:none; }
+  }
   .stage{
     max-width:1140px; margin:0 auto; border-radius:6px; overflow:hidden;
     background:linear-gradient(160deg, #e8e6e0 0%, #cfccc2 55%, #b8b4a6 100%);
@@ -721,17 +738,18 @@
   <div class="wrap">
     <div class="eyebrow-top">No Jig. No Mess. No Wasted Time.</div>
     <h1>Glue It. Slide It. <em>Done.</em></h1>
-    <p>A small ring of glue at the front, another in the middle, then slide it down your shaft — no fletching jig, no clamps, no precise alignment to fuss over. And since it's built to your exact arrow, it fits right from the start. Want to tweak the shape yourself? You can — most people don't need to.</p>
+    <p>A small ring of glue at the front, another in the middle, then slide it down your shaft — no fletching jig, no clamps, no precise alignment to fuss over. And since it's built to your exact arrow, it fits right from the start. Want to tweak the shape yourself? You can.</p>
   </div>
 </div>
 
+<div id="stageSentinel"></div>
 <div class="stage-frame">
   <div class="stage">
     <div class="stage-badge">Live Preview</div>
     <div class="arrow-view-btn" id="arrowViewBtn">See on Arrow</div>
     <div class="arrow-view-note" id="arrowViewNote">Illustrative arrow length — not your exact arrow.</div>
     <div id="canvasHost"></div>
-    <div class="stage-hint">Drag to rotate · Ctrl + scroll to zoom</div>
+    <div class="stage-hint">Drag to rotate · Shift-drag to pan · Ctrl+scroll or pinch to zoom</div>
   </div>
 </div>
 
@@ -760,11 +778,11 @@
   <section class="step reveal" id="shape">
     <div class="step-eyebrow">The Shape</div>
     <h2>Choose your profile</h2>
-    <div class="step-sub">Each shape is tuned for a different style of shooting. Not sure? IMPACT and CROSSOVER are the most popular all-around picks.</div>
+    <div class="step-sub">Each shape is tuned for a different style of shooting. Not sure? IMPACT and CROSSOVER are the most popular all-around picks. Try a few — the length field below adjusts too, so it's worth playing with both until the preview feels right.</div>
     <div class="shape-grid" id="shapeGrid"></div>
     <div class="stock-msg" id="shapeStockMsg"></div>
     <div class="customize-link" id="compareLink" style="margin-right:18px;">
-      <span>⚖</span> Not sure? Compare all eight shapes
+      <span>⚖</span> Not sure? Compare all nine shapes
     </div>
     <div class="customize-btn" id="customizeLink">
       <span>✎</span> Design Your Own Custom Shape
@@ -1023,7 +1041,7 @@
     </svg>
     <div class="wrap">
       <div class="eyebrow-top">Pick With Confidence</div>
-      <h1>Compare the <em>eight shapes</em>, side by side.</h1>
+      <h1>Compare the <em>nine shapes</em>, side by side.</h1>
     </div>
   </div>
 
@@ -1033,7 +1051,7 @@
       <h2>Two Numbers Do Most of the Work</h2>
       <p><b>Height</b> is what steers a broadhead back on line — taller vanes correct more, which is exactly why hunting vanes tend to stand taller than target vanes. That correction isn't free, though: taller also means more noise and, to a lesser degree, more drag.</p>
       <p><b>Length</b> works differently than most people expect. It's actually the bigger factor in aerodynamic drag — a long vane costs you more speed than a tall one does. But length also quiets things down: spread the same surface area over a longer, lower-angle curve and it slices through the air with less noise than a short, steep one. That's why a vane can be both long <i>and</i> quiet at the same time.</p>
-      <p>Every shape below is fully rounded already — no sharp edges anywhere in the curve, on any of them — so airflow separation and turbulence aren't a variable here. What actually separates these eight is how much length and height each one leans on, and that's what the ratings below reflect.</p>
+      <p>Every shape below is fully rounded already — no sharp edges anywhere in the curve, on any of them — so airflow separation and turbulence aren't a variable here. What actually separates these nine is how much length and height each one leans on, and that's what the ratings below reflect.</p>
     </section>
 
     <section class="about-block reveal">
@@ -1050,7 +1068,7 @@
       <div class="step-eyebrow">Side by Side</div>
       <h2>Shape Comparison</h2>
       <div class="compare-grid" id="compareGrid"></div>
-      <p class="compare-footnote">Ratings are relative to the other five shapes in this lineup, based on each shape's actual length and height and how those two dimensions are known to affect steering power, noise, and drag. They're a guide for picking a starting point — not a lab measurement of your specific build, which also depends on your shaft, point weight, and broadhead choice.</p>
+      <p class="compare-footnote">Ratings are relative to the other shapes in this lineup, based on each shape's actual length and height and how those two dimensions are known to affect steering power, noise, and drag. They're a guide for picking a starting point — not a lab measurement of your specific build, which also depends on your shaft, point weight, and broadhead choice.</p>
     </section>
 
     <section class="about-block reveal about-cta">
@@ -1306,7 +1324,7 @@ function logOrderToTracker(payload){
     setTimeout(()=>input.focus(), 100);
   }
 })();
-
+*/
 
 /* =====================================================================
    3D PREVIEW SCENE
@@ -1414,35 +1432,106 @@ function buildArrowShaftAndNock(shaftRadius){
 }
 
 let isDragging=false, prevX=0, prevY=0, rotY=0.6, rotX=-0.2, camDist=95;
-let lookAtY=12, lookAtZ=0; // lookAt target shifts when toggling "See on Arrow" -- see setArrowViewMode()
-let rotVelY=0, rotVelX=0, lastInteractTime=0, hasEverInteracted=false;
-const AUTOROTATE_SPEED = 0.0035, AUTOROTATE_DELAY_MS = 2500;
+let lookAtX=0, lookAtY=12, lookAtZ=0; // lookAt target shifts when toggling "See on Arrow" -- see setArrowViewMode() -- and now also when panning, see panByScreenDelta()
+let rotVelY=0, rotVelX=0;
+
+// ---- Pan: shifts the lookAt target (and camera along with it) sideways/
+// up-down instead of orbiting around it. Right-click-drag or Shift+drag on
+// desktop, two-finger drag on touch. Math mirrors three.js's own
+// OrbitControls.pan() -- move the target along the camera's current
+// right/up vectors, scaled by distance-from-target and viewport size so a
+// given drag always feels like "grabbing" the same point on screen
+// regardless of current zoom level.
+let isPanning=false, panPrevX=0, panPrevY=0;
+function cameraRightAndUp(){
+  const offX = camDist*Math.sin(rotY)*Math.cos(rotX);
+  const offY = camDist*Math.sin(rotX);
+  const offZ = camDist*Math.cos(rotY)*Math.cos(rotX);
+  const flen = Math.hypot(offX,offY,offZ) || 1;
+  const fX=-offX/flen, fY=-offY/flen, fZ=-offZ/flen; // forward = camera -> target
+  let rX=-fZ, rY=0, rZ=fX; // right = normalize(cross(forward, worldUp=(0,1,0)))
+  const rlen = Math.hypot(rX,rY,rZ) || 1;
+  rX/=rlen; rZ/=rlen;
+  let uX=rY*fZ-rZ*fY, uY=rZ*fX-rX*fZ, uZ=rX*fY-rY*fX; // up = cross(right, forward)
+  const ulen = Math.hypot(uX,uY,uZ) || 1;
+  uX/=ulen; uY/=ulen; uZ/=ulen;
+  return {rX,rY,rZ,uX,uY,uZ};
+}
+function panByScreenDelta(dx, dy){
+  const {rX,rY,rZ,uX,uY,uZ} = cameraRightAndUp();
+  const fovFactor = Math.tan((45/2)*Math.PI/180); // matches camera's 45deg fov
+  const scale = 2*camDist*fovFactor / Math.max(1,host.clientHeight);
+  lookAtX += (-rX*dx + uX*dy)*scale;
+  lookAtY += (-rY*dx + uY*dy)*scale;
+  lookAtZ += (-rZ*dx + uZ*dy)*scale;
+}
+
+// ---- Multi-touch: tracks every active pointer so two fingers down
+// switches from single-finger orbit to pinch-zoom + two-finger pan.
+const activePointers = new Map();
+let pinchStartDist=null, pinchStartCamDist=null, pinchMidPrev=null;
+function pointerDist(a,b){ return Math.hypot(a.x-b.x, a.y-b.y); }
+function pointerMid(a,b){ return {x:(a.x+b.x)/2, y:(a.y+b.y)/2}; }
+function zoomBounds(){ return arrowViewMode ? [150,900] : [8,300]; }
+function clampCamDist(){ const b=zoomBounds(); camDist = Math.max(b[0], Math.min(b[1], camDist)); }
+
+renderer.domElement.addEventListener('contextmenu', e=>e.preventDefault()); // right-drag is repurposed for panning
 renderer.domElement.addEventListener('pointerdown', e=>{
-  isDragging=true; prevX=e.clientX; prevY=e.clientY; rotVelY=0; rotVelX=0;
-  hasEverInteracted=true; lastInteractTime=Date.now();
   renderer.domElement.setPointerCapture(e.pointerId);
+  activePointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  if(activePointers.size >= 2){
+    isDragging=false; isPanning=false; rotVelY=0; rotVelX=0;
+    const pts = Array.from(activePointers.values());
+    pinchStartDist = pointerDist(pts[0], pts[1]);
+    pinchStartCamDist = camDist;
+    pinchMidPrev = pointerMid(pts[0], pts[1]);
+  } else {
+    const wantsPan = e.button===2 || e.shiftKey;
+    isPanning = wantsPan; isDragging = !wantsPan;
+    prevX=e.clientX; prevY=e.clientY; panPrevX=e.clientX; panPrevY=e.clientY;
+    rotVelY=0; rotVelX=0;
+  }
 });
-window.addEventListener('pointerup', ()=>{ isDragging=false; lastInteractTime=Date.now(); });
-window.addEventListener('pointercancel', ()=>{ isDragging=false; lastInteractTime=Date.now(); });
+window.addEventListener('pointerup', e=>{ activePointers.delete(e.pointerId); isDragging=false; isPanning=false; pinchStartDist=null; pinchMidPrev=null; });
+window.addEventListener('pointercancel', e=>{ activePointers.delete(e.pointerId); isDragging=false; isPanning=false; pinchStartDist=null; pinchMidPrev=null; });
 window.addEventListener('pointermove', e=>{
+  if(activePointers.has(e.pointerId)) activePointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+
+  if(activePointers.size >= 2){
+    const pts = Array.from(activePointers.values()).slice(0,2);
+    const d = pointerDist(pts[0], pts[1]);
+    if(pinchStartDist){
+      camDist = pinchStartCamDist * (pinchStartDist/d);
+      clampCamDist();
+    }
+    const mid = pointerMid(pts[0], pts[1]);
+    if(pinchMidPrev) panByScreenDelta(mid.x-pinchMidPrev.x, mid.y-pinchMidPrev.y);
+    pinchMidPrev = mid;
+    return;
+  }
+
+  if(isPanning){
+    panByScreenDelta(e.clientX-panPrevX, e.clientY-panPrevY);
+    panPrevX=e.clientX; panPrevY=e.clientY;
+    return;
+  }
+
   if(!isDragging) return;
   const dx=e.clientX-prevX, dy=e.clientY-prevY;
   rotVelY = -dx*0.008; rotVelX = dy*0.008;
   rotY += rotVelY; rotX += rotVelX;
   rotX = Math.max(-1.3, Math.min(1.3, rotX));
   prevX=e.clientX; prevY=e.clientY;
-  lastInteractTime=Date.now();
 });
 // Ctrl+scroll to zoom; plain scroll passes through to the page instead of
 // getting captured by the 3D viewport. Zoom bounds widen in arrow-view mode
-// since that scene is roughly 7x longer than the vane-only view.
+// since that scene is roughly 7x longer than the vane-only view. Touch
+// devices pinch to zoom instead -- see the multi-touch handling above.
 renderer.domElement.addEventListener('wheel', e=>{
   if(!(e.ctrlKey || e.metaKey)) return; // let the page scroll normally
   camDist *= (1 + e.deltaY*0.001);
-  const bounds = arrowViewMode ? [150,900] : [15,300];
-  camDist = Math.max(bounds[0], Math.min(bounds[1], camDist));
+  clampCamDist();
   e.preventDefault();
-  hasEverInteracted=true; lastInteractTime=Date.now();
 }, {passive:false});
 function updateCamera(){
   if(isDragging){
@@ -1452,15 +1541,11 @@ function updateCamera(){
     rotY += rotVelY; rotX += rotVelX;
     rotX = Math.max(-1.3, Math.min(1.3, rotX));
     rotVelY *= 0.92; rotVelX *= 0.92;
-  } else if(!hasEverInteracted || Date.now()-lastInteractTime > AUTOROTATE_DELAY_MS){
-    // gentle idle auto-rotate -- makes it obvious at a glance that this is a
-    // 3D object you can spin, no hint text required to figure that out
-    rotY += AUTOROTATE_SPEED;
   }
-  camera.position.x = camDist*Math.sin(rotY)*Math.cos(rotX);
+  camera.position.x = lookAtX + camDist*Math.sin(rotY)*Math.cos(rotX);
   camera.position.z = lookAtZ + camDist*Math.cos(rotY)*Math.cos(rotX);
   camera.position.y = camDist*Math.sin(rotX)+lookAtY;
-  camera.lookAt(0,lookAtY,lookAtZ);
+  camera.lookAt(lookAtX,lookAtY,lookAtZ);
 }
 function resizeRenderer(){
   camera.aspect = host.clientWidth/Math.max(1,host.clientHeight);
@@ -1498,13 +1583,12 @@ document.getElementById('arrowViewBtn').addEventListener('click', ()=>{
     // zoom freely from here same as normal.
     camDist = 420;
     rotY = 1.15; rotX = -0.12;
-    lookAtY = 4; lookAtZ = 160;
+    lookAtX = 0; lookAtY = 4; lookAtZ = 160;
   } else {
     camDist = 95;
     rotY = 0.6; rotX = -0.2;
-    lookAtY = 12; lookAtZ = 0;
+    lookAtX = 0; lookAtY = 12; lookAtZ = 0;
   }
-  hasEverInteracted = true; lastInteractTime = Date.now();
   render();
 });
 
@@ -1857,7 +1941,9 @@ const SHAPES = {
   drift: { name:'DRIFT', desc:'Sharp front rise, long gradual taper to the nock.', rounding:100, stock:true,
     nodes:[{x:0,h:0.4},{x:4,h:3},{x:9,h:7},{x:16,h:12},{x:75,h:0.4}] },
   vandor: { name:'VANDOR', desc:'Rounded, back-loaded peak for steady correction.', rounding:100, stock:true,
-    nodes:[{x:0,h:2.3},{x:8,h:8.3},{x:20,h:12},{x:65,h:0.4}] }
+    nodes:[{x:0,h:2.3},{x:8,h:8.3},{x:20,h:12},{x:65,h:0.4}] },
+  riptide: { name:'RIPTIDE', desc:'Long, mid-loaded peak for sustained correction over extended flight.', rounding:100, stock:true,
+    nodes:[{x:0,h:0.4},{x:25,h:10.7},{x:58,h:4},{x:76.2,h:0.4}] }
 };
 // Shared reference dimensions for miniCurveSVG -- computed once across all
 // stock shapes so every silhouette on the shape-picker and Compare cards
@@ -2487,7 +2573,7 @@ function loadShapeIntoEditor(s){
    applying the published relationships: height drives steering power and
    noise (taller = more of both); length is the stronger driver of drag,
    and longer vanes run quieter for a given height. Values below are
-   relative rankings across these eight shapes, not absolute measurements.
+   relative rankings across these nine shapes, not absolute measurements.
 ===================================================================== */
 const COMPARE_INFO = {
   ghost:      { stab:5, quiet:2, speed:2, bestFor:'Quiet hunting shots where you still want real correction — long enough to stay quiet, tall enough to steer.' },
@@ -2498,6 +2584,7 @@ const COMPARE_INFO = {
   longrange:  { stab:3, quiet:4, speed:1, bestFor:'Longer shots or heavier hunting arrows needing sustained correction in flight.' },
   drift:      { stab:4, quiet:3, speed:2, bestFor:'Sharp early correction near the front, then a long quiet taper to the nock.' },
   vandor:     { stab:4, quiet:2, speed:3, bestFor:'A rounded, back-loaded profile for smooth, sustained correction across mixed hunting and target use.' },
+  riptide:    { stab:4, quiet:4, speed:2, bestFor:'Long-range hunting shots needing steady, sustained correction without extra noise — our longest vane after LONGRANGE.' },
 };
 function ratingBar(score){
   let html = '<div class="cc-bar">';
@@ -3221,6 +3308,40 @@ const io = new IntersectionObserver((entries)=>{
   entries.forEach(en=>{ if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); } });
 }, {threshold:0.12});
 revealEls.forEach(el=>io.observe(el));
+
+/* =====================================================================
+   STICKY LIVE PREVIEW (desktop only, see the 900px breakpoint in CSS)
+   Keeps the 3D preview pinned near the top while scrolling through the
+   configurator fields below, instead of it disappearing off-screen --
+   shrinks to a compact strip once stuck so it doesn't dominate the
+   viewport. #stageSentinel is a 0-height marker placed right where the
+   stage would naturally sit; once it scrolls above the header, we know
+   the stage itself is now stuck, so toggle the compact layout and tell
+   Three.js to resize into the new (smaller) canvas height.
+===================================================================== */
+function setHeaderHeightVar(){
+  const h = document.querySelector('header')?.offsetHeight || 74;
+  document.documentElement.style.setProperty('--header-h', h+'px');
+  return h;
+}
+let headerH = setHeaderHeightVar();
+window.addEventListener('resize', ()=>{ headerH = setHeaderHeightVar(); });
+
+const stageFrameEl = document.querySelector('.stage-frame');
+const stageSentinelEl = document.getElementById('stageSentinel');
+if(stageFrameEl && stageSentinelEl && 'IntersectionObserver' in window){
+  const stageIO = new IntersectionObserver((entries)=>{
+    entries.forEach(en=>{
+      stageFrameEl.classList.toggle('stuck', !en.isIntersecting);
+      // Canvas height just changed via CSS -- tell Three.js to match it,
+      // and repaint once so it isn't stretched/squashed until the next
+      // orbit-drag frame.
+      resizeRenderer();
+      render();
+    });
+  }, { rootMargin: `-${headerH}px 0px 0px 0px`, threshold:0 });
+  stageIO.observe(stageSentinelEl);
+}
 
 /* =====================================================================
    PAGE NAVIGATION (Home / About, expandable to more tabs later —
