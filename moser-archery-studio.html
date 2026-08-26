@@ -5,7 +5,7 @@
  Ctrl+F any of the CAPITALIZED terms below to jump toward that part of the file.
 =================================================================================
 
-   NAMED_PRESETS         - preset shape data (GHOST/IMPACT/TARGET/COMPACT/LONGRANGE/DRIFT/VANDOR/CROSSOVER)
+   NAMED_PRESETS         - preset shape data (GHOST/IMPACT/TARGET/COMPACT/LONGRANGE/DRIFT/VANDOR/CROSSOVER/RIPTIDE)
    applyNamedPreset()     - loads a preset's shape + sets Vane Length to match
    CHANGE_SHAPE_STOCK_HERE - grey out / disable a preset button, same keyword as the storefront
 
@@ -345,6 +345,7 @@
         <div class="presetbtn" id="presetDrift" title="Peak 21% from nock, 75mm">DRIFT</div>
         <div class="presetbtn" id="presetVandor" title="Peak 31% from nock, 65mm">VANDOR</div>
         <div class="presetbtn" id="presetCrossover" title="Peak 46% from nock, 50mm">CROSSOVER</div>
+        <div class="presetbtn" id="presetRiptide" title="Low-profile peak 44% from nock, 50mm">RIPTIDE</div>
       </div>
       <div id="customModeToggle">🔓 Customize Shape</div>
     </div>
@@ -555,7 +556,15 @@ const NAMED_PRESETS = {
   // CROSSOVER -- MIRRORED, same orientation fix. Peak (13mm) now at x=23
   // (46% from nock). See COMPACT note above re: similarity flag.
   crossover: { rounding:100, stock:true,
-    nodes:[{x:0,h:3},{x:4,h:6.2},{x:23,h:13},{x:50,h:0.4}] }
+    nodes:[{x:0,h:3},{x:4,h:6.2},{x:23,h:13},{x:50,h:0.4}] },
+  // RIPTIDE -- updated from Studio print-testing pass (vane_profile.json).
+  // Peak (10.7mm) at x=25 (33% from nock), length 76.2mm. No longer a
+  // low-profile shape by peak height -- now sits between GHOST (12.7mm)
+  // and IMPACT (9.8mm), and is the second-longest vane after LONGRANGE.
+  // Glue gap for this profile is 0.525mm diametral clearance, not the
+  // 0.15mm standard used by every other vane -- see order defaults below.
+  riptide: { rounding:100, stock:true,
+    nodes:[{x:0,h:0.4},{x:25,h:10.7},{x:58,h:4},{x:76.2,h:0.4}] }
 };
 function currentLength(){ return parseFloat(document.getElementById('vaneLength').value)||70; }
 // Helical twist (the 'helical' slider/field) is degrees PER INCH of vane
@@ -904,11 +913,13 @@ document.getElementById('presetLongrange').addEventListener('click', ()=> applyN
 document.getElementById('presetDrift').addEventListener('click', ()=> applyNamedPreset(NAMED_PRESETS.drift, 'DRIFT (placeholder)'));
 document.getElementById('presetVandor').addEventListener('click', ()=> applyNamedPreset(NAMED_PRESETS.vandor, 'VANDOR'));
 document.getElementById('presetCrossover').addEventListener('click', ()=> applyNamedPreset(NAMED_PRESETS.crossover, 'CROSSOVER'));
+document.getElementById('presetRiptide').addEventListener('click', ()=> applyNamedPreset(NAMED_PRESETS.riptide, 'RIPTIDE'));
 // Grey out any preset button whose NAMED_PRESETS entry has stock:false --
 // see CHANGE_SHAPE_STOCK_HERE at the top of NAMED_PRESETS.
 const PRESET_BUTTON_IDS = {
   ghost:'presetGhost', impact:'presetImpact', target:'presetTarget', compact:'presetCompact',
-  longrange:'presetLongrange', drift:'presetDrift', vandor:'presetVandor', crossover:'presetCrossover'
+  longrange:'presetLongrange', drift:'presetDrift', vandor:'presetVandor', crossover:'presetCrossover',
+  riptide:'presetRiptide'
 };
 Object.entries(PRESET_BUTTON_IDS).forEach(([key,id])=>{
   const btn = document.getElementById(id);
