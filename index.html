@@ -897,13 +897,13 @@
     </div>
     <div class="field-grid">
       <div class="field">
-        <label>Offset <span class="opt" id="offsetSliderVal">0°</span></label>
-        <input type="range" id="offsetSlider" min="0" max="3" step="0.1" value="0" style="width:100%;">
+        <label>Offset <span class="opt" id="offsetSliderVal">1°</span></label>
+        <input type="range" id="offsetSlider" min="0" max="3" step="0.1" value="1" style="width:100%;">
         <div class="help">A rotation around the shaft, same as Helical Twist, specified as one flat total angle instead of scaling with vane length. At this range it reads visually as a near-straight tilt rather than an obvious spiral. Combines with Helical Twist below into one total twist.</div>
       </div>
       <div class="field">
-        <label>Helical Twist <span class="opt" id="helicalSliderVal">2.5°/in</span></label>
-        <input type="range" id="helicalSlider" min="0" max="25" step="0.1" value="2.5" style="width:100%;">
+        <label>Helical Twist <span class="opt" id="helicalSliderVal">19°/in</span></label>
+        <input type="range" id="helicalSlider" min="0" max="25" step="0.1" value="19" style="width:100%;">
         <div class="help">The same rotation as Offset, specified as degrees per inch of vane length instead of a flat total — so total twist scales with your vane's length. Combines with Offset above (both use the same Twist Direction).</div>
       </div>
       <div class="field">
@@ -1969,7 +1969,7 @@ const COLORS = [
 const order = {
   shape:'impact', customNodes:null, customRounding:55,
   vaneLength:55, shaftOD:6.15, arrowBrand:'', arrowModel:'', arrowSpine:'', shaftSizeSource:'unset', usingWraps:'no', wrapThickness:'', wrapBrand:'',
-  fletchCount:'4', weightClass:'standard', helical:'2.5', helicalDir:'right', offset:'0',
+  fletchCount:'4', weightClass:'standard', helical:'19', helicalDir:'right', offset:'1',
   color:'#8BC34A', packSize:'18', quantity:1
 };
 // Declared early (not down near the rest of the custom-editor code) because
