@@ -413,6 +413,17 @@
     padding:4px 10px; border-radius:2px; max-width:200px; text-align:right; line-height:1.4; display:none;
   }
   .arrow-view-note.visible{ display:block; }
+  /* ---- pin/unpin toggle for the sticky live preview ---- */
+  .pin-toggle-btn{
+    position:absolute; bottom:14px; right:14px; font-family:var(--label); font-size:10.5px; letter-spacing:0.6px; text-transform:uppercase;
+    color:#3a3226; background:rgba(255,255,255,0.75); padding:6px 12px; border-radius:3px; font-weight:600;
+    cursor:pointer; border:1px solid rgba(0,0,0,0.08); display:none; align-items:center; gap:6px; transition:background .12s;
+    z-index:5;
+  }
+  .pin-toggle-btn:hover{ background:rgba(255,255,255,0.92); }
+  @media (min-width:900px){ .pin-toggle-btn{ display:flex; } }
+  .stage-frame.stuck .pin-toggle-btn{ bottom:6px; right:6px; padding:4px 9px; font-size:9.5px; }
+  .stage-frame.preview-unpinned{ position:static !important; }
 
   /* ---- sections ---- */
   section.step{ padding:64px 0; border-bottom:1px solid var(--line-soft); }
@@ -759,6 +770,7 @@
     <div class="stage-badge">Live Preview</div>
     <div class="arrow-view-btn" id="arrowViewBtn">See on Arrow</div>
     <div class="arrow-view-note" id="arrowViewNote">Illustrative arrow length — not your exact arrow.</div>
+    <div class="pin-toggle-btn" id="pinToggleBtn">📌 Stop Following</div>
     <div id="canvasHost"></div>
     <div class="stage-hint">Drag to rotate · Shift-drag to pan · Ctrl+scroll or pinch to zoom</div>
   </div>
@@ -3394,9 +3406,23 @@ window.addEventListener('resize', ()=>{ headerH = setHeaderHeightVar(); });
 
 const stageFrameEl = document.querySelector('.stage-frame');
 const stageSentinelEl = document.getElementById('stageSentinel');
+let previewPinned = true; // when false, .preview-unpinned forces static positioning -- the preview
+                           // stops following scroll entirely and stays wherever it naturally sits
+                           // (the top of the page), until the button up there is clicked again.
+const pinToggleBtn = document.getElementById('pinToggleBtn');
+function setPreviewPinned(pinned){
+  previewPinned = pinned;
+  stageFrameEl.classList.toggle('preview-unpinned', !pinned);
+  if(!pinned) stageFrameEl.classList.remove('stuck'); // back to full-size default preview
+  pinToggleBtn.textContent = pinned ? '📌 Stop Following' : '📌 Follow While Scrolling';
+  resizeRenderer();
+  render();
+}
+pinToggleBtn?.addEventListener('click', ()=> setPreviewPinned(!previewPinned));
 if(stageFrameEl && stageSentinelEl && 'IntersectionObserver' in window){
   const stageIO = new IntersectionObserver((entries)=>{
     entries.forEach(en=>{
+      if(!previewPinned) return; // manually stopped -- ignore scroll position entirely
       stageFrameEl.classList.toggle('stuck', !en.isIntersecting);
       // Canvas height just changed via CSS -- tell Three.js to match it,
       // and repaint once so it isn't stretched/squashed until the next
