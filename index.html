@@ -142,6 +142,17 @@
     letter-spacing:1.2px; color:var(--text); white-space:nowrap; line-height:1.1;
   }
   .brand-text-inline .mark{ color:var(--accent); }
+  /* ---- Arrow Brand: custom dropdown that always shows the full list, never filters on typed text ---- */
+  .brand-dropdown{
+    display:none; position:absolute; top:100%; left:0; right:0; z-index:50;
+    max-height:220px; overflow-y:auto; background:var(--bg2); border:1px solid var(--accent);
+    border-top:none; border-radius:0 0 4px 4px; margin-top:-1px;
+  }
+  .brand-dropdown.open{ display:block; }
+  .brand-dropdown .opt{
+    padding:10px 12px; font-size:14px; color:var(--text); cursor:pointer;
+  }
+  .brand-dropdown .opt:hover, .brand-dropdown .opt.active{ background:var(--accent-soft); color:var(--accent); }
 
   .header-cta{
     font-family:var(--label); font-size:12.5px; font-weight:500; letter-spacing:0.5px; text-transform:uppercase;
@@ -824,20 +835,20 @@
       </div>
     </div>
     <div class="field-grid" style="grid-template-columns:1fr 1fr 1fr;">
-      <div class="field">
+      <div class="field" style="position:relative;">
         <label>Arrow Brand</label>
-        <input type="text" id="arrowBrand" list="arrowBrandList" placeholder="e.g. Easton" autocomplete="off">
-        <datalist id="arrowBrandList"></datalist>
+        <input type="text" id="arrowBrand" placeholder="e.g. Easton" autocomplete="off">
+        <div id="arrowBrandDropdown" class="brand-dropdown"></div>
       </div>
-      <div class="field">
+      <div class="field" style="position:relative;">
         <label>Arrow Model</label>
-        <input type="text" id="arrowModel" list="arrowModelList" placeholder="e.g. Axis 5mm" autocomplete="off">
-        <datalist id="arrowModelList"></datalist>
+        <input type="text" id="arrowModel" placeholder="e.g. Axis 5mm" autocomplete="off">
+        <div id="arrowModelDropdown" class="brand-dropdown"></div>
       </div>
-      <div class="field">
+      <div class="field" style="position:relative;">
         <label>Spine</label>
-        <input type="text" id="arrowSpine" list="arrowSpineList" placeholder="e.g. 340" autocomplete="off">
-        <datalist id="arrowSpineList"></datalist>
+        <input type="text" id="arrowSpine" placeholder="e.g. 340" autocomplete="off">
+        <div id="arrowSpineDropdown" class="brand-dropdown"></div>
       </div>
     </div>
     <div class="field-grid">
@@ -2759,18 +2770,35 @@ const SHAFT_OD_REASONABLE_MIN = 3, SHAFT_OD_REASONABLE_MAX = 12;
    dataset is verified and self-maintained, an exact Brand+Model+Spine
    match auto-fills it. Manual entry always overrides a match the moment
    the customer types something themselves. */
+let ARROW_BRANDS = [];
 function populateArrowDatalists(){
-  const brands = [...new Set(ARROW_SHAFTS.map(s=>s.brand))].sort();
-  document.getElementById('arrowBrandList').innerHTML = brands.map(b=>`<option value="${b}">`).join('');
+  ARROW_BRANDS = [...new Set(ARROW_SHAFTS.map(s=>s.brand))].sort();
+  renderBrandDropdown();
   updateModelDatalist();
   updateSpineDatalist();
 }
+/* Always renders the FULL brand list, unfiltered by whatever is typed in the box --
+   a mis-click or stray keystroke can never hide options the customer needs. */
+function renderBrandDropdown(){
+  const dd = document.getElementById('arrowBrandDropdown');
+  dd.innerHTML = ARROW_BRANDS.map(b=>`<div class="opt" data-brand="${b}">${b}</div>`).join('');
+}
+function openBrandDropdown(){
+  document.getElementById('arrowBrandDropdown').classList.add('open');
+}
+function closeBrandDropdown(){
+  document.getElementById('arrowBrandDropdown').classList.remove('open');
+}
+/* Model/Spine lists still narrow to the selected Brand (and Model, for Spine) --
+   that's intentional matching against your dataset, not the keystroke-filter bug.
+   But within that context, the FULL matching list always shows regardless of what's
+   typed in the Model/Spine box itself -- a mis-click there can't hide options either. */
 function updateModelDatalist(){
   const brandVal = document.getElementById('arrowBrand').value.trim().toLowerCase();
   const models = [...new Set(
     ARROW_SHAFTS.filter(s => !brandVal || s.brand.toLowerCase()===brandVal).map(s=>s.model)
   )].sort();
-  document.getElementById('arrowModelList').innerHTML = models.map(m=>`<option value="${m}">`).join('');
+  renderSimpleDropdown('arrowModelDropdown', models);
 }
 function updateSpineDatalist(){
   const brandVal = document.getElementById('arrowBrand').value.trim().toLowerCase();
@@ -2785,7 +2813,28 @@ function updateSpineDatalist(){
     if(!isNaN(na) && !isNaN(nb)) return nb-na;
     return String(a).localeCompare(String(b));
   });
-  document.getElementById('arrowSpineList').innerHTML = spines.map(sp=>`<option value="${sp}">`).join('');
+  renderSimpleDropdown('arrowSpineDropdown', spines);
+}
+function renderSimpleDropdown(dropdownId, values){
+  const dd = document.getElementById(dropdownId);
+  dd.innerHTML = values.map(v=>`<div class="opt" data-value="${v}">${v}</div>`).join('');
+}
+function wireSimpleDropdown(inputId, dropdownId, onPick){
+  const input = document.getElementById(inputId);
+  const dd = document.getElementById(dropdownId);
+  input.addEventListener('focus', ()=>dd.classList.add('open'));
+  input.addEventListener('click', ()=>dd.classList.add('open'));
+  dd.addEventListener('mousedown', (e)=>{
+    const opt = e.target.closest('.opt');
+    if(!opt) return;
+    e.preventDefault();
+    input.value = opt.dataset.value;
+    dd.classList.remove('open');
+    if(onPick) onPick();
+  });
+  document.addEventListener('click', (e)=>{
+    if(!e.target.closest('#'+inputId) && !e.target.closest('#'+dropdownId)) dd.classList.remove('open');
+  });
 }
 function findExactShaftMatch(){
   const b = document.getElementById('arrowBrand').value.trim().toLowerCase();
@@ -2829,8 +2878,24 @@ function recomputeShaftSizing(){
   render();
 }
 document.getElementById('arrowBrand').addEventListener('input', ()=>{ updateModelDatalist(); updateSpineDatalist(); recomputeShaftSizing(); });
+document.getElementById('arrowBrand').addEventListener('focus', openBrandDropdown);
+document.getElementById('arrowBrand').addEventListener('click', openBrandDropdown);
+document.getElementById('arrowBrandDropdown').addEventListener('mousedown', (e)=>{
+  const opt = e.target.closest('.opt');
+  if(!opt) return;
+  e.preventDefault();
+  const input = document.getElementById('arrowBrand');
+  input.value = opt.dataset.brand;
+  closeBrandDropdown();
+  updateModelDatalist(); updateSpineDatalist(); recomputeShaftSizing();
+});
+document.addEventListener('click', (e)=>{
+  if(!e.target.closest('#arrowBrand') && !e.target.closest('#arrowBrandDropdown')) closeBrandDropdown();
+});
 document.getElementById('arrowModel').addEventListener('input', ()=>{ updateSpineDatalist(); recomputeShaftSizing(); });
 document.getElementById('arrowSpine').addEventListener('input', recomputeShaftSizing);
+wireSimpleDropdown('arrowModel', 'arrowModelDropdown', ()=>{ updateSpineDatalist(); recomputeShaftSizing(); });
+wireSimpleDropdown('arrowSpine', 'arrowSpineDropdown', recomputeShaftSizing);
 document.getElementById('shaftOD').addEventListener('input', recomputeShaftSizing);
 document.querySelectorAll('.unitbtn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
