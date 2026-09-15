@@ -1307,7 +1307,7 @@ function logOrderToTracker(payload){
 }
 
 /*   ADD PASSWORD ENABLE
-/* =====================================================================
+ =====================================================================
    PASSWORD GATE — soft "not open to the public yet" barrier.
    NOT real security: this password lives in plain view in this file's
    source code, so anyone determined enough to view-source or open dev
@@ -1317,8 +1317,8 @@ function logOrderToTracker(payload){
    #passwordGate div near the top of <body>) once you're ready to launch
    for real.
 ===================================================================== */
-/* const SITE_PASSWORD = "moser2026"; // <-- CHANGE THIS to whatever you tell testers
-/* (function(){
+ const SITE_PASSWORD = "moser2026"; // <-- CHANGE THIS to whatever you tell testers
+ (function(){
   const gate = document.getElementById('passwordGate');
   const input = document.getElementById('pgInput');
   const errorEl = document.getElementById('pgError');
@@ -1347,7 +1347,6 @@ function logOrderToTracker(payload){
     setTimeout(()=>input.focus(), 100);
   }
 })();
-*/
 
 /* =====================================================================
    3D PREVIEW SCENE
