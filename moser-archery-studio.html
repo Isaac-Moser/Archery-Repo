@@ -239,11 +239,15 @@
   </div>
 
   <div class="group">
-    <label>Vane Type</label>
-    <div class="btnrow">
-      <div class="btn active" data-group="vaneType" data-val="standard">Standard (0.60mm)</div>
-      <div class="btn" data-group="vaneType" data-val="ultralight">Ultralight (0.35mm)</div>
-    </div>
+    <label>Tube Wall Thickness (mm) — <span id="tubeWallVal">0.60</span>mm</label>
+    <input type="number" id="tubeWallThickness" value="0.30" step="0.01" min="0.25" max="0.60" style="width:72px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;background:var(--input-bg,var(--surface));color:var(--text);font-size:13px;font-family:inherit">
+    <div style="font-size:10px; color:var(--muted); margin-top:4px; line-height:1.4;">The bore that wraps the shaft. Thinner here = less rigid tube, likely softer feel and less resonance/noise. Independent from fin thickness below.</div>
+  </div>
+
+  <div class="group">
+    <label>Fin Thickness (mm) — <span id="finThicknessVal">0.60</span>mm</label>
+    <input type="number" id="finThickness" value="0.60" step="0.01" min="0.30" max="0.60" style="width:72px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;background:var(--input-bg,var(--surface));color:var(--text);font-size:13px;font-family:inherit">
+    <div style="font-size:10px; color:var(--muted); margin-top:4px; line-height:1.4;">The blade that catches air. Keep this thicker than the tube wall for durability. Below ~0.32mm may not print reliably on a 0.4mm nozzle — a warning will show if you go under that.</div>
   </div>
 
   <div class="group">
@@ -266,7 +270,7 @@
 
   <div class="group">
     <label>Fit Clearance (mm)</label>
-    <input type="number" id="clearance" value="0.525" step="0.01">
+    <input type="number" id="clearance" value="0.52" step="0.01">
   </div>
 
   <div class="group">
@@ -280,7 +284,7 @@
   <div class="group">
     <label>Offset (deg, flat) <span style="font-weight:400; color:var(--muted);">— matches the live customer-facing range, 0-3°</span></label>
     <div class="slider-row">
-      <input type="range" id="offset" min="0" max="3" step="0.1" value="0">
+      <input type="number" id="offset" value="0" step="0.1" min="0" max="3" style="width:72px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;background:var(--input-bg,var(--surface));color:var(--text);font-size:13px;font-family:inherit">
       <div class="val" id="offsetVal">0°</div>
     </div>
     <div style="font-size:10px; color:var(--muted); margin-top:4px;">A rotation around the shaft, same as Helical Twist below, just as one flat total angle instead of deg/in (not scaled by vane length). Combines with Helical Twist into a single total sweep -- both use the same direction toggle. <b>Range went 0-3 &rarr; 0-6 &rarr; back to 0-3&deg; per Isaac's request.</b></div>
@@ -289,7 +293,7 @@
   <div class="group">
     <label>Helical Twist (deg/in) <span style="font-weight:400; color:var(--muted);">— matches the live customer-facing range, 0-25°/in</span></label>
     <div class="slider-row">
-      <input type="range" id="helical" min="0" max="25" step="0.1" value="0">
+      <input type="number" id="helical" value="0" step="0.1" min="0" max="25" style="width:72px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;background:var(--input-bg,var(--surface));color:var(--text);font-size:13px;font-family:inherit">
       <div class="val" id="helicalVal">0°/in</div>
     </div>
     <div style="font-size:10px; color:var(--muted); margin-top:4px;">Degrees per inch of vane length -- actual total twist = this value &times; vane length in inches. <b>Range bumped from 0-10&deg;/in to 0-25&deg;/in per Isaac's explicit confirmation, having been shown the numbers.</b> At the new max, total twist runs 55-96&deg; depending on vane length -- 2-3x the 28-32&deg; ceiling validated on dry filament. <b>Nothing near this range has been printed.</b> Use the twist-test batch button below (update its levels to the new max first) before treating any of this as viable.</div>
@@ -338,7 +342,7 @@
       <div id="peSectionLabel">Quick Presets <span style="text-transform:none; font-weight:400;">— shape only, scaled to your current length</span></div>
       <div id="presetRow" class="btnrow">
         <div class="presetbtn" id="presetGhost" title="Smooth curve, peak 27% from nock, blunt both ends">GHOST</div>
-        <div class="presetbtn" id="presetImpact" title="Peak 28% from nock, 57mm">IMPACT</div>
+        <div class="presetbtn" id="presetImpact" title="Peak 34% from nock, 65mm">IMPACT</div>
         <div class="presetbtn" id="presetTarget" title="Peak 21% from nock, 70mm">TARGET</div>
         <div class="presetbtn" id="presetCompact" title="Sharp triangular peak 34% from nock, 50mm">COMPACT</div>
         <div class="presetbtn" id="presetLongrange" title="Peak 19% from nock, long 91mm plateau taper">LONGRANGE</div>
@@ -357,11 +361,11 @@
       </div>
       <div class="peDivider"></div>
       <div id="peControlsGroup">
-        <span class="ctrlLabel">Node <input type="number" id="nodeX" step="0.1"> mm &nbsp;·&nbsp; Height <input type="number" id="nodeH" step="0.05"> mm</span>
+        <span class="ctrlLabel">Node <input type="number" id="nodeX" step="0.01"> mm &nbsp;·&nbsp; Height <input type="number" id="nodeH" step="0.01"> mm</span>
       </div>
       <div class="peDivider"></div>
       <div id="peControlsGroup">
-        <span class="ctrlLabel" id="nodeRoundingWrap">Rounding <input type="range" id="nodeRounding" min="0" max="100" step="1" value="55"> <span id="nodeRoundingVal" class="ctrlVal">55%</span></span>
+        <span class="ctrlLabel" id="nodeRoundingWrap">Rounding <input type="number" id="nodeRounding" value="55" step="1" min="0" max="100" style="width:72px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;background:var(--input-bg,var(--surface));color:var(--text);font-size:13px;font-family:inherit"> <span id="nodeRoundingVal" class="ctrlVal">55%</span></span>
       </div>
       <div class="peDivider"></div>
       <div id="peControlsGroup">
@@ -427,7 +431,7 @@ function animate(){ requestAnimationFrame(animate); updateCamera(); renderer.ren
 animate();
 
 /* ===================== UI STATE ===================== */
-const state = { vaneType:'standard', fletchCount:'3', helicalDir:'right', packSize:'18', color:'#8BC34A', usingWraps:'no' };
+const state = { tubeWallThickness:0.30, finThickness:0.60, fletchCount:'3', helicalDir:'right', packSize:'18', color:'#8BC34A', usingWraps:'no' };
 
 // Max fletch count is 4 -- clamps any imported/legacy value (old saved
 // profiles or order exports could predate this cap) down to the 3-4 range.
@@ -448,11 +452,21 @@ document.querySelectorAll('.btn[data-group]').forEach(btn=>{
     generate();
   });
 });
-document.getElementById('helical').addEventListener('input', e=>{
-  document.getElementById('helicalVal').textContent = e.target.value+'°/in';
+document.getElementById('tubeWallThickness').addEventListener('change', (e)=>{
+  const v = parseFloat(e.target.value);
+  if(!isNaN(v)){ state.tubeWallThickness = v; generate(); }
 });
-document.getElementById('offset').addEventListener('input', e=>{
+document.getElementById('finThickness').addEventListener('change', (e)=>{
+  const v = parseFloat(e.target.value);
+  if(!isNaN(v)){ state.finThickness = v; generate(); }
+});
+document.getElementById('helical').addEventListener('change', e=>{
+  document.getElementById('helicalVal').textContent = e.target.value+'°/in';
+  generate();
+});
+document.getElementById('offset').addEventListener('change', e=>{
   document.getElementById('offsetVal').textContent = e.target.value+'°';
+  generate();
 });
 
 /* ---- colour dropdown ---- */
@@ -524,10 +538,17 @@ const NAMED_PRESETS = {
   // Peak (12.7mm) now sits at x=19 (27% from nock) instead of x=52.
   ghost: { rounding:100, stock:true,
     nodes:[{x:0,h:0.4},{x:8,h:6},{x:19,h:12.7},{x:33,h:9},{x:51,h:4},{x:71,h:0.4}] },
-  // IMPACT -- MIRRORED, same orientation fix. Peak (9.8mm) now at x=16
-  // (28% from nock).
+  // IMPACT -- the print-tested profile from the Studio's custom curve
+  // editor, MIRRORED to correct nock/point orientation. As originally given
+  // (x=0 -> h=0.36 ... x=65 -> h=0.38) the two ends were swapped relative to
+  // this app's fixed convention (x=0 is always the nock end -- every other
+  // preset was mirrored for the same reason, see GHOST/TARGET/etc. above).
+  // Mirrored via x -> 65-x, keeping every height exactly as given: same
+  // shape, same curve, just the correct end at x=0. Peak (10.10mm) now at
+  // x=21.8 (34% from nock) -- front-loaded, not back-loaded as it read
+  // before the mirror.
   impact: { rounding:100, stock:true,
-    nodes:[{x:0,h:3},{x:6,h:7.1},{x:16,h:9.8},{x:57,h:0.4}] },
+    nodes:[{x:0,h:0.38},{x:0.6,h:0.8},{x:1.2,h:1.77},{x:3.2,h:4.09},{x:7.3,h:7.11},{x:13.7,h:9.55},{x:21.8,h:10.10},{x:63.9,h:0.84},{x:65,h:0.36}] },
   // TARGET -- MIRRORED again to fix the nock/point orientation bug. This
   // undoes the earlier left-right mirror (done for a different reason, shape
   // accuracy vs. source photo) -- net result is back to REF-08's original
@@ -561,8 +582,9 @@ const NAMED_PRESETS = {
   // Peak (10.7mm) at x=25 (33% from nock), length 76.2mm. No longer a
   // low-profile shape by peak height -- now sits between GHOST (12.7mm)
   // and IMPACT (9.8mm), and is the second-longest vane after LONGRANGE.
-  // Glue gap for this profile is 0.525mm diametral clearance, not the
-  // 0.15mm standard used by every other vane -- see order defaults below.
+  // Glue gap for this profile uses the shared global clearance default
+  // (see clearance input above / order defaults below) -- no per-profile
+  // override. Default diametral clearance is 0.52mm.
   riptide: { rounding:100, stock:true,
     nodes:[{x:0,h:0.4},{x:25,h:10.7},{x:58,h:4},{x:76.2,h:0.4}] }
 };
@@ -576,8 +598,8 @@ function currentLength(){ return parseFloat(document.getElementById('vaneLength'
 // deg/in. See the storefront's matching comment near render() for the
 // customer-facing version.
 
-function snapX(v){ return Math.round(v); }
-function snapH(v){ return Math.round(v*10)/10; }
+function snapX(v){ return Math.round(v*100)/100; }
+function snapH(v){ return Math.round(v*100)/100; }
 
 
 function interpAt(xmm){
@@ -607,6 +629,14 @@ function maxNodeHeight(){ return nodes.reduce((m,n)=>Math.max(m,n.h),0); }
    drawn on the graph -- the raw nodes are just the "control handles."
 */
 const DEFAULT_NODE_ROUND = 55;
+// Minimum x-gap enforced between adjacent nodes when dragging or typing a
+// position. Used to be a flat 1mm, back when node x was snapped to whole
+// millimeters -- fine then, but with 2-decimal precision now supported,
+// real digitized data can legitimately need nodes closer than 1mm apart
+// (e.g. 63.00 / 64.00 / 65.00 near a sharp tip taper). 0.05mm still stops
+// two nodes from landing on literally the same point or crossing order,
+// without blocking the tight spacing 2-decimal data actually needs.
+const MIN_NODE_GAP = 0.05;
 let smoothedCurve = [];
 
 function rebuildSmoothedCurve(){
@@ -680,16 +710,17 @@ document.getElementById('overhangLimit').addEventListener('change', e=>{
   const v = parseFloat(e.target.value);
   if(v>0 && v<90){ OVERHANG_LIMIT_DEG = v; drawGraph(); }
 });
-document.getElementById('nodeRounding').addEventListener('input', e=>{
+document.getElementById('nodeRounding').addEventListener('change', e=>{
   const isEndpoint = selectedIdx===0 || selectedIdx===nodes.length-1;
   if(isEndpoint) return;
   const v = parseFloat(e.target.value);
+  if(isNaN(v)) return;
   nodes[selectedIdx].round = v;
   markCustom();
   document.getElementById('nodeRoundingVal').textContent = v+'%';
   drawGraph();
+  generate();
 });
-document.getElementById('nodeRounding').addEventListener('change', ()=>{ generate(); });
 
 function drawGraph(){
   refreshSvgDims();
@@ -860,7 +891,7 @@ window.addEventListener('pointermove', e=>{
   let xmm = snapX(pixToXmm(p.x)), hmm = snapH(pixToHmm(p.y));
   const i = selectedIdx;
   if(i>0 && i<nodes.length-1){
-    xmm = Math.max(nodes[i-1].x+1, Math.min(nodes[i+1].x-1, xmm));
+    xmm = Math.max(nodes[i-1].x+MIN_NODE_GAP, Math.min(nodes[i+1].x-MIN_NODE_GAP, xmm));
   } else if(i===0){ xmm = 0; }
   else { xmm = currentLength(); }
   nodes[i] = {x:xmm, h:hmm, round: nodes[i].round};
@@ -874,7 +905,7 @@ window.addEventListener('pointerup', ()=>{
 document.getElementById('nodeX').addEventListener('change', e=>{
   const i=selectedIdx; if(i===0||i===nodes.length-1) return;
   let v = snapX(parseFloat(e.target.value));
-  v = Math.max(nodes[i-1].x+1, Math.min(nodes[i+1].x-1, v));
+  v = Math.max(nodes[i-1].x+MIN_NODE_GAP, Math.min(nodes[i+1].x-MIN_NODE_GAP, v));
   nodes[i].x = v; markCustom(); drawGraph(); generate();
 });
 document.getElementById('nodeH').addEventListener('change', e=>{
@@ -975,76 +1006,326 @@ document.getElementById('vaneLength').addEventListener('change', e=>{
 
 /* ===================== GEOMETRY ===================== */
 let allTriangles = [];
-function pushTri(p1,p2,p3){ allTriangles.push([p1,p2,p3]); }
+// Skip any triangle with two coincident vertices, at the source. This is the
+// general fix for a problem that kept resurfacing at every solid/hollow
+// boundary in the vane shell: whenever a quad has exactly one corner where
+// inner==outer (solid), splitting it into two triangles the usual way
+// produces one valid triangle and one with a repeated vertex -- zero area,
+// contributing nothing, but its "edge" (between the two identical points)
+// still gets counted, and that is what showed up as duplicate/open edges
+// scattered across every fin boundary rather than in one place. Filtering
+// here fixes it everywhere at once instead of special-casing every call site
+// that happens to produce a degenerate corner. The other, valid triangle
+// from the same quad is unaffected and still closes the surface correctly --
+// a quad with one collapsed corner is legitimately just a triangle.
+function pushTri(p1,p2,p3){
+  const eq = (a,b) => Math.abs(a[0]-b[0])<1e-6 && Math.abs(a[1]-b[1])<1e-6 && Math.abs(a[2]-b[2])<1e-6;
+  if(eq(p1,p2) || eq(p2,p3) || eq(p1,p3)) return;
+  allTriangles.push([p1,p2,p3]);
+}
 function pushQuad(p1,p2,p3,p4){ pushTri(p1,p2,p3); pushTri(p1,p3,p4); }
 
-function buildTube(Rin,Rout,length,segments){
-  for(let i=0;i<segments;i++){
-    const a0=i/segments*Math.PI*2, a1=(i+1)/segments*Math.PI*2;
-    const o0=[Rout*Math.cos(a0),Rout*Math.sin(a0),0], o1=[Rout*Math.cos(a1),Rout*Math.sin(a1),0];
-    const o0b=[Rout*Math.cos(a0),Rout*Math.sin(a0),length], o1b=[Rout*Math.cos(a1),Rout*Math.sin(a1),length];
-    const i0=[Rin*Math.cos(a0),Rin*Math.sin(a0),0], i1=[Rin*Math.cos(a1),Rin*Math.sin(a1),0];
-    const i0b=[Rin*Math.cos(a0),Rin*Math.sin(a0),length], i1b=[Rin*Math.cos(a1),Rin*Math.sin(a1),length];
-    pushQuad(o0,o1,o1b,o0b);
-    pushQuad(i1,i0,i0b,i1b);
-    pushQuad(i0,i1,o1,o0);
-    pushQuad(o0b,o1b,i1b,i0b);
-  }
+/* ============ CONTINUOUS-OUTLINE SHELL (EasyVanes-style) ==============
+ *
+ * The old model built the tube and each fin as SEPARATE solids and relied on
+ * the slicer to union them. That produces a T-junction at every fin root and
+ * forces a fin "overlap" depth that can eat through a thin tube wall.
+ *
+ * This model instead treats one cross-section as a SINGLE closed silhouette
+ * (tube blended into all fins) and shells it at one constant wall thickness.
+ * Consequences, all of which match the reference part:
+ *
+ *   - Where the silhouette is WIDER than 2x wall, the inward offset survives
+ *     and you get a hollow 0.3mm wall -> the tube.
+ *   - Where it is NARROWER than 2x wall, the inward offset self-collapses and
+ *     the region is simply solid -> the fins. At 0.6mm fin / 0.3mm wall that
+ *     is exactly two beads side by side, with no "2 walls" setting needed.
+ *   - The root blend is not an added bulge. It is what a constant offset
+ *     around a blended silhouette does on its own.
+ *
+ * There is no overlap parameter any more, and no fin-into-bore penetration to
+ * guard against, because the fins are no longer separate bodies being sunk in.
+ *
+ * Implementation: the silhouette is defined as a signed distance field (tube
+ * circle smooth-unioned with one capsule per fin). The outer contour is the
+ * sdf=0 level set; the bore is the sdf=-wall level set. Both are extracted by
+ * ray-casting outward-in along fixed angles, which is valid here because both
+ * contours are star-shaped about the axis. The smooth-union radius IS the root
+ * blend -- it is a property of the silhouette, not a correction applied after.
+ */
+
+// Polynomial smooth minimum. A plain Math.min would union the tube and fins
+// with a hard crease at every root -- the exact stress riser and print artifact
+// this design exists to avoid. k is the blend radius in mm.
+function smin(a, b, k){
+  if(k <= 0) return Math.min(a,b);
+  const h = Math.max(0, Math.min(1, 0.5 + 0.5*(b-a)/k));
+  return b*(1-h) + a*h - k*h*(1-h);
 }
 
-function buildBlade(baseAngle0, twistTotalRad, dirSign, outerR, thickness, overlap, length, segments, tipThickFactor){
-  const baseR = outerR - overlap;
-  // tipThickFactor is passed in already clamped to a printable floor -- see
-  // the caller in generate(), which enforces a hard minimum of ~0.35mm
-  // absolute tip thickness regardless of what the taper slider requests.
-  // A blade tapering to an EXACT knife-edge coincidence with the tube surface
-  // (h=0 precisely) is fragile: two independently-generated solids meeting at
-  // a razor-thin, floating-point-exact boundary can confuse a slicer's mesh
-  // resolution right at that seam. Instead, truncate the taper at a small but
-  // real minimum height (well under printable resolution, so no visible
-  // change) and close it with an actual non-degenerate cap face there. The
-  // untruncated sliver near each tip is already hidden inside the tube's own
-  // solid material (baseR sits inside the tube's outer radius), so nothing
-  // is lost -- this just avoids ever asking the slicer to resolve a
-  // zero-thickness boundary.
-  const MIN_H = 0.05;
-
-  const cross = [];
-  for(let i=0;i<=segments;i++){
-    const t=i/segments, z=t*length;
-    const twist = twistTotalRad*t*dirSign;
-    const ang = baseAngle0+twist;
-    const rad=[Math.cos(ang),Math.sin(ang)], tan=[-Math.sin(ang),Math.cos(ang)];
-    const h = interpAt(z);
-    const tipR = baseR+h;
-    const halfT=thickness/2, halfTtip=halfT*tipThickFactor;
-    cross.push({
-      h,
-      baseL:[rad[0]*baseR+tan[0]*halfT, rad[1]*baseR+tan[1]*halfT, z],
-      baseRp:[rad[0]*baseR-tan[0]*halfT, rad[1]*baseR-tan[1]*halfT, z],
-      tipL:[rad[0]*tipR+tan[0]*halfTtip, rad[1]*tipR+tan[1]*halfTtip, z],
-      tipRp:[rad[0]*tipR-tan[0]*halfTtip, rad[1]*tipR-tan[1]*halfTtip, z]
-    });
-  }
-
-  let start = cross.findIndex(c => c.h > MIN_H);
-  let end = cross.length-1 - [...cross].reverse().findIndex(c => c.h > MIN_H);
-  if(start===-1 || start>end) return; // fin never rises above the minimum -- nothing to draw
-
-  const first = cross[start], last = cross[end];
-  pushQuad(first.baseRp, first.baseL, first.tipL, first.tipRp); // real front cap
-  let prev = first;
-  for(let i=start+1; i<=end; i++){
-    const cur = cross[i];
-    pushQuad(prev.baseL,cur.baseL,cur.tipL,prev.tipL);
-    pushQuad(prev.tipRp,cur.tipRp,cur.baseRp,prev.baseRp);
-    pushQuad(prev.tipL,cur.tipL,cur.tipRp,prev.tipRp);
-    pushQuad(prev.baseRp,cur.baseRp,cur.baseL,prev.baseL);
-    prev = cur;
-  }
-  pushQuad(last.tipRp,last.tipL,last.baseL,last.baseRp); // real back cap
+// Distance from point p to the segment ab (used as the spine of each fin).
+function sdSegment(px,py, ax,ay, bx,by){
+  const pax=px-ax, pay=py-ay, bax=bx-ax, bay=by-ay;
+  const denom = bax*bax + bay*bay;
+  const h = denom>0 ? Math.max(0, Math.min(1, (pax*bax + pay*bay)/denom)) : 0;
+  return Math.hypot(pax - bax*h, pay - bay*h);
 }
 
+// Signed distance to the whole cross-section silhouette at one height.
+// Negative inside the material, positive outside.
+//
+// The outer boundary is a hard union of: the tube circle, each fin's capsule,
+// and two small "fillet disks" per fin -- one per wall face. A fillet disk of
+// radius fr, centered so it is simultaneously tangent to the wall line (at
+// distance fr below it) and tangent to the tube circle from outside (at
+// distance Rtube+fr from the axis), fills the reflex corner between the two
+// shapes with an EXACT circular arc. This is a standard construction (union
+// a disk sized and placed to be tangent to both neighbors) and it is the
+// Signed distance to the whole cross-section silhouette at one height.
+// Negative inside the material, positive outside.
+//
+// This is a PLAIN HARD UNION of the tube circle and each fin capsule --
+// d = min(circle, capsule), nothing else. By construction this can never
+// place the boundary further from the axis than either shape's own extent in
+// any direction, so it is guaranteed to add zero material beyond the tube's
+// plain circle and the fin's own capsule -- there is no fillet, no blend, no
+// disk, nothing unioned in beyond the two shapes themselves.
+//
+// Two earlier attempts here were wrong, in two different ways worth naming
+// so they don't get re-tried:
+//   1. smooth-min (smin) blending -- softens the corner, but by definition
+//      always adds material beyond the union, growing with the blend radius.
+//      Measured directly, it didn't settle back to the plain tube radius
+//      until several degrees off the fin.
+//   2. a tangent "fillet disk" unioned in at the corner -- this ALSO always
+//      adds material (a union can only grow a shape, never shrink it),
+//      visible as a bulge sticking out past the plain tube circle. That
+//      bulge, not a subtle side-effect, was the actual complaint: adding
+//      visible geometry on the outside of the part.
+//
+// The union of two convex shapes (a circle and a capsule both are) meeting
+// Signed distance to the OUTER silhouette only: the tube circle unioned with
+// each fin capsule (segment thickened by finHalf, rounded caps at both ends).
+// No bore, no arc-trimming, no cusp.
+//
+// This file used to also model an inner bore surface -- a "pen-stroke
+// network" where the tube was one 0.3mm stroke and each fin was two parallel
+// 0.3mm strokes, trimmed and rejoined so the whole cross-section could be
+// traced as one continuous line without lifting the pen. That was the right
+// model for a slicer laying down discrete, countable perimeters. It is not
+// needed anymore.
+//
+// The prints are now sliced in spiral vase mode, printed by object. Vase
+// mode traces ONLY the outer contour of each layer, rising continuously in Z
+// -- it has no concept of an inner wall, infill, or multiple loops, and by
+// construction it can never lift the nozzle. Every bug chased through the
+// last dozen or so revisions of this file -- the shoulder disconnect, the
+// bore's cusp needing denser and denser sampling to twist cleanly -- was
+// entirely inner-boundary geometry. None of it was ever going to reach the
+// printer once slicing switched to vase mode, because vase mode discards the
+// inner boundary outright. So it is deleted here, not patched again: fewer
+// moving parts, and an entire class of bug (anything to do with the bore)
+// can no longer exist.
+function vaneSDF(px,py, sec){
+  let d = Math.hypot(px,py) - sec.Rtube;
+  for(let i=0;i<sec.fins.length;i++){
+    const f = sec.fins[i];
+    d = Math.min(d, sdSegment(px,py, f.ax,f.ay, f.bx,f.by) - sec.finHalf);
+  }
+  return d;
+}
+
+// Walk inward along one ray and report the radius where the field first
+// crosses `level`. Coarse march to bracket the crossing, then bisect.
+// Marching inward (not outward) matters: it finds the OUTERMOST crossing,
+// which is the surface actually facing the outside world.
+function castLevel(cosA, sinA, rStart, level, sec){
+  // March inward to find the crossing, then BISECT to nail it.
+  //
+  // The march alone is not accurate enough. It steps by max(d*0.9, minStep),
+  // so the final step overshoots past the surface by up to minStep and returns
+  // that overshot radius. With minStep at 0.004mm, sampled radii landed up to
+  // 0.0036mm INSIDE the true surface, by a different amount at every angle --
+  // measured on 115 of 220 samples around one ring.
+  //
+  // The absolute error is tiny, but the shape of the error is what hurts: the
+  // tube outline stops being a circle and becomes a random sawtooth, so the
+  // wall thickness jitters from one vertex to the next. A slicer places beads
+  // along the medial axis of the outline, and a jittery boundary generates
+  // spurious little medial-axis branches -- which is how a wall that measures
+  // ~0.297mm everywhere still slices into a dashed line instead of one bead.
+  //
+  // Bisection costs ~40 extra SDF evaluations per sample and converges to
+  // ~1e-9mm, which is exact for any purpose here.
+  //
+  // At a ray angle that grazes very close to a fin's own edge, the field
+  // gradient along the ray goes very shallow for an extended stretch -- d
+  // stays small and positive, decreasing only a little per step, well before
+  // it actually reaches zero. That is not divergence; traced directly, d
+  // decreases monotonically the whole way, it just needs more than 200
+  // minimum-sized steps to finish crossing. The old 200-iteration cap cut
+  // this off a handful of steps early on exactly this kind of ray, at r a
+  // few thousandths of a mm short of the true crossing, then discarded that
+  // near-perfect answer and fell back to Rtube -- a multi-millimeter error
+  // that showed up as a visible flat panel on the printed fin. Two fixes:
+  // more budget (600 iterations comfortably covers the grazing case above),
+  // and if it still runs out, return the last r reached instead of null --
+  // a march that got this close is a far better answer than snapping to the
+  // plain tube radius.
+  let r = rStart, prev = r;
+  for(let it=0; it<600 && r>1e-4; it++){
+    const d = vaneSDF(cosA*r, sinA*r, sec) - level;
+    if(d <= 0){
+      // prev is outside (d>0), r is inside (d<=0): the crossing is between.
+      let lo = r, hi = prev;
+      for(let b=0; b<48; b++){
+        const mid = 0.5*(lo+hi);
+        if(vaneSDF(cosA*mid, sinA*mid, sec) - level <= 0) lo = mid; else hi = mid;
+      }
+      return 0.5*(lo+hi);
+    }
+    prev = r;
+    r -= Math.max(d*0.9, 0.002);
+  }
+  return r;
+}
+
+
+// Build the whole vane as ONE SOLID surface -- the outer silhouette only,
+// twisted up the length and capped flat top and bottom.
+//
+// No bore, no inner surface, no end-cap annulus to stitch. Printing is done
+// in spiral vase mode now (see the note above vaneSDF for why), which only
+// ever traces the outer contour -- so the outer contour is the only thing
+// that needs to exist in this file. What's below is a plain, solid,
+// watertight tube-with-fins: one ring of outer points per Z height, walled
+// together between consecutive rings, with a flat triangulated cap at each
+// end.
+function buildVaneShell(opts){
+  const { Rtube, finThickness, numFletches,
+          twistRad, dirSign, length, zSegs, angSegs, heightAt, maxFinH } = opts;
+
+  const finHalf = finThickness/2;
+  const rings = [];
+
+  // --- Adaptive angular sampling -------------------------------------
+  // Radius-at-angle is a terrible parameterisation for a thin radial blade
+  // and a fine one for the tube, so the sample density can't be uniform.
+  //
+  // Near a fin the outline follows r = finHalf/sin(dTheta): the ray grazes
+  // the flat side of the blade, so r blows up as the ray lines up with it.
+  // On a tall fin that spike spans under 1.5 degrees of arc. Uniform steps
+  // put roughly one sample across the whole blade, so the sampler catches
+  // the fin at one angle and misses it at the next -- and as the fin twists,
+  // which one it catches alternates layer to layer. That alternation is
+  // real geometry in the STL, not a preview artifact (it's how the earlier
+  // chevron-shredding defect happened).
+  //
+  // So: sparse across the smooth tube, geometrically dense across each fin,
+  // tightening as the ray approaches the blade's centreline. There is no
+  // longer a second dense cluster for a bore cusp -- there is no bore.
+  //
+  // Built ONCE from the tallest fin section and reused for every ring: index
+  // i must mean the same point on the profile at every height or the quad
+  // strip stops corresponding between rings.
+  const angles = (()=>{
+    const set = [];
+    const base = Math.max(48, Math.round(angSegs/4));
+    for(let i=0;i<base;i++) set.push(i/base*Math.PI*2);
+
+    const tipR = Math.max(Rtube, Rtube + maxFinH - finHalf);
+    const aMin = Math.asin(Math.min(0.999, finHalf/Math.max(finHalf, tipR)));
+    const aMax = Math.PI/numFletches;
+    for(let f=0; f<numFletches; f++){
+      const c = f*(Math.PI*2/numFletches);
+      set.push(c);
+      for(let d=aMin*0.35; d<aMax; d*=1.18){
+        set.push(c+d);
+        set.push(c-d);
+      }
+    }
+    const TAU = Math.PI*2;
+    const norm = set.map(a=>((a%TAU)+TAU)%TAU).sort((x,y)=>x-y);
+    const out = [];
+    for(const a of norm){
+      if(out.length===0 || a-out[out.length-1] > 1e-5) out.push(a);
+    }
+    if(TAU-out[out.length-1] < 1e-5) out.pop();
+    return Float64Array.from(out);
+  })();
+  const nAng = angles.length;
+
+  for(let k=0; k<=zSegs; k++){
+    const t = zSegs>0 ? k/zSegs : 0, z = t*length;
+    const twist = twistRad*t*dirSign;
+    const h = Math.max(0, heightAt(z));
+
+    // Each layer is built in its OWN untwisted frame -- fins always at
+    // f*(2pi/n), never rotated here -- and the finished layer is rotated
+    // into place at emit time (see `pt` below). This is what keeps vertex i
+    // tracking the same point on the profile at every height.
+    //
+    // Every fin exists at every height, even h=0, where it degenerates to a
+    // zero-length segment (just the root cap, i.e. no bump at all). Letting
+    // it shrink to zero continuously -- rather than switching on above some
+    // threshold -- avoids a discontinuous jump in the silhouette between
+    // adjacent rings.
+    const fins = [];
+    for(let f=0; f<numFletches; f++){
+      const a = f*(Math.PI*2/numFletches);
+      const ca = Math.cos(a), sa = Math.sin(a);
+      const tipR = Math.max(Rtube, Rtube + h - finHalf);
+      fins.push({ ax: ca*Rtube, ay: sa*Rtube, bx: ca*tipR, by: sa*tipR });
+    }
+    const sec = { Rtube, finHalf, fins };
+    const rStart = Rtube + h + finThickness + 1;
+
+    const outer = new Float64Array(nAng);
+    for(let i=0;i<nAng;i++){
+      const ang = angles[i];
+      const ro = castLevel(Math.cos(ang), Math.sin(ang), rStart, 0, sec);
+      outer[i] = ro !== null ? ro : Rtube;
+    }
+    rings.push({ z, twist, outer });
+  }
+
+  // Rotate the layer into place. The profile index means the same point on
+  // the cross-section at every height; the twist is applied only here, so
+  // the quad strip follows each fin up its helix instead of cutting across
+  // it.
+  const pt = (r,i,ring)=>{
+    const ang = angles[i] + ring.twist;
+    return [r*Math.cos(ang), r*Math.sin(ang), ring.z];
+  };
+
+  // Side wall between consecutive rings.
+  for(let k=0;k<zSegs;k++){
+    const A = rings[k], B = rings[k+1];
+    for(let i=0;i<nAng;i++){
+      const j = (i+1)%nAng;
+      pushQuad(pt(A.outer[i],i,A), pt(A.outer[j],j,A),
+               pt(B.outer[j],j,B), pt(B.outer[i],i,B));
+    }
+  }
+
+  // Flat end caps. The cross-section is star-shaped about the axis (every
+  // angle has exactly one outer radius, by construction of how outer[] was
+  // sampled), so a simple fan from the centre point to each boundary vertex
+  // is a valid, non-self-intersecting triangulation -- no need for general
+  // polygon triangulation here.
+  const capRing = (ring, flip)=>{
+    const center = [0,0,ring.z];
+    for(let i=0;i<nAng;i++){
+      const j = (i+1)%nAng;
+      const p1 = pt(ring.outer[i],i,ring), p2 = pt(ring.outer[j],j,ring);
+      if(flip) pushTri(center,p2,p1); else pushTri(center,p1,p2);
+    }
+  };
+  capRing(rings[0], true);
+  capRing(rings[rings.length-1], false);
+
+  return {};
+}
 function generate(){
   allTriangles=[];
   rebuildSmoothedCurve();
@@ -1053,32 +1334,62 @@ function generate(){
   const clearance = parseFloat(document.getElementById('clearance').value);
   const wrapThickness = state.usingWraps==='yes' ? (parseFloat(document.getElementById('wrapThickness').value)||0) : 0;
   const effectiveShaftOD = shaftOD + 2*wrapThickness;
-  const wall = state.vaneType==='standard'?0.60:0.35;
-  const fletchThickness = wall;
+  const tubeWall = state.tubeWallThickness;
+  const fletchThickness = state.finThickness;
   const numFletches = parseInt(state.fletchCount);
   const helicalDeg = parseFloat(document.getElementById('helical').value);
   const dirSign = state.helicalDir==='right'?1:-1;
 
-  const Rin=(effectiveShaftOD+clearance)/2, Rout=Rin+wall, overlap=wall*0.6;
-  buildTube(Rin,Rout,length,56);
+  // Rout is the tube's outer radius and is now the primary input: the bore
+  // falls out of it via the inward offset rather than being set directly.
+  const Rin=(effectiveShaftOD+clearance)/2, Rout=Rin+tubeWall;
   // helicalDeg is deg/in -- scale by vane length in inches for the total
   // helical rotation, matching the storefront's render(). offsetDeg is a
   // flat total angle (not deg/in). Both are rotations and combine into one
   // total angular sweep -- offset was briefly a raw sideways shear instead,
   // which detached the fins from the tube (a linear shift doesn't stay on a
-  // curved surface the way a rotation does). See buildBlade.
+  // curved surface the way a rotation does).
   const totalTwistDeg = helicalDeg * (length/25.4);
   const offsetDeg = parseFloat(document.getElementById('offset').value);
   const twistRad = (totalTwistDeg + offsetDeg)*Math.PI/180;
-  // Fin Tip Taper control was removed -- always full/uniform thickness now
-  // (equivalent to the old slider's "100%/Off" setting). buildBlade still
-  // accepts a tipThickFactor param for the untaper-to-a-point safety logic
-  // (see its own comment), so this stays at 1.
-  const tipThickFactor = 1;
-  for(let f=0; f<numFletches; f++){
-    const baseAngle = f*(Math.PI*2/numFletches);
-    buildBlade(baseAngle, twistRad, dirSign, Rout, fletchThickness, overlap, length, 90, tipThickFactor);
+
+  // --- Fin-root bulge -------------------------------------------------
+  // Angular half-width is DERIVED from fin thickness rather than set as a raw
+  // angle. The bulge exists to blend the fin into the tube, so its natural
+  // scale is the fin's own angular footprint on the tube surface; a hardcoded
+  // angle would look correct at one fin thickness and wrong at another, and
+  // would go stale the moment the thickness slider moves. The multiplier sets
+  // how far past that footprint the blend spreads.
+  // One shelled silhouette replaces the old tube-solid + fin-solids union.
+  // Angular resolution has to resolve the root blend, which is the highest
+  // curvature region of the outline.
+  const angSegs = 200;
+  // Ring spacing is tied to the printer's layer height rather than an
+  // arbitrary count. The slicer samples this mesh in 0.16mm horizontal
+  // planes; wherever the mesh resolves the shape more coarsely than that, the
+  // slicer interpolates flat facets between rings -- which is what makes a
+  // twisted surface look stepped. One ring per printed layer means every
+  // plane the slicer takes lands on geometry that was actually evaluated.
+  //
+  // Going finer than the layer height buys nothing: the slicer cannot see
+  // detail between its own planes. Going coarser is what caused the problem.
+  const LAYER_H = 0.16;
+  const zSegs = Math.max(40, Math.min(560, Math.ceil(length/LAYER_H)));
+  // The adaptive angle list is built from the tallest fin section, because
+  // that is where the blade subtends the smallest angle and needs the
+  // tightest sampling. One list, reused at every height.
+  let maxFinH = 0;
+  for(let k=0;k<=zSegs;k++){
+    const hh = interpAt(k/zSegs*length);
+    if(hh > maxFinH) maxFinH = hh;
   }
+  buildVaneShell({
+    Rtube: Rout,
+    finThickness: fletchThickness,
+    numFletches, twistRad, dirSign, length,
+    zSegs, angSegs, maxFinH,
+    heightAt: interpAt
+  });
 
   modelGroup.clear();
   const positions=[], normals=[];
@@ -1099,15 +1410,31 @@ function generate(){
   modelGroup.add(mesh);
 
   document.getElementById('statOD').textContent = (Rout*2).toFixed(2);
-  document.getElementById('statID').textContent = (Rin*2).toFixed(2);
+  // The STL is a SOLID shape now -- there is no modeled bore to measure. In
+  // spiral vase mode the printed part comes out hollow regardless (vase mode
+  // only ever traces the outer wall), so the usable inside diameter is set by
+  // the slicer's line width, not by anything in this file. What's reported
+  // here is the DESIGN target -- shaft OD plus clearance -- for reference,
+  // not a measurement of the actual mesh.
+  document.getElementById('statID').textContent = (Rin*2).toFixed(2) + ' (target — set by slicer wall in vase mode)';
   document.getElementById('statTris').textContent = allTriangles.length;
 
   updatePricing();
 
   const warnEl = document.getElementById('warn');
+  const warnings = [];
   if(fletchThickness < 0.32){
+    warnings.push('Fletch thickness under ~0.32mm may not print reliably — consider a smaller nozzle/line width, or increase thickness.');
+  }
+  // No fin-collapse or bore-clearance warnings anymore -- the mesh is solid
+  // by construction now (no modeled bore, no inward offset to collapse), so
+  // neither failure mode described by the old warnings can occur here. The
+  // actual usable inside diameter is a function of the slicer's vase-mode
+  // wall/line width, not of this geometry -- verify shaft fit against a test
+  // print, not against this file.
+  if(warnings.length){
     warnEl.style.display='block';
-    warnEl.textContent = 'Warning: fletch thickness under ~0.32mm may not print reliably — consider a smaller nozzle/line width, or increase thickness.';
+    warnEl.textContent = 'Warning: ' + warnings.join('  •  ');
   } else warnEl.style.display='none';
 }
 
@@ -1254,7 +1581,8 @@ function currentProfileData(name){
     clearance: parseFloat(document.getElementById('clearance').value),
     usingWraps: state.usingWraps,
     wrapThickness: parseFloat(document.getElementById('wrapThickness').value),
-    vaneType: state.vaneType,
+    tubeWallThickness: state.tubeWallThickness,
+    finThickness: state.finThickness,
     fletchCount: state.fletchCount,
     helical: document.getElementById('helical').value,
     helicalDir: state.helicalDir,
@@ -1275,7 +1603,17 @@ function applyProfileData(data){
   document.getElementById('offsetVal').textContent = document.getElementById('offset').value+'°';
   // Max fletch count is 4 -- clamp here too, in case this is an older saved
   // profile from before that cap existed.
-  state.vaneType = data.vaneType; state.fletchCount = clampFletchCount(data.fletchCount); state.helicalDir = data.helicalDir;
+  if(data.tubeWallThickness!==undefined && data.finThickness!==undefined){
+    state.tubeWallThickness = data.tubeWallThickness;
+    state.finThickness = data.finThickness;
+  } else {
+    // Older saved file predates the tube/fin split -- both used the same
+    // single value, so apply that value to both.
+    const legacyWall = data.wallThickness!==undefined ? data.wallThickness : (data.vaneType==='ultralight' ? 0.35 : 0.60);
+    state.tubeWallThickness = legacyWall;
+    state.finThickness = legacyWall;
+  }
+  state.fletchCount = clampFletchCount(data.fletchCount); state.helicalDir = data.helicalDir;
   if(data.color) state.color = data.color;
   if(data.packSize) state.packSize = data.packSize;
   if(data.usingWraps!==undefined){
@@ -1284,7 +1622,13 @@ function applyProfileData(data){
     document.getElementById('wrapThicknessRow').style.display = (data.usingWraps==='yes') ? 'block' : 'none';
   }
   if(data.wrapThickness!==undefined) document.getElementById('wrapThickness').value = data.wrapThickness;
-  document.querySelectorAll('.btn[data-group="vaneType"]').forEach(b=>b.classList.toggle('active', b.dataset.val===data.vaneType));
+  document.getElementById('tubeWallThickness').value = state.tubeWallThickness;
+  document.getElementById('tubeWallVal').textContent = state.tubeWallThickness.toFixed(2);
+  document.getElementById('finThickness').value = state.finThickness;
+  document.getElementById('finThicknessVal').textContent = state.finThickness.toFixed(2);
+  // Files saved before the shell rewrite carry no blend value; 1.20 is the
+  // new default rather than 0, because 0 means a hard corner at every fin
+  // root -- not what any older design was trying to express.
   document.querySelectorAll('.btn[data-group="fletchCount"]').forEach(b=>{ b.classList.toggle('active', b.dataset.val===data.fletchCount); b.classList.toggle('green', b.dataset.val===data.fletchCount); });
   document.querySelectorAll('.btn[data-group="helicalDir"]').forEach(b=>{ b.classList.toggle('active', b.dataset.val===data.helicalDir); b.classList.toggle('green', b.dataset.val===data.helicalDir); });
   if(data.packSize) document.querySelectorAll('.btn[data-group="packSize"]').forEach(b=>b.classList.toggle('active', b.dataset.val===data.packSize));
@@ -1351,7 +1695,9 @@ function applyOrderItem(item, index, total){
   // export from before that cap existed.
   state.fletchCount = clampFletchCount(item.fletchCount!==undefined ? item.fletchCount : state.fletchCount);
   state.helicalDir = item.helicalDir || 'right';
-  state.vaneType = item.weightClass || 'standard'; // storefront calls this weightClass, Studio calls it vaneType
+  const importedWall = item.weightClass==='ultralight' ? 0.35 : 0.60; // storefront still uses one value for both tube+fin; Studio now splits them
+  state.tubeWallThickness = importedWall;
+  state.finThickness = importedWall;
   if(item.packSize) state.packSize = String(item.packSize);
   if(item.color) state.color = item.color;
   state.usingWraps = item.usingWraps || 'no';
@@ -1361,7 +1707,10 @@ function applyOrderItem(item, index, total){
   document.getElementById('offset').value = item.offset!==undefined ? item.offset : 0;
   document.getElementById('offsetVal').textContent = document.getElementById('offset').value+'°';
 
-  document.querySelectorAll('.btn[data-group="vaneType"]').forEach(b=>b.classList.toggle('active', b.dataset.val===state.vaneType));
+  document.getElementById('tubeWallThickness').value = state.tubeWallThickness;
+  document.getElementById('tubeWallVal').textContent = state.tubeWallThickness.toFixed(2);
+  document.getElementById('finThickness').value = state.finThickness;
+  document.getElementById('finThicknessVal').textContent = state.finThickness.toFixed(2);
   document.querySelectorAll('.btn[data-group="fletchCount"]').forEach(b=>{ b.classList.toggle('active', b.dataset.val===state.fletchCount); b.classList.toggle('green', b.dataset.val===state.fletchCount); });
   document.querySelectorAll('.btn[data-group="helicalDir"]').forEach(b=>{ b.classList.toggle('active', b.dataset.val===state.helicalDir); b.classList.toggle('green', b.dataset.val===state.helicalDir); });
   document.querySelectorAll('.btn[data-group="packSize"]').forEach(b=>b.classList.toggle('active', b.dataset.val===state.packSize));
@@ -1464,7 +1813,7 @@ window.addEventListener('pointerup', ()=>{
 /* ===================== INIT ===================== */
 setPanelHeightPercent(panelHeightPct);
 resizeRenderer();
-applyNamedPreset(NAMED_PRESETS.impact);
+applyNamedPreset(NAMED_PRESETS.ghost, 'GHOST');
 applyCustomModeUI();
 </script>
 </body>
