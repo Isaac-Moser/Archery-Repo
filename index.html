@@ -29,7 +29,7 @@
 
  JS (inside the main SCRIPT block, near the bottom of the file):
    3D PREVIEW SCENE       - Three.js camera/lighting/render loop
-   SHAPE LIBRARY          - SHAPES data: GHOST/IMPACT/CROSSOVER/TARGET/COMPACT/LONGRANGE/DRIFT/VANDOR/RIPTIDE
+   SHAPE LIBRARY          - SHAPES data: GHOST/COMPACT/IMPACT/LONGRANGE/ANCHOR
    CURVE MATH             - corner-rounding + curve sampling shared by preview/icons/editor
    3D GEOMETRY             - tube + fin mesh construction (preview only, not print-grade)
    PRICING                 - updatePricing(): the live price formula
@@ -331,7 +331,27 @@
   .cc-bar{ display:flex; gap:3px; }
   .cc-bar span{ flex:1; height:5px; border-radius:2px; background:var(--line); }
   .cc-bar span.filled{ background:var(--accent); }
+  /* Proportional area readout -- one continuous bar, not 5 discrete pips.
+     Deliberate: pips read as a rating out of five (a judgement), a filled
+     bar reads as a measurement, which is what this now is. */
+  .cc-areabar{ height:6px; border-radius:3px; background:var(--line); overflow:hidden; }
+  .cc-areafill{ height:100%; background:var(--accent); border-radius:3px; }
+  .cc-areaval{ color:var(--text); font-variant-numeric:tabular-nums; }
+  .cc-arealegend{ margin-top:10px; font-size:11.5px; line-height:1.45; color:var(--muted); }
   .compare-footnote{ font-size:11.5px; color:var(--muted-dim); line-height:1.6; margin-top:16px; }
+  /* Pull-out box for the "what most people actually use" guidance -- the
+     numbers a customer is looking for shouldn't be buried in a paragraph. */
+  .spec-callout{
+    border-left:3px solid var(--accent); background:var(--surface2);
+    padding:16px 20px; margin:20px 0; border-radius:0 6px 6px 0;
+  }
+  .spec-callout-title{
+    font-family:var(--label); font-size:11.5px; letter-spacing:2px;
+    text-transform:uppercase; color:var(--accent); margin-bottom:10px;
+  }
+  .spec-list{ margin:0; padding-left:18px; }
+  .spec-list li{ font-size:14.5px; line-height:1.65; color:var(--text); margin-bottom:6px; }
+  .spec-list li:last-child{ margin-bottom:0; }
   @media(max-width:700px){ .compare-grid{ grid-template-columns:1fr 1fr; } }
 
   /* ---- order summary ---- */
@@ -451,6 +471,31 @@
 
   /* ---- shape cards ---- */
   .shape-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+  .reco-box{ background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:22px 24px; margin-bottom:26px; }
+  .reco-q{ margin-bottom:18px; }
+  .reco-q:last-of-type{ margin-bottom:0; }
+  .reco-q-label{ font-size:14px; font-weight:600; color:var(--text); margin-bottom:10px; }
+  .reco-opts{ display:flex; gap:10px; flex-wrap:wrap; }
+  .reco-opt{
+    padding:9px 16px; border:1.5px solid var(--line); border-radius:6px; background:var(--surface2);
+    color:var(--muted); font-size:13.5px; cursor:pointer; transition:border-color .15s, color .15s, background .15s;
+  }
+  .reco-opt:hover{ border-color:var(--muted); color:var(--text); }
+  .reco-opt.selected{ border-color:var(--accent); background:var(--accent-soft); color:var(--text); font-weight:600; }
+  .reco-result{
+    margin-top:20px; padding-top:20px; border-top:1px solid var(--line);
+  }
+  .reco-result-head{ font-family:var(--label); font-size:12px; letter-spacing:1.2px; text-transform:uppercase; color:var(--accent); margin-bottom:8px; }
+  .reco-result-shape{ font-size:20px; font-weight:700; color:var(--text); margin-bottom:6px; }
+  .reco-result-why{ font-size:13.5px; color:var(--muted); line-height:1.6; margin-bottom:16px; max-width:560px; }
+  .reco-result-btns{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+  .reco-use-btn{
+    padding:10px 20px; background:var(--accent); border:none; border-radius:5px; color:#fff;
+    font-size:13.5px; font-weight:600; cursor:pointer;
+  }
+  .reco-use-btn:hover{ background:var(--accent-deep); }
+  .reco-skip{ font-size:13px; color:var(--muted-dim); cursor:pointer; text-decoration:underline; }
+  .reco-skip:hover{ color:var(--muted); }
   .shape-card{
     background:var(--surface); border:1.5px solid var(--line); border-radius:4px; padding:18px 16px 16px;
     cursor:pointer; transition:all .18s; text-align:left; position:relative;
@@ -799,11 +844,40 @@
   <section class="step reveal" id="shape">
     <div class="step-eyebrow">The Shape</div>
     <h2>Choose your profile</h2>
-    <div class="step-sub">Each shape is tuned for a different style of shooting. Not sure? IMPACT and CROSSOVER are the most popular all-around picks. Try a few — the length field below adjusts too, so it's worth playing with both until the preview feels right.</div>
+    <div class="step-sub">Each shape is tuned for a different style of shooting. Not sure? Answer three quick questions about how you actually shoot, and we'll point you at a starting shape and angle — you can still browse and change it manually afterward.</div>
+
+    <div class="reco-box" id="recoBox">
+      <div class="reco-q" data-q="tip">
+        <div class="reco-q-label">What are you shooting?</div>
+        <div class="reco-opts">
+          <div class="reco-opt" data-val="fixed">Fixed-blade broadhead</div>
+          <div class="reco-opt" data-val="mech">Mechanical broadhead</div>
+          <div class="reco-opt" data-val="field">Field point / target point</div>
+        </div>
+      </div>
+      <div class="reco-q" data-q="distance">
+        <div class="reco-q-label">Typical shot distance?</div>
+        <div class="reco-opts">
+          <div class="reco-opt" data-val="close">Under 20 yards</div>
+          <div class="reco-opt" data-val="mid">20–40 yards</div>
+          <div class="reco-opt" data-val="far">40+ yards</div>
+        </div>
+      </div>
+      <div class="reco-q" data-q="priority">
+        <div class="reco-q-label">What matters most?</div>
+        <div class="reco-opts">
+          <div class="reco-opt" data-val="quiet">Quiet &amp; low-drag</div>
+          <div class="reco-opt" data-val="correction">Maximum correction &amp; stability</div>
+          <div class="reco-opt" data-val="balanced">Balanced — not sure</div>
+        </div>
+      </div>
+      <div class="reco-result" id="recoResult" style="display:none;"></div>
+    </div>
+
     <div class="shape-grid" id="shapeGrid"></div>
     <div class="stock-msg" id="shapeStockMsg"></div>
     <div class="customize-link" id="compareLink" style="margin-right:18px;">
-      <span>⚖</span> Not sure? Compare all nine shapes
+      <span>⚖</span> Not sure? Compare all five shapes
     </div>
     <div class="customize-btn" id="customizeLink">
       <span>✎</span> Design Your Own Custom Shape
@@ -907,25 +981,28 @@
           <div class="segbtn active" data-group="fletchCount" data-val="4">4</div>
         </div>
       </div>
-      <div class="field">
-        <label>Weight Class</label>
-        <div class="segbtn-row">
-          <div class="segbtn active" data-group="weightClass" data-val="standard">Standard<span class="thick">0.60mm wall</span></div>
-          <div class="segbtn disabled" id="ultralightBtn" title="Still in development — not orderable yet">Ultralight<span class="thick">In Progress</span></div>
-        </div>
-        <div class="help">Ultralight trims weight for a bit more speed and a quieter shot — still being tested, not available to order yet.</div>
-      </div>
     </div>
     <div class="field-grid">
       <div class="field">
-        <label>Offset <span class="opt" id="offsetSliderVal">1°</span></label>
-        <input type="range" id="offsetSlider" min="0" max="3" step="0.1" value="1" style="width:100%;">
-        <div class="help">A rotation around the shaft, same as Helical Twist, specified as one flat total angle instead of scaling with vane length. At this range it reads visually as a near-straight tilt rather than an obvious spiral. Combines with Helical Twist below into one total twist.</div>
+        <label>Offset <span class="opt" id="offsetSliderVal">2°</span></label>
+        <div class="segbtn-row">
+          <div class="segbtn" data-group="offset" data-val="1">1&deg;</div>
+          <div class="segbtn active" data-group="offset" data-val="2">2&deg;</div>
+          <div class="segbtn" data-group="offset" data-val="3">3&deg;</div>
+        </div>
+        <div class="help">Tilts each vane a few degrees off the shaft so air spins the arrow, the way rifling spins a bullet. That spin averages out small imperfections and is what keeps a broadhead from steering the arrow. <strong>1&ndash;2&deg; is what most archers shoot.</strong> Go to 3&deg; for fixed-blade broadheads; stay at 1&deg; for field points and max speed.</div>
       </div>
       <div class="field">
-        <label>Helical Twist <span class="opt" id="helicalSliderVal">19°/in</span></label>
-        <input type="range" id="helicalSlider" min="0" max="25" step="0.1" value="19" style="width:100%;">
-        <div class="help">The same rotation as Offset, specified as degrees per inch of vane length instead of a flat total — so total twist scales with your vane's length. Combines with Offset above (both use the same Twist Direction).</div>
+        <label>Helical <span class="opt" id="helicalSliderVal">3°</span></label>
+        <div class="segbtn-row">
+          <div class="segbtn" data-group="helicalAngle" data-val="1">1&deg;</div>
+          <div class="segbtn" data-group="helicalAngle" data-val="2">2&deg;</div>
+          <div class="segbtn active" data-group="helicalAngle" data-val="3">3&deg;</div>
+          <div class="segbtn" data-group="helicalAngle" data-val="4">4&deg;</div>
+          <div class="segbtn" data-group="helicalAngle" data-val="5">5&deg;</div>
+          <div class="segbtn" data-group="helicalAngle" data-val="6">6&deg;</div>
+        </div>
+        <div class="help">Same idea as offset, but the vane curves around the shaft instead of sitting flat &mdash; so it grips more air and spins the arrow harder. More helical means faster spin and better broadhead control, at the cost of a little speed. <strong>3&ndash;4&deg; suits most hunting setups.</strong></div>
       </div>
       <div class="field">
         <label>Twist Direction</label>
@@ -933,6 +1010,7 @@
           <div class="segbtn active" data-group="helicalDir" data-val="right">Right</div>
           <div class="segbtn" data-group="helicalDir" data-val="left">Left</div>
         </div>
+        <div class="help">Which way the arrow spins: right is clockwise, left is counter-clockwise. Performance is the same either way &mdash; the old &ldquo;match your shooting hand&rdquo; rule has no real basis. <strong>We default to right</strong> because screw-in points and broadheads use right-hand threads, so a right spin tends to snug them rather than back them off. Pick left only if you shoot single-bevel broadheads ground for it. Whichever you choose, keep it the same across every arrow in your quiver.</div>
       </div>
     </div>
     <div class="field">
@@ -949,8 +1027,8 @@
       <div class="field">
         <label>Pack Size</label>
         <div class="segbtn-row">
-          <div class="segbtn active" data-group="packSize" data-val="18">Pack of 18</div>
-          <div class="segbtn" data-group="packSize" data-val="24">Pack of 24</div>
+          <div class="segbtn" data-group="packSize" data-val="12">Pack of 12<span class="thick">4 arrows &middot; $30</span></div>
+          <div class="segbtn active" data-group="packSize" data-val="18">Pack of 18<span class="thick">6 arrows &middot; $40</span></div>
         </div>
       </div>
       <div class="field">
@@ -992,7 +1070,19 @@
       </details>
       <details class="faq-item">
         <summary>How tight is the fit around my shaft?</summary>
-        <p>We build a small glue gap into every vane — about 0.525mm larger than the exact shaft diameter you enter. That's enough room for glue and a smooth slide-on, but tight enough that it seats snug and doesn't wobble before the glue sets. It's a tolerance we hold on every print, not a rough estimate.</p>
+        <p>Every vane is printed to the exact shaft diameter you enter, with a glue gap built in — enough room for adhesive and a smooth slide-on, tight enough that it seats snug and doesn't wobble before the glue sets. That clearance is a tolerance we hold and verify on every print, not a rough estimate. If your shaft measures unusual, tell us in the notes and we'll check it against your number before printing.</p>
+      </details>
+      <details class="faq-item">
+        <summary>How do I actually put these on?</summary>
+        <p>Slide the vane onto a clean shaft, position it where you want it, and run a thin bead of glue at each end of the tube. No jig, no clamps, no alignment — the helical is already built into the part, so however it slides on is how it flies. Gel superglue or a slow-set CA both work well; wipe the shaft with alcohol first.</p>
+      </details>
+      <details class="faq-item">
+        <summary>What if one vane gets damaged?</summary>
+        <p>Run a utility knife down the spine of that vane, peel it off, clean the shaft and slide on a replacement. You're not re-fletching the whole arrow to fix one fin — which is most of the reason these exist.</p>
+      </details>
+      <details class="faq-item">
+        <summary>3 vanes or 4? What offset should I pick?</summary>
+        <p>Three is the standard and what we ship by default — lighter, less drag, better clearance. Four adds correction for big fixed-blade broadheads but costs speed. For spin, most archers run 1–2° of offset; go higher for fixed blades, lower for field points and speed. There's a full breakdown on the Compare page, including what each shape is actually built for.</p>
       </details>
       <details class="faq-item">
         <summary>Can I pick up locally instead of shipping?</summary>
@@ -1062,7 +1152,7 @@
     </svg>
     <div class="wrap">
       <div class="eyebrow-top">Pick With Confidence</div>
-      <h1>Compare the <em>nine shapes</em>, side by side.</h1>
+      <h1>Compare the <em>five shapes</em>, side by side.</h1>
     </div>
   </div>
 
@@ -1072,24 +1162,56 @@
       <h2>Two Numbers Do Most of the Work</h2>
       <p><b>Height</b> is what steers a broadhead back on line — taller vanes correct more, which is exactly why hunting vanes tend to stand taller than target vanes. That correction isn't free, though: taller also means more noise and, to a lesser degree, more drag.</p>
       <p><b>Length</b> works differently than most people expect. It's actually the bigger factor in aerodynamic drag — a long vane costs you more speed than a tall one does. But length also quiets things down: spread the same surface area over a longer, lower-angle curve and it slices through the air with less noise than a short, steep one. That's why a vane can be both long <i>and</i> quiet at the same time.</p>
-      <p>Every shape below is fully rounded already — no sharp edges anywhere in the curve, on any of them — so airflow separation and turbulence aren't a variable here. What actually separates these nine is how much length and height each one leans on, and that's what the ratings below reflect.</p>
+      <p>Every shape below is fully rounded already — no sharp edges anywhere in the curve, on any of them — so airflow separation and turbulence aren't a variable here. What separates them is side-profile area: the total surface the air pushes against. That number is measured off each shape's actual printed curve, and it's what the bars below show. More area means more correction and more drag — they scale together, so picking a shape is really picking where you want to sit on that trade.</p>
     </section>
 
     <section class="about-block reveal">
-      <div class="step-eyebrow">A Third and Fourth Dial</div>
-      <h2>Offset &amp; Helical Twist</h2>
-      <p>Where shape gives you a fixed amount of steering, <b>offset</b> and <b>helical twist</b> are the dials you turn to add more — both spin the arrow in flight, which helps drive a broadhead back on line faster than a straight fletch alone. They do it two different ways, and you can use either one alone or combine them.</p>
-      <p><b>Offset</b> is a rotation around the shaft, same as helical twist, just expressed as one flat total angle instead of scaling with vane length. It's a single angle, from <b>0° up to 3°</b>, that stays the same no matter how long the vane is. At that small a range it reads visually as a near-straight tilt rather than an obvious spiral — picture a straight line drawn on a piece of paper wrapped around a tube: at a shallow angle it still looks straight from the side, even though it's technically following the tube's curve.</p>
-      <p><b>Helical twist</b> is the same kind of rotation, just usually a bigger one and specified per inch of vane length instead of as a flat total: from <b>Straight (0°/in) up to 25°/in</b>. Because it's specified as a rate, the total amount of twist scales with how long a vane you've picked — a longer vane ends up with more total twist at the same setting than a shorter one does. Offset and helical combine into one continuous twist along the vane, so you can dial in either alone or both together.</p>
-      <p>Both tradeoff the same way — more of either means more correction, but also more drag and more noise off the string. Higher settings lean harder into correction; lower settings lean toward speed and quiet. Set them independently, or dial in both together for a stronger effect than either gives alone — every order is printed to your exact combination, shape by shape.</p>
-      <p>One more thing worth knowing: some vane makers and jig manufacturers use a flat, length-independent angle for what we call helical twist (Bohning's system works this way), which isn't directly comparable to our degrees-per-inch number. If you're used to comparing flat-degree specs from another vane, don't assume the numbers translate directly — ask if you're not sure how a given setting will come out on your specific vane length.</p>
+      <div class="step-eyebrow">Spin</div>
+      <h2>Offset &amp; Helical</h2>
+      <p>Shape decides how much steering you have. <b>Offset</b> and <b>helical</b> decide how much the arrow <i>spins</i> — and spin is what keeps a broadhead from steering your arrow for you. A spinning arrow averages out small imperfections instead of letting them push it off line, the same way rifling stabilizes a bullet.</p>
+      <p><b>Offset</b> tilts each vane a few degrees off the shaft while keeping it flat. <b>Helical</b> curves the vane around the shaft instead, so it grips more air and spins the arrow harder for the same nominal angle. You can use either, or both together.</p>
+      <div class="spec-callout">
+        <div class="spec-callout-title">What most people shoot</div>
+        <ul class="spec-list">
+          <li><b>Offset 1–2°</b> — the common range, and where most archers land.</li>
+          <li><b>Helical 3–4°</b> — suits most hunting setups.</li>
+        </ul>
+      </div>
+      <p><b>Field points, indoor, maximum speed:</b> offset 1°, helical 1–2°. You barely need spin when nothing up front is trying to steer the arrow, and every degree costs a little velocity.</p>
+      <p><b>Mechanicals and mixed use:</b> offset 2°, helical 3°. Enough rotation to keep things honest without paying much for it.</p>
+      <p><b>Fixed-blade broadheads:</b> offset 2–3°, helical 4–6°. A fixed blade is a steering surface at the front of your arrow, and it will win unless there's enough spin and enough rear area to overrule it. This is the one case where it's worth accepting the speed loss.</p>
+      <p>The trade is the same in both directions: more spin means better broadhead control and more drag. There's no setting that gives one without the other.</p>
+    </section>
+
+    <section class="about-block reveal">
+      <div class="step-eyebrow">Direction</div>
+      <h2>Right or Left Twist?</h2>
+      <p><b>Right</b> spins the arrow clockwise, <b>left</b> counter-clockwise. That's the whole difference in flight — there's no meaningful accuracy or stability advantage either way, and the old rule about matching your shooting hand has no real basis behind it. An arrow doesn't even begin rotating until a few feet after it leaves the bow.</p>
+      <p><b>We default to right</b> for one practical reason: screw-in field points, broadheads and inserts use right-hand threads, so a clockwise spin tends to snug them rather than slowly back them out. It's a small thing, but it's free.</p>
+      <p><b>Pick left only if</b> you shoot single-bevel broadheads ground for a left spin — that's the one case where direction genuinely has to match.</p>
+      <p>Whichever you pick, keep it consistent across every arrow in your quiver. Mixing directions within a set is the one thing that will actually show up in your groups.</p>
+    </section>
+
+    <section class="about-block reveal">
+      <div class="step-eyebrow">How Many</div>
+      <h2>3 Vanes or 4?</h2>
+      <p>Three vanes at 120° is the standard across target and hunting archery, and it's what we ship by default. Four vanes at 90° adds a fourth surface, which adds correction — and adds drag along with it.</p>
+      <div class="spec-callout">
+        <div class="spec-callout-title">The honest summary</div>
+        <ul class="spec-list">
+          <li><b>3 vanes</b> — lighter, less drag, flatter trajectory, less wind drift. Better clearance past your rest. The default for good reason.</li>
+          <li><b>4 vanes</b> — about a third more surface area, so quicker recovery out of the bow and more authority over a big broadhead. Costs speed and drifts more in a crosswind.</li>
+        </ul>
+      </div>
+      <p>One thing worth knowing: most archers who move to 4 vanes also move to a <i>shorter</i> vane, so total surface area stays roughly the same and it's spread more evenly around the shaft rather than simply increased. Adding a fourth vane of the same size is a real increase in drag, not a free upgrade — if that's what you want, going up one profile in our lineup gets you there with less speed loss.</p>
+      <p>And a myth worth retiring: lining your vanes up with your broadhead blades makes no measurable difference. It's been tested on shooting machines at every practical distance. Do it if you like how it looks.</p>
     </section>
 
     <section class="about-block reveal">
       <div class="step-eyebrow">Side by Side</div>
       <h2>Shape Comparison</h2>
       <div class="compare-grid" id="compareGrid"></div>
-      <p class="compare-footnote">Ratings are relative to the other shapes in this lineup, based on each shape's actual length and height and how those two dimensions are known to affect steering power, noise, and drag. They're a guide for picking a starting point — not a lab measurement of your specific build, which also depends on your shaft, point weight, and broadhead choice.</p>
+      <p class="compare-footnote">Areas are measured from each shape's actual printed curve. They're a guide for picking a starting point — not a prediction for your specific build, which also depends on your shaft, point weight, broadhead and spin settings.</p>
     </section>
 
     <section class="about-block reveal about-cta">
@@ -1946,24 +2068,34 @@ function shippingValueHTML(itemsSubtotal, packQty){
 // way (a mislabeled "Front"/"Back" convention in Studio's 2D editor), which
 // is why they rendered backwards on the arrow. Fixed here.
 const SHAPES = {
-  ghost: { name:'GHOST', desc:'Smooth, low-drag, quiet in flight.', rounding:100, stock:true,
-    nodes:[{x:0,h:0.4},{x:8,h:6},{x:19,h:12.7},{x:33,h:9},{x:51,h:4},{x:71,h:0.4}] },
-  impact: { name:'IMPACT', desc:'Back-loaded correction in a shorter package.', rounding:100, stock:true,
-    nodes:[{x:0,h:3},{x:6,h:7.1},{x:16,h:9.8},{x:57,h:0.4}] },
-  crossover: { name:'CROSSOVER', desc:'Back-loaded peak, compact 50mm length.', rounding:100, stock:true,
-    nodes:[{x:0,h:3},{x:4,h:6.2},{x:23,h:13},{x:50,h:0.4}] },
-  target: { name:'TARGET', desc:'Back-loaded taper, low noise off the shelf.', rounding:100, stock:true,
-    nodes:[{x:0,h:3.2},{x:3,h:5.5},{x:15,h:10},{x:40,h:6.5},{x:60,h:2.5},{x:70,h:0.4}] },
-  compact: { name:'COMPACT', desc:'Sharp triangular peak, quick correction, short package.', rounding:100, stock:true,
-    nodes:[{x:0,h:3},{x:4,h:6.2},{x:17,h:12},{x:50,h:0.4}] },
-  longrange: { name:'LONGRANGE', desc:'Front-loaded nose, extended stability plateau.', rounding:100, stock:true,
+  // Five profiles spanning a measured range, cut down from nine. Ordered
+  // smallest to largest by side-profile AREA -- the property that actually
+  // drives behaviour. A vane stabilises by creating drag at the rear, which
+  // pushes the centre of pressure behind the centre of gravity; that offset
+  // generates the correcting torque. More area = more correction AND more
+  // drag. A fixed-blade broadhead is a steering surface at the FRONT that
+  // pulls centre of pressure forward, which is why broadheads need more
+  // vane area to stay stable.
+  //
+  // The old nine had seven profiles between 417-464 mm^2 -- an 11% spread,
+  // i.e. the same vane with different outlines, which is why their
+  // descriptions could not be made truthful. Retired: DRIFT, VANDOR,
+  // CROSSOVER, RIPTIDE, and the old TARGET (whose 409 mm^2 was nowhere
+  // near small enough for the job its name claimed -- GHOST fills that
+  // slot properly now, at 244).
+  //
+  // Areas are measured on the SMOOTHED curve (what prints), not the raw
+  // node polygon, and every profile clears the 40-degree steepness limit.
+  ghost: { name:'GHOST', area:244, desc:'Our quietest and fastest. Least area means least drag and least noise \u2014 built for field points, indoor and 3D, where the arrow is already stable and extra surface only costs you speed.', rounding:100, stock:true,
+    nodes:[{x:0,h:3.2},{x:10,h:6.4},{x:26,h:7.3},{x:48,h:1.0},{x:50,h:0.4}] },
+  compact: { name:'COMPACT', area:323, desc:'A short 50mm vane with real steering behind it. Low drag, quick recovery \u2014 suits mechanicals, small-diameter shafts, and speed-focused builds.', rounding:100, stock:true,
+    nodes:[{x:0,h:3.2},{x:14,h:9.6},{x:24,h:10.2},{x:49,h:1.0},{x:50,h:0.4}] },
+  impact: { name:'IMPACT', area:434, desc:'The all-around anchor of the lineup and our most-tested shape. Mid-range correction with a smooth single curve \u2014 the default pick if you are not sure.', rounding:100, stock:true,
+    nodes:[{x:0,h:3.2},{x:13.7,h:9.55},{x:33.83,h:9.95},{x:63.9,h:0.84},{x:65,h:0.36}] },
+  longrange: { name:'LONGRANGE', area:644, desc:'Long and moderately tall, for sustained correction over distance. Built for broadheads and heavier hunting arrows on longer shots.', rounding:100, stock:true,
     nodes:[{x:0,h:2.5},{x:17,h:11.4},{x:50,h:9.5},{x:91,h:0.4}] },
-  drift: { name:'DRIFT', desc:'Sharp front rise, long gradual taper to the nock.', rounding:100, stock:true,
-    nodes:[{x:0,h:0.4},{x:4,h:3},{x:9,h:7},{x:16,h:12},{x:75,h:0.4}] },
-  vandor: { name:'VANDOR', desc:'Rounded, back-loaded peak for steady correction.', rounding:100, stock:true,
-    nodes:[{x:0,h:2.3},{x:8,h:8.3},{x:20,h:12},{x:65,h:0.4}] },
-  riptide: { name:'RIPTIDE', desc:'Long, mid-loaded peak for sustained correction over extended flight.', rounding:100, stock:true,
-    nodes:[{x:0,h:0.4},{x:25,h:10.7},{x:58,h:4},{x:76.2,h:0.4}] }
+  anchor: { name:'ANCHOR', area:795, desc:'The most steering authority we make \u2014 it holds a broadhead on line when nothing smaller will. For aggressive fixed blades, which plane hardest and need the most area behind them. Expect real speed loss in exchange.', rounding:100, stock:true,
+    nodes:[{x:0,h:3.2},{x:20,h:11.8},{x:48,h:13.2},{x:92,h:1.2},{x:95,h:0.4}] }
 };
 // Shared reference dimensions for miniCurveSVG -- computed once across all
 // stock shapes so every silhouette on the shape-picker and Compare cards
@@ -1989,7 +2121,7 @@ const COLORS = [
 const order = {
   shape:'impact', customNodes:null, customRounding:55,
   vaneLength:55, shaftOD:6.15, arrowBrand:'', arrowModel:'', arrowSpine:'', shaftSizeSource:'unset', usingWraps:'no', wrapThickness:'', wrapBrand:'',
-  fletchCount:'4', weightClass:'standard', helical:'19', helicalDir:'right', offset:'1',
+  fletchCount:'3', helicalAngle:'3', helical:'19', helicalDir:'right', offset:'2',
   color:'#8BC34A', packSize:'18', quantity:1
 };
 // Declared early (not down near the rest of the custom-editor code) because
@@ -2135,8 +2267,8 @@ function render(){
   const wrapVal = parseFloat(order.wrapThickness);
   const wrapAdd = (order.usingWraps==='yes') ? 2*(isNaN(wrapVal) ? 0.15 : wrapVal) : 0;
   const effOD = order.shaftOD + wrapAdd;
-  const wall = order.weightClass==='standard' ? 0.60 : 0.35;
-  const Rin = (effOD + 0.525)/2, Rout = Rin+wall, overlap = wall*0.6;
+  const wall = 0.60; // single wall spec -- the weight-class option was removed
+  const Rin = (effOD + FIT_CLEARANCE)/2, Rout = Rin+wall, overlap = wall*0.6;
 
   buildTube(Rin, Rout, length, 48);
   const numFletches = parseInt(order.fletchCount);
@@ -2207,16 +2339,14 @@ function updatePricing(){
   const numFletches = parseInt(order.fletchCount);
   const pack = parseInt(order.packSize);
 
-  // Price correlates with vane length and fletch count (3 vs 4 vanes per
-  // arrow) to set the base 18-pack price -- bounded $38 (35mm, 3-fletch)
-  // to $50 (100mm, 4-fletch). Switching pack size from 18 to 24 scales
-  // that price up proportionally rather than adding a flat surcharge:
-  // 24-pack price = (18-pack price / 18 * 3) + 18-pack price. So a $45
-  // 18-pack becomes (45/18*3)+45 = $52.50 -> $53 at 24.
-  const lengthTerm = 8 * (length - 35) / (100 - 35);
-  const fletchTerm = 4 * Math.max(0, numFletches - 3); // only 3 or 4 offered today
-  const price18 = Math.min(50, Math.max(38, 38 + lengthTerm + fletchTerm));
-  const packPrice = Math.round(pack === 24 ? (price18/18*3) + price18 : price18);
+  // Flat price per pack size. Deliberately simple: one number per pack,
+  // no length or fletch-count surcharge, so the price a customer sees on
+  // the shape page is the price at checkout regardless of what they
+  // configure. (The old model scaled with length and fletch count between
+  // $38 and $50, which meant the quoted price moved as they adjusted
+  // unrelated settings.)
+  const PACK_PRICES = { 12: 30, 18: 40 };
+  const packPrice = PACK_PRICES[pack] ?? PACK_PRICES[18];
 
   const qty = Math.max(1, parseInt(order.quantity)||1);
   const total = packPrice * qty;
@@ -2291,7 +2421,6 @@ function updateOrderSummary(total){
   const wrapText = order.usingWraps==='yes'
     ? ('Yes' + (order.wrapThickness ? ` (${order.wrapThickness}mm)` : order.wrapBrand ? ` (${order.wrapBrand})` : ''))
     : 'No';
-  const weightClassLabel = order.weightClass==='standard' ? 'Standard' : 'Ultralight';
 
   const arrowIdParts = [order.arrowBrand, order.arrowModel, order.arrowSpine ? order.arrowSpine+' spine' : ''].filter(Boolean);
   const yourArrowValue = arrowIdParts.length
@@ -2306,7 +2435,6 @@ function updateOrderSummary(total){
     ['Shaft Size', order.shaftSizeSource==='unset' ? '<span style="color:var(--accent);">Not entered yet</span>' : order.shaftOD + 'mm'],
     ['Arrow Wraps', wrapText],
     ['Number of Vanes', order.fletchCount],
-    ['Weight Class', weightClassLabel],
     ['Helical', helicalSummaryText()],
     ['Pack Size', 'Pack of ' + order.packSize],
     ['Quantity', order.quantity + ' pack' + (order.quantity==1?'':'s')],
@@ -2519,11 +2647,150 @@ function miniCurveSVG(nodes, rounding){
    UI BUILD — shape cards
 ===================================================================== */
 const shapeGrid = document.getElementById('shapeGrid');
+
+/* =====================================================================
+   SHAPE RECOMMENDER
+   Three questions -> a starting shape + a starting helical angle. Not a
+   black-box score -- explicit tiers, so this is easy to read and adjust
+   later without reverse-engineering a formula.
+
+   Grounded in two things: (1) real industry practice for what customers
+   are actually asked (broadhead/tip type, shot distance -- see e.g.
+   archerycalculators.com's Vane Selector), never asked to design a curve
+   themselves, and (2) each shape's MEASURED side-profile area, which is
+   the property that actually drives behaviour:
+
+     GHOST 244  <  COMPACT 323  <  IMPACT 434  <  LONGRANGE 644  <  ANCHOR 795
+
+   A vane stabilises by creating drag at the rear, pushing the centre of
+   pressure behind the centre of gravity; that offset is what generates the
+   correcting torque. More area = more correction AND more drag/speed loss,
+   inseparably. A fixed-blade broadhead is a steering surface at the FRONT
+   that pulls centre of pressure forward and cuts stability, which is
+   exactly why broadheads demand more rear area.
+
+   So the whole recommendation reduces to one honest question: how much
+   correction does this setup actually need? Tip type sets the baseline
+   (fixed blades plane hardest, field points barely at all), distance
+   raises it (longer flight = more time for error to grow), and the
+   priority answer nudges one step either way.
+===================================================================== */
+const RECO_BASE = {
+  fixed: { far:'anchor',    mid:'longrange', close:'impact'   },
+  mech:  { far:'longrange', mid:'impact',    close:'compact'  },
+  field: { far:'impact',    mid:'compact',   close:'ghost'    },
+};
+// Priority acts as a one-tier override on the tip/distance base pick: one
+// step up or down the SAME ordered lineup above, never a sideways jump.
+const RECO_LESS = { anchor:'longrange', longrange:'impact', impact:'compact', compact:'ghost' };
+const RECO_MORE = { ghost:'compact', compact:'impact', impact:'longrange', longrange:'anchor' };
+
+const RECO_ANGLE = {
+  fixed: { far:6, mid:5, close:5 },
+  mech:  { far:4, mid:4, close:3 },
+  field: { far:2, mid:2, close:1 },
+};
+
+const RECO_WHY = {
+  fixed:'a fixed-blade broadhead planes hardest in flight, so it needs the most vane area behind it to stay pointed straight',
+  mech: 'a mechanical broadhead planes less than a fixed blade, so it needs steady correction without paying for drag you do not need',
+  field:'a field point barely planes at all, so a smaller, lower-drag vane does the job without slowing the arrow down',
+};
+
+const recoAnswers = {};
+document.querySelectorAll('.reco-opt').forEach(opt=>{
+  opt.addEventListener('click', ()=>{
+    const q = opt.closest('.reco-q').dataset.q;
+    opt.closest('.reco-opts').querySelectorAll('.reco-opt').forEach(o=>o.classList.remove('selected'));
+    opt.classList.add('selected');
+    recoAnswers[q] = opt.dataset.val;
+    if(recoAnswers.tip && recoAnswers.distance && recoAnswers.priority) showRecommendation();
+  });
+});
+
+function showRecommendation(){
+  const { tip, distance, priority } = recoAnswers;
+  let key = RECO_BASE[tip][distance];
+  if(priority==='correction' && RECO_MORE[key]) key = RECO_MORE[key];
+  if(priority==='quiet' && RECO_LESS[key]) key = RECO_LESS[key];
+  const angleDeg = RECO_ANGLE[tip][distance];
+
+  const shape = SHAPES[key];
+  const resultEl = document.getElementById('recoResult');
+  resultEl.style.display = 'block';
+  resultEl.innerHTML = `
+    <div class="reco-result-head">Recommended for you</div>
+    <div class="reco-result-shape">${shape.name} — ${angleDeg}&deg; helical</div>
+    <div class="reco-result-why">${shape.name}: ${shape.desc} Suggested because ${RECO_WHY[tip]}.</div>
+    <div class="reco-result-btns">
+      <button class="reco-use-btn" id="recoUseBtn">Use this recommendation</button>
+      <span class="reco-skip" id="recoSkip">I'll browse and pick manually</span>
+    </div>`;
+
+  document.getElementById('recoUseBtn').addEventListener('click', ()=>{
+    applyRecommendation(key, angleDeg);
+  });
+  document.getElementById('recoSkip').addEventListener('click', ()=>{
+    document.getElementById('shapeGrid').scrollIntoView({behavior:'smooth', block:'start'});
+  });
+}
+
+// Converts the recommended vane-to-shaft ANGLE (physically meaningful,
+// 1-6 degrees, same convention as real fletching jigs) into this shape's
+// deg/in -- the raw geometry input the slider actually uses. deg/in isn't
+// portable between shapes: the same angle needs a different raw rotation
+// depending on tip radius (tube + fin height) and vane length, via
+// tan(angle) = tipRadius * rawRotationRad / length. Reuses this file's own
+// existing Rin/Rout/WALL_STANDARD constants (see render()/renderShapeCards
+// above) rather than inventing a fourth geometry constant in this file.
+function angleToHelicalPerIn(shape, angleDeg, lengthMm){
+  const wrapVal = parseFloat(order.wrapThickness);
+  const wrapAdd = (order.usingWraps==='yes') ? 2*(isNaN(wrapVal) ? 0.15 : wrapVal) : 0;
+  const effOD = order.shaftOD + wrapAdd;
+  const wall = WALL_STANDARD; // single wall spec -- weight class removed
+  const Rin = (effOD + FIT_CLEARANCE)/2, Rout = Rin + wall;
+  const finHalf = 0.30;
+  const maxH = Math.max(...shape.nodes.map(n=>n.h));
+  const R = Math.max(Rout, Rout + maxH - finHalf);
+  const angleRad = angleDeg*Math.PI/180;
+  const rawRad = R>0 ? (lengthMm*Math.tan(angleRad))/R : 0;
+  const totalDeg = rawRad*180/Math.PI;
+  return totalDeg / (lengthMm/25.4);
+}
+
+function applyRecommendation(key, angleDeg){
+  // Reuse the exact same click handler every shape card already has --
+  // sets order.shape, sets vaneLength to that shape's native length, updates
+  // the length field, closes the editor panel, re-renders -- rather than
+  // duplicating that logic here and risking it drifting out of sync later.
+  const card = document.querySelector(`.shape-card[data-key="${key}"]`);
+  if(card) card.click();
+
+  // Drive the helical ANGLE buttons, not a raw deg/in value -- the button
+  // row is the source of truth now, and syncHelicalFromAngle() derives
+  // order.helical from it (correctly, for this shape's length/tip radius).
+  const angleBtn = document.querySelector(`.segbtn[data-group="helicalAngle"][data-val="${angleDeg}"]`);
+  if(angleBtn){
+    document.querySelectorAll('.segbtn[data-group="helicalAngle"]').forEach(b=>b.classList.remove('active'));
+    angleBtn.classList.add('active');
+    order.helicalAngle = String(angleDeg);
+    document.getElementById('helicalSliderVal').textContent = angleDeg+'\u00b0';
+  }
+  syncHelicalFromAngle();
+  render();
+
+  document.getElementById('shapeGrid').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
 // True height off the actual shaft surface = the node's local curve height,
-// plus half the 0.525mm glue gap, plus the tube wall (minus the small
+// plus half the FIT_CLEARANCE glue gap, plus the tube wall (minus the small
 // overlap fused into the tube -- see buildFin/Rin/Rout above). Standard
 // wall (0.60mm) is assumed here since weight class isn't chosen yet at
 // this point in the flow; ultralight (0.35mm) runs about 0.1mm less.
+// Diametral glue gap, matched to the Studio's tested value. Was 0.525 here
+// while the Studio had moved to 0.30 -- which meant this preview was drawing
+// a bore that no longer matched what actually shipped.
+const FIT_CLEARANCE = 0.30;
 const WALL_STANDARD = 0.60;
 function trueHeightOffShaft(nodes, wall){
   const peak = Math.max(...nodes.map(n=>n.h));
@@ -2566,6 +2833,7 @@ function renderShapeCards(){
       document.getElementById('lengthErrorMsg').classList.remove('field-error');
       document.getElementById('customizeLink').classList.remove('active');
       document.getElementById('customizePanel').style.display = 'none';
+      syncHelicalFromAngle(); // tip radius and length both just changed
       renderShapeCards();
       render();
     });
@@ -2589,27 +2857,54 @@ function loadShapeIntoEditor(s){
 
 /* =====================================================================
    COMPARE PAGE
-   Ratings are derived from each shape's actual length/height (in SHAPES),
-   applying the published relationships: height drives steering power and
-   noise (taller = more of both); length is the stronger driver of drag,
-   and longer vanes run quieter for a given height. Values below are
-   relative rankings across these nine shapes, not absolute measurements.
+   Shows each shape's MEASURED side-profile area (computed off the
+   smoothed curve that actually prints, stored as `area` on each SHAPES
+   entry) plus a plain-language note on what that area suits. No derived
+   or hand-assigned performance scores -- see the note in COMPARE_INFO
+   for why the previous 1-5 ratings were removed.
 ===================================================================== */
 const COMPARE_INFO = {
-  ghost:      { stab:5, quiet:2, speed:2, bestFor:'Quiet hunting shots where you still want real correction — long enough to stay quiet, tall enough to steer.' },
-  impact:     { stab:1, quiet:5, speed:4, bestFor:'Light corrective touch in a short, fast package — lowest-profile shape in the lineup.' },
-  crossover:  { stab:5, quiet:1, speed:4, bestFor:'Maximum correction in a compact 50mm length — expect more noise for that stability.' },
-  target:     { stab:1, quiet:5, speed:3, bestFor:'Field points and indoor/3D target work — minimal correction, minimal noise.' },
-  compact:    { stab:4, quiet:2, speed:4, bestFor:'Small-diameter or speed-focused builds that still want dependable steering.' },
-  longrange:  { stab:3, quiet:4, speed:1, bestFor:'Longer shots or heavier hunting arrows needing sustained correction in flight.' },
-  drift:      { stab:4, quiet:3, speed:2, bestFor:'Sharp early correction near the front, then a long quiet taper to the nock.' },
-  vandor:     { stab:4, quiet:2, speed:3, bestFor:'A rounded, back-loaded profile for smooth, sustained correction across mixed hunting and target use.' },
-  riptide:    { stab:4, quiet:4, speed:2, bestFor:'Long-range hunting shots needing steady, sustained correction without extra noise — our longest vane after LONGRANGE.' },
+  // Replaces the old 1-5 "Broadhead Stabilization / Quietness / Speed
+  // Retention" bars. Those numbers were never measured -- they were
+  // assigned by hand, and several contradicted the geometry (IMPACT was
+  // rated 1/5 for stabilization and called "lowest-profile in the lineup"
+  // while actually sitting mid-pack at 434 mm^2). Publishing performance
+  // scores nobody tested is a credibility problem and a claims-substantiation
+  // problem, so what shows now is the measured geometry plus a directional
+  // statement that follows from it.
+  //
+  // `area` lives on each SHAPES entry; `relative` is that area as a share of
+  // the largest profile, so the bar is a true proportional readout rather
+  // than a rating.
+  ghost:     { bestFor:'Field points, indoor and 3D target work. Minimal correction because a well-tuned target arrow does not need much \u2014 and the quietest, fastest flight of anything we make as a result.' },
+  compact:   { bestFor:'Mechanicals, small-diameter shafts, and speed-focused builds that still want dependable steering.' },
+  impact:    { bestFor:'The default all-around choice, and the shape we have printed and tested most. Mid-range correction for mixed field-point and broadhead use.' },
+  longrange: { bestFor:'Longer shots and heavier hunting arrows needing correction sustained through the whole flight.' },
+  anchor:    { bestFor:'Aggressive fixed-blade broadheads. The most rear area we make, to counteract a head that planes hard at the front.' },
 };
-function ratingBar(score){
-  let html = '<div class="cc-bar">';
-  for(let i=1;i<=5;i++) html += `<span class="${i<=score?'filled':''}"></span>`;
-  return html + '</div>';
+const SHAPE_AREA_MAX = Math.max(...Object.values(SHAPES).map(s => s.area));
+function areaBar(area){
+  const pct = Math.round(area / SHAPE_AREA_MAX * 100);
+  return `<div class="cc-areabar"><div class="cc-areafill" style="width:${pct}%"></div></div>`;
+}
+// Per-card note: where THIS shape sits relative to the rest, rather than the
+// same trade-off sentence repeated on all five cards (the trade-off itself is
+// stated once in the page intro). Computed from the area values, not written
+// by hand, so it stays correct if a shape is added, removed or retuned.
+const SHAPES_BY_AREA = Object.entries(SHAPES).sort((a,b)=>a[1].area-b[1].area);
+function areaNote(key){
+  const n = SHAPES_BY_AREA.length;
+  const i = SHAPES_BY_AREA.findIndex(([k])=>k===key);
+  const smallest = SHAPES_BY_AREA[0][1];
+  let rank;
+  if(i===0) rank = 'Our smallest';
+  else if(i===n-1) rank = 'Our largest';
+  else if(i===1) rank = 'Second smallest';
+  else if(i===n-2) rank = 'Second largest';
+  else rank = 'Mid-lineup';
+  if(i===0) return `${rank} \u2014 the baseline the others are measured against.`;
+  const mult = (SHAPES_BY_AREA[i][1].area / smallest.area).toFixed(1);
+  return `${rank} \u2014 ${mult}\u00d7 the area of ${smallest.name}.`;
 }
 function renderCompareGrid(){
   const grid = document.getElementById('compareGrid');
@@ -2628,17 +2923,10 @@ function renderCompareGrid(){
       <div class="cc-dims">${lengthIn}in long &middot; ${(height/25.4).toFixed(3)}in off the shaft</div>
       <div class="cc-bestfor">${info.bestFor}</div>
       <div class="cc-rating">
-        <div class="cc-rating-label"><span>Broadhead Stabilization</span></div>
-        ${ratingBar(info.stab)}
+        <div class="cc-rating-label"><span>Side area</span><span class="cc-areaval">${s.area} mm&sup2;</span></div>
+        ${areaBar(s.area)}
       </div>
-      <div class="cc-rating">
-        <div class="cc-rating-label"><span>Quietness</span></div>
-        ${ratingBar(info.quiet)}
-      </div>
-      <div class="cc-rating">
-        <div class="cc-rating-label"><span>Speed Retention</span></div>
-        ${ratingBar(info.speed)}
-      </div>`;
+      <div class="cc-arealegend">${areaNote(key)}</div>`;
     grid.appendChild(card);
   });
 }
@@ -2723,26 +3011,42 @@ COLORS.forEach(c=>{
 
 document.querySelectorAll('.segbtn[data-group]').forEach(btn=>{
   btn.addEventListener('click', ()=>{
+    if(btn.classList.contains('disabled')) return;
     const group = btn.dataset.group;
     document.querySelectorAll(`.segbtn[data-group="${group}"]`).forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     order[group] = btn.dataset.val;
     if(group==='usingWraps') document.getElementById('wrapFields').style.display = (btn.dataset.val==='yes') ? 'block' : 'none';
+    // Helical is chosen as a vane-to-shaft ANGLE (1-6deg, the same
+    // convention a physical fletching jig uses), but the geometry needs
+    // deg/in. That conversion depends on the shape's tip radius and the
+    // vane length, so it is recomputed here and on every length/shape
+    // change rather than stored as a fixed deg/in number.
+    if(group==='helicalAngle'){
+      document.getElementById('helicalSliderVal').textContent = btn.dataset.val+'\u00b0';
+      syncHelicalFromAngle();
+    }
+    if(group==='offset'){
+      document.getElementById('offsetSliderVal').textContent = btn.dataset.val+'\u00b0';
+    }
     render();
   });
 });
 
-document.getElementById('helicalSlider').addEventListener('input', e=>{
-  order.helical = e.target.value;
-  document.getElementById('helicalSliderVal').textContent = e.target.value+'°/in';
-  render();
-});
-
-document.getElementById('offsetSlider').addEventListener('input', e=>{
-  order.offset = e.target.value;
-  document.getElementById('offsetSliderVal').textContent = e.target.value+'°';
-  render();
-});
+// Keeps order.helical (deg/in, what the geometry consumes) in step with the
+// selected vane-to-shaft angle. Called whenever the angle, the shape or the
+// vane length changes -- without this, changing length would silently change
+// the actual angle while the button still showed the old one.
+function syncHelicalFromAngle(){
+  const shape = order.shape==='custom' && order.customNodes
+    ? { nodes: order.customNodes }
+    : SHAPES[order.shape];
+  if(!shape) return;
+  const deg = parseFloat(order.helicalAngle);
+  if(isNaN(deg)) return;
+  const perIn = angleToHelicalPerIn(shape, deg, order.vaneLength);
+  order.helical = Math.min(25, Math.max(0, perIn));
+}
 
 const LENGTH_MIN = 35, LENGTH_MAX = 100; // mm -- internal storage/geometry always stays in mm
 document.getElementById('vaneLength').addEventListener('input', e=>{
@@ -2759,6 +3063,7 @@ document.getElementById('vaneLength').addEventListener('input', e=>{
   // clamped value -- nothing out of range ever actually renders or prices.
   // Field itself is inches; order.vaneLength is always stored in mm.
   order.vaneLength = Math.min(LENGTH_MAX, Math.max(LENGTH_MIN, isNaN(rawMM) ? 55 : rawMM));
+  syncHelicalFromAngle();
   render();
   if(customizeOpen) drawCPGraph();
 });
@@ -2768,6 +3073,7 @@ document.getElementById('vaneLength').addEventListener('blur', e=>{
   e.target.value = Math.round(clampedMM/25.4*100)/100;
   order.vaneLength = clampedMM;
   document.getElementById('lengthErrorMsg').classList.remove('field-error');
+  syncHelicalFromAngle();
   render();
   if(customizeOpen) drawCPGraph();
 });
@@ -3145,7 +3451,6 @@ function buildItemProfileData(name, s){
     wrapThickness: s.wrapThickness,
     wrapBrand: s.wrapBrand,
     fletchCount: s.fletchCount,
-    weightClass: s.weightClass,
     helical: s.helical,
     helicalDir: s.helicalDir,
     offset: s.offset,
@@ -3175,7 +3480,6 @@ function buildItemLines(s, pricing, index, total){
     '  Shaft OD:       ' + s.shaftOD + 'mm (' + sourceNote + ')',
     '  Arrow Wraps:    ' + wrapLine,
     '  Fin Count:      ' + s.fletchCount,
-    '  Weight Class:   ' + s.weightClass,
     '  Helical:        ' + helicalSummaryText(s),
     '  Color:          ' + colorDisplayName(s.color) + ' (' + s.color + ')',
     '  Pack Size:      ' + pricing.pack,
@@ -3209,7 +3513,6 @@ function buildStudioCopyLines(s, index, total){
     (s.usingWraps==='yes' ? 'Wrap Thickness (mm): ' + (s.wrapThickness || '(not provided)') : null),
     (s.usingWraps==='yes' ? 'Wrap Brand: ' + (s.wrapBrand || '(not provided)') : null),
     'Fin Count: ' + s.fletchCount,
-    'Weight Class: ' + s.weightClass,
     'Helical (deg/in): ' + s.helical,
     'Offset (deg): ' + (s.offset || '0'),
     'Helical Dir: ' + s.helicalDir,
