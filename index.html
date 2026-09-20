@@ -29,7 +29,7 @@
 
  JS (inside the main SCRIPT block, near the bottom of the file):
    3D PREVIEW SCENE       - Three.js camera/lighting/render loop
-   SHAPE LIBRARY          - SHAPES data: GHOST/COMPACT/IMPACT/LONGRANGE/ANCHOR
+   SHAPE LIBRARY          - SHAPES data: GHOST/COMPACT/RIDGE/IMPACT/GLIDE/LONGRANGE/ANCHOR
    CURVE MATH             - corner-rounding + curve sampling shared by preview/icons/editor
    3D GEOMETRY             - tube + fin mesh construction (preview only, not print-grade)
    PRICING                 - updatePricing(): the live price formula
@@ -877,7 +877,7 @@
     <div class="shape-grid" id="shapeGrid"></div>
     <div class="stock-msg" id="shapeStockMsg"></div>
     <div class="customize-link" id="compareLink" style="margin-right:18px;">
-      <span>⚖</span> Not sure? Compare all five shapes
+      <span>⚖</span> Not sure? Compare all seven shapes
     </div>
     <div class="customize-btn" id="customizeLink">
       <span>✎</span> Design Your Own Custom Shape
@@ -1152,17 +1152,24 @@
     </svg>
     <div class="wrap">
       <div class="eyebrow-top">Pick With Confidence</div>
-      <h1>Compare the <em>five shapes</em>, side by side.</h1>
+      <h1>Compare the <em>seven shapes</em>, side by side.</h1>
     </div>
   </div>
 
   <div class="wrap about-body">
     <section class="about-block reveal">
+      <div class="step-eyebrow">Side by Side</div>
+      <h2>Shape Comparison</h2>
+      <div class="compare-grid" id="compareGrid"></div>
+      <p class="compare-footnote">Areas are measured from each shape's actual printed curve. They're a guide for picking a starting point — not a prediction for your specific build, which also depends on your shaft, point weight, broadhead and spin settings.</p>
+    </section>
+
+    <section class="about-block reveal">
       <div class="step-eyebrow">The Short Version</div>
       <h2>Two Numbers Do Most of the Work</h2>
       <p><b>Height</b> is what steers a broadhead back on line — taller vanes correct more, which is exactly why hunting vanes tend to stand taller than target vanes. That correction isn't free, though: taller also means more noise and, to a lesser degree, more drag.</p>
       <p><b>Length</b> works differently than most people expect. It's actually the bigger factor in aerodynamic drag — a long vane costs you more speed than a tall one does. But length also quiets things down: spread the same surface area over a longer, lower-angle curve and it slices through the air with less noise than a short, steep one. That's why a vane can be both long <i>and</i> quiet at the same time.</p>
-      <p>Every shape below is fully rounded already — no sharp edges anywhere in the curve, on any of them — so airflow separation and turbulence aren't a variable here. What separates them is side-profile area: the total surface the air pushes against. That number is measured off each shape's actual printed curve, and it's what the bars below show. More area means more correction and more drag — they scale together, so picking a shape is really picking where you want to sit on that trade.</p>
+      <p>Every shape below is fully rounded already — no sharp edges anywhere in the curve, on any of them — so airflow separation and turbulence aren't a variable here. What separates them is two things, and they're independent. <b>Steering area</b> is the total surface the air pushes against — more of it means more correction and more drag, always together. <b>Height</b> is how far the vane stands off the shaft, which is what decides whether it clears your rest. Some shapes here carry nearly identical area in very different heights: that's deliberate, and it's why both bars are shown. Both numbers are measured off each shape's actual printed curve.</p>
     </section>
 
     <section class="about-block reveal">
@@ -1205,13 +1212,6 @@
       </div>
       <p>One thing worth knowing: most archers who move to 4 vanes also move to a <i>shorter</i> vane, so total surface area stays roughly the same and it's spread more evenly around the shaft rather than simply increased. Adding a fourth vane of the same size is a real increase in drag, not a free upgrade — if that's what you want, going up one profile in our lineup gets you there with less speed loss.</p>
       <p>And a myth worth retiring: lining your vanes up with your broadhead blades makes no measurable difference. It's been tested on shooting machines at every practical distance. Do it if you like how it looks.</p>
-    </section>
-
-    <section class="about-block reveal">
-      <div class="step-eyebrow">Side by Side</div>
-      <h2>Shape Comparison</h2>
-      <div class="compare-grid" id="compareGrid"></div>
-      <p class="compare-footnote">Areas are measured from each shape's actual printed curve. They're a guide for picking a starting point — not a prediction for your specific build, which also depends on your shaft, point weight, broadhead and spin settings.</p>
     </section>
 
     <section class="about-block reveal about-cta">
@@ -1350,9 +1350,9 @@
     <section class="about-block reveal">
       <div class="step-eyebrow">The Start</div>
       <h2>Why This Exists</h2>
-      <p>I'm Isaac Moser, my business has my name on it, not a made-up brand, because if a vane you ordered shows up wrong, that's on me personally, not some faceless company.</p>
-      <p>I'm based in North Dakota, where the season's short, the winters don't care what your gear was rated for, and "close enough" tends to matter a lot more than it does somewhere with a milder climate. I'm an electrical engineer by trade, which mostly just means I get genuinely annoyed when something doesn't fit right — or takes way more effort to use than it should — and I go figure out why instead of living with it.</p>
-      <p>What actually pushed me to build a business out of it was simpler than the fit problem: I was tired of ripping a vane out in the field and not having a fletching jig or the right tools on hand to fix it. So I designed these to go on fast — no jig, no clamps, just two rings of glue and a slide down the shaft. If one gets torn up mid-hunt or mid-round, cut down the spine with a utility knife, peel it off, slide a new one on, keep shooting.</p>
+      <p>This started from two specific annoyances, not a business plan: showing up to hunt or shoot with a torn vane and no fletching jig on hand to fix it, and scratching arrow shafts nearly every time I used a fletching tool to strip off old or damaged vanes.</p>
+      <p>So the requirement was simple — it had to go on and come off without a jig, without scratching anything, and fast enough to do standing in a field. Glue, a knife, about 30 seconds: slide a new vane down the shaft, and if one ever gets torn up mid-hunt or mid-round, cut down the spine with a utility knife, peel it off, slide the next one on, and keep shooting.</p>
+      <p>I'm Isaac, and I design and print every one of these myself. What turned it from a personal fix into a business was realizing other people were dealing with the exact same problem &mdash; and once the design worked, there wasn't a good reason to keep it to myself.</p>
     </section>
 
     <section class="about-block reveal">
@@ -2068,7 +2068,7 @@ function shippingValueHTML(itemsSubtotal, packQty){
 // way (a mislabeled "Front"/"Back" convention in Studio's 2D editor), which
 // is why they rendered backwards on the arrow. Fixed here.
 const SHAPES = {
-  // Five profiles spanning a measured range, cut down from nine. Ordered
+  // Seven profiles spanning two independent axes: steering area and height. Ordered
   // smallest to largest by side-profile AREA -- the property that actually
   // drives behaviour. A vane stabilises by creating drag at the rear, which
   // pushes the centre of pressure behind the centre of gravity; that offset
@@ -2090,8 +2090,12 @@ const SHAPES = {
     nodes:[{x:0,h:3.2},{x:10,h:6.4},{x:26,h:7.3},{x:48,h:1.0},{x:50,h:0.4}] },
   compact: { name:'COMPACT', area:323, desc:'A short 50mm vane with real steering behind it. Low drag, quick recovery \u2014 suits mechanicals, small-diameter shafts, and speed-focused builds.', rounding:100, stock:true,
     nodes:[{x:0,h:3.2},{x:14,h:9.6},{x:24,h:10.2},{x:49,h:1.0},{x:50,h:0.4}] },
-  impact: { name:'IMPACT', area:434, desc:'The all-around anchor of the lineup and our most-tested shape. Mid-range correction with a smooth single curve \u2014 the default pick if you are not sure.', rounding:100, stock:true,
+  ridge: { name:'RIDGE', area:439, desc:'Short and tall \u2014 the classic high-profile hunting shape. Buys its steering with height instead of length, so you get full correction in a 50mm vane. The pick for fixed blades on a fast, short-fletched setup.', rounding:100, stock:true,
+    nodes:[{x:0,h:3.2},{x:16,h:12.0},{x:25,h:14.7},{x:38,h:8.6},{x:47,h:2.0},{x:50,h:0.4}] },
+  impact: { name:'IMPACT', area:434, desc:'Our most used shape \u2014 a smooth, single-curve profile that sits in the middle of the lineup rather than leaning hard any direction. The default pick if you are not sure.', rounding:100, stock:true,
     nodes:[{x:0,h:3.2},{x:13.7,h:9.55},{x:33.83,h:9.95},{x:63.9,h:0.84},{x:65,h:0.36}] },
+  glide: { name:'GLIDE', area:478, desc:'Trades height for length to stay under 8mm off the shaft \u2014 the lowest-profile shape we make. Built for tight rests and drop-aways where clearance is the deciding factor, and quiet in flight as a side effect of running so long and low.', rounding:100, stock:true,
+    nodes:[{x:0,h:3.0},{x:22,h:7.0},{x:50,h:8.2},{x:74,h:3.4},{x:86,h:0.8},{x:88,h:0.4}] },
   longrange: { name:'LONGRANGE', area:644, desc:'Long and moderately tall, for sustained correction over distance. Built for broadheads and heavier hunting arrows on longer shots.', rounding:100, stock:true,
     nodes:[{x:0,h:2.5},{x:17,h:11.4},{x:50,h:9.5},{x:91,h:0.4}] },
   anchor: { name:'ANCHOR', area:795, desc:'The most steering authority we make \u2014 it holds a broadhead on line when nothing smaller will. For aggressive fixed blades, which plane hardest and need the most area behind them. Expect real speed loss in exchange.', rounding:100, stock:true,
@@ -2660,7 +2664,13 @@ const shapeGrid = document.getElementById('shapeGrid');
    themselves, and (2) each shape's MEASURED side-profile area, which is
    the property that actually drives behaviour:
 
-     GHOST 244  <  COMPACT 323  <  IMPACT 434  <  LONGRANGE 644  <  ANCHOR 795
+     GHOST 244 < COMPACT 323 < IMPACT 434 < RIDGE 439 < GLIDE 478 < LONGRANGE 644 < ANCHOR 795
+
+   NOTE: area alone no longer orders the lineup meaningfully. IMPACT, RIDGE
+   and GLIDE all carry ~440-480 mm^2 but in very different shapes -- 65mm
+   medium, 50mm tall, 88mm low. Area sets STEERING; height sets rest
+   CLEARANCE. They are two independent axes and the compare page now shows
+   both.
 
    A vane stabilises by creating drag at the rear, pushing the centre of
    pressure behind the centre of gravity; that offset is what generates the
@@ -2676,14 +2686,14 @@ const shapeGrid = document.getElementById('shapeGrid');
    priority answer nudges one step either way.
 ===================================================================== */
 const RECO_BASE = {
-  fixed: { far:'anchor',    mid:'longrange', close:'impact'   },
+  fixed: { far:'anchor',    mid:'longrange', close:'ridge'    },
   mech:  { far:'longrange', mid:'impact',    close:'compact'  },
-  field: { far:'impact',    mid:'compact',   close:'ghost'    },
+  field: { far:'glide',     mid:'compact',   close:'ghost'    },
 };
 // Priority acts as a one-tier override on the tip/distance base pick: one
 // step up or down the SAME ordered lineup above, never a sideways jump.
-const RECO_LESS = { anchor:'longrange', longrange:'impact', impact:'compact', compact:'ghost' };
-const RECO_MORE = { ghost:'compact', compact:'impact', impact:'longrange', longrange:'anchor' };
+const RECO_LESS = { anchor:'longrange', longrange:'glide', glide:'impact', ridge:'impact', impact:'compact', compact:'ghost' };
+const RECO_MORE = { ghost:'compact', compact:'impact', impact:'glide', glide:'longrange', ridge:'longrange', longrange:'anchor' };
 
 const RECO_ANGLE = {
   fixed: { far:6, mid:5, close:5 },
@@ -2876,9 +2886,11 @@ const COMPARE_INFO = {
   // `area` lives on each SHAPES entry; `relative` is that area as a share of
   // the largest profile, so the bar is a true proportional readout rather
   // than a rating.
+  ridge:     { bestFor:'Fixed-blade broadheads where you want full correction without a long vane \u2014 short fletching, fast arrows, and setups with room for a tall profile.' },
+  glide:     { bestFor:'Tight rest clearance, drop-aways, and quiet target work \u2014 the lowest-profile shape we make, for setups where a taller vane simply will not clear.' },
   ghost:     { bestFor:'Field points, indoor and 3D target work. Minimal correction because a well-tuned target arrow does not need much \u2014 and the quietest, fastest flight of anything we make as a result.' },
   compact:   { bestFor:'Mechanicals, small-diameter shafts, and speed-focused builds that still want dependable steering.' },
-  impact:    { bestFor:'The default all-around choice, and the shape we have printed and tested most. Mid-range correction for mixed field-point and broadhead use.' },
+  impact:    { bestFor:'The default all-around choice and our most used shape. Mid-range correction for mixed field-point and broadhead use.' },
   longrange: { bestFor:'Longer shots and heavier hunting arrows needing correction sustained through the whole flight.' },
   anchor:    { bestFor:'Aggressive fixed-blade broadheads. The most rear area we make, to counteract a head that planes hard at the front.' },
 };
@@ -2893,18 +2905,21 @@ function areaBar(area){
 // by hand, so it stays correct if a shape is added, removed or retuned.
 const SHAPES_BY_AREA = Object.entries(SHAPES).sort((a,b)=>a[1].area-b[1].area);
 function areaNote(key){
-  const n = SHAPES_BY_AREA.length;
   const i = SHAPES_BY_AREA.findIndex(([k])=>k===key);
   const smallest = SHAPES_BY_AREA[0][1];
-  let rank;
-  if(i===0) rank = 'Our smallest';
-  else if(i===n-1) rank = 'Our largest';
-  else if(i===1) rank = 'Second smallest';
-  else if(i===n-2) rank = 'Second largest';
-  else rank = 'Mid-lineup';
-  if(i===0) return `${rank} \u2014 the baseline the others are measured against.`;
+  if(i===0) return `Our smallest \u2014 the baseline the others are measured against.`;
   const mult = (SHAPES_BY_AREA[i][1].area / smallest.area).toFixed(1);
-  return `${rank} \u2014 ${mult}\u00d7 the area of ${smallest.name}.`;
+  return `${mult}\u00d7 the steering area of ${smallest.name}.`;
+}
+// Height is a SECOND, independent axis: area decides how much the vane
+// steers, height decides whether it clears your rest. Three shapes in this
+// lineup sit within 10% of each other on area (IMPACT, RIDGE, GLIDE) while
+// spanning 7.7mm to 13.8mm tall, so ranking by area alone would imply they
+// are near-interchangeable when they are not.
+const SHAPE_H_MAX = Math.max(...Object.values(SHAPES).map(s => trueHeightOffShaft(s.nodes, WALL_STANDARD)));
+function heightBar(h){
+  const pct = Math.round(h / SHAPE_H_MAX * 100);
+  return `<div class="cc-areabar"><div class="cc-areafill" style="width:${pct}%;background:#8A8172"></div></div>`;
 }
 function renderCompareGrid(){
   const grid = document.getElementById('compareGrid');
@@ -2920,11 +2935,15 @@ function renderCompareGrid(){
     card.innerHTML = `
       ${miniCurveSVG(s.nodes, s.rounding)}
       <div class="cc-name">${s.name}</div>
-      <div class="cc-dims">${lengthIn}in long &middot; ${(height/25.4).toFixed(3)}in off the shaft</div>
+      <div class="cc-dims">${lengthIn}in long</div>
       <div class="cc-bestfor">${info.bestFor}</div>
       <div class="cc-rating">
-        <div class="cc-rating-label"><span>Side area</span><span class="cc-areaval">${s.area} mm&sup2;</span></div>
+        <div class="cc-rating-label"><span>Steering area</span><span class="cc-areaval">${s.area} mm&sup2;</span></div>
         ${areaBar(s.area)}
+      </div>
+      <div class="cc-rating">
+        <div class="cc-rating-label"><span>Height off shaft</span><span class="cc-areaval">${(height/25.4).toFixed(3)}in</span></div>
+        ${heightBar(height)}
       </div>
       <div class="cc-arealegend">${areaNote(key)}</div>`;
     grid.appendChild(card);
