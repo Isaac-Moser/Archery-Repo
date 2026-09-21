@@ -29,7 +29,7 @@
 
  JS (inside the main SCRIPT block, near the bottom of the file):
    3D PREVIEW SCENE       - Three.js camera/lighting/render loop
-   SHAPE LIBRARY          - SHAPES data: GHOST/COMPACT/RIDGE/IMPACT/GLIDE/LONGRANGE/ANCHOR
+   SHAPE LIBRARY          - SHAPES data: GHOST/COMPACT/IMPACT/RIDGE/RANGE/ANCHOR
    CURVE MATH             - corner-rounding + curve sampling shared by preview/icons/editor
    3D GEOMETRY             - tube + fin mesh construction (preview only, not print-grade)
    PRICING                 - updatePricing(): the live price formula
@@ -316,6 +316,7 @@
   .compare-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:20px; }
   .compare-card{
     background:var(--surface); border:1.5px solid var(--line); border-radius:4px; padding:18px 18px 20px;
+    display:flex; flex-direction:column;
   }
   .compare-card svg{ width:100%; height:32px; display:block; margin-bottom:8px; }
   .compare-card .cc-name{
@@ -323,6 +324,7 @@
   }
   .compare-card .cc-dims{ font-size:11.5px; color:var(--muted-dim); margin:2px 0 12px; }
   .compare-card .cc-bestfor{ font-size:12px; color:var(--muted); line-height:1.5; margin-bottom:14px; min-height:36px; }
+  .compare-card .cc-ratings-bottom{ margin-top:auto; }
   .cc-rating{ margin-bottom:9px; }
   .cc-rating-label{
     display:flex; justify-content:space-between; font-family:var(--label); font-size:10px;
@@ -511,7 +513,7 @@
   .shape-card svg{ width:100%; height:36px; display:block; margin-bottom:10px; }
   .shape-card .name{ font-family:var(--label); font-weight:600; font-size:16px; letter-spacing:0.3px; text-transform:uppercase; }
   .shape-card .desc{ font-size:12px; color:var(--muted); margin-top:4px; line-height:1.4; }
-  .shape-card .dims{ font-size:11px; color:var(--accent); margin-top:6px; font-family:'SF Mono','Consolas','Courier New',monospace; letter-spacing:0.2px; }
+  .shape-card .dims{ font-size:11px; color:#fff; margin-top:6px; font-family:'SF Mono','Consolas','Courier New',monospace; letter-spacing:0.2px; }
   .shape-card .check{
     position:absolute; top:12px; right:12px; width:18px; height:18px; border-radius:2px;
     background:var(--accent); display:none; align-items:center; justify-content:center;
@@ -844,9 +846,13 @@
   <section class="step reveal" id="shape">
     <div class="step-eyebrow">The Shape</div>
     <h2>Choose your profile</h2>
-    <div class="step-sub">Each shape is tuned for a different style of shooting. Not sure? Answer three quick questions about how you actually shoot, and we'll point you at a starting shape and angle — you can still browse and change it manually afterward.</div>
+    <div class="step-sub">Each shape is tuned for a different style of shooting. Not sure which one? Answer three quick questions and we'll point you at a starting shape and angle — you can still browse and change it manually afterward.</div>
 
-    <div class="reco-box" id="recoBox">
+    <div class="customize-btn" id="recoOpenBtn" style="margin-bottom:22px;">
+      <span>?</span> Help Me Pick A Profile
+    </div>
+
+    <div class="reco-box" id="recoBox" style="display:none;">
       <div class="reco-q" data-q="tip">
         <div class="reco-q-label">What are you shooting?</div>
         <div class="reco-opts">
@@ -877,7 +883,7 @@
     <div class="shape-grid" id="shapeGrid"></div>
     <div class="stock-msg" id="shapeStockMsg"></div>
     <div class="customize-link" id="compareLink" style="margin-right:18px;">
-      <span>⚖</span> Not sure? Compare all seven shapes
+      <span>⚖</span> Not sure? Compare all six shapes
     </div>
     <div class="customize-btn" id="customizeLink">
       <span>✎</span> Design Your Own Custom Shape
@@ -977,9 +983,10 @@
       <div class="field">
         <label>Number of Vanes</label>
         <div class="segbtn-row">
-          <div class="segbtn" data-group="fletchCount" data-val="3">3</div>
-          <div class="segbtn active" data-group="fletchCount" data-val="4">4</div>
+          <div class="segbtn active" data-group="fletchCount" data-val="3">3</div>
+          <div class="segbtn" data-group="fletchCount" data-val="4">4</div>
         </div>
+        <div class="help field-error" id="fletch4AnchorWarn" style="display:none;">ANCHOR is our largest profile. Four of them adds up to a lot of surface area &mdash; real drag, real speed loss. Most people are better served by 3-fletch here, or by stepping down to RANGE if you want 4.</div>
       </div>
     </div>
     <div class="field-grid">
@@ -990,7 +997,7 @@
           <div class="segbtn active" data-group="offset" data-val="2">2&deg;</div>
           <div class="segbtn" data-group="offset" data-val="3">3&deg;</div>
         </div>
-        <div class="help">Tilts each vane a few degrees off the shaft so air spins the arrow, the way rifling spins a bullet. That spin averages out small imperfections and is what keeps a broadhead from steering the arrow. <strong>1&ndash;2&deg; is what most archers shoot.</strong> Go to 3&deg; for fixed-blade broadheads; stay at 1&deg; for field points and max speed.</div>
+        <div class="help"><strong>1&ndash;2&deg; is what most archers shoot.</strong> Go to 3&deg; for fixed-blade broadheads; stay at 1&deg; for field points and max speed.</div>
       </div>
       <div class="field">
         <label>Helical <span class="opt" id="helicalSliderVal">3°</span></label>
@@ -1002,7 +1009,7 @@
           <div class="segbtn" data-group="helicalAngle" data-val="5">5&deg;</div>
           <div class="segbtn" data-group="helicalAngle" data-val="6">6&deg;</div>
         </div>
-        <div class="help">Same idea as offset, but the vane curves around the shaft instead of sitting flat &mdash; so it grips more air and spins the arrow harder. More helical means faster spin and better broadhead control, at the cost of a little speed. <strong>3&ndash;4&deg; suits most hunting setups.</strong></div>
+        <div class="help">More helical means faster spin and better broadhead control, at the cost of a little speed. <strong>3&ndash;4&deg; suits most hunting setups.</strong></div>
       </div>
       <div class="field">
         <label>Twist Direction</label>
@@ -1010,7 +1017,6 @@
           <div class="segbtn active" data-group="helicalDir" data-val="right">Right</div>
           <div class="segbtn" data-group="helicalDir" data-val="left">Left</div>
         </div>
-        <div class="help">Which way the arrow spins: right is clockwise, left is counter-clockwise. Performance is the same either way &mdash; the old &ldquo;match your shooting hand&rdquo; rule has no real basis. <strong>We default to right</strong> because screw-in points and broadheads use right-hand threads, so a right spin tends to snug them rather than back them off. Pick left only if you shoot single-bevel broadheads ground for it. Whichever you choose, keep it the same across every arrow in your quiver.</div>
       </div>
     </div>
     <div class="field">
@@ -1027,8 +1033,8 @@
       <div class="field">
         <label>Pack Size</label>
         <div class="segbtn-row">
-          <div class="segbtn" data-group="packSize" data-val="12">Pack of 12<span class="thick">4 arrows &middot; $30</span></div>
-          <div class="segbtn active" data-group="packSize" data-val="18">Pack of 18<span class="thick">6 arrows &middot; $40</span></div>
+          <div class="segbtn" data-group="packSize" data-val="12">12 Pack</div>
+          <div class="segbtn active" data-group="packSize" data-val="18">18 Pack</div>
         </div>
       </div>
       <div class="field">
@@ -1038,7 +1044,6 @@
           <input type="number" id="quantity" value="1" min="1" step="1">
           <button type="button" id="qtyPlus" aria-label="Increase quantity">+</button>
         </div>
-        <div class="help">Number of packs — most archers order 1 or 2 for a full dozen arrows plus spares.</div>
       </div>
     </div>
     <div class="price-card">
@@ -1152,7 +1157,7 @@
     </svg>
     <div class="wrap">
       <div class="eyebrow-top">Pick With Confidence</div>
-      <h1>Compare the <em>seven shapes</em>, side by side.</h1>
+      <h1>Compare the <em>six shapes</em>, side by side.</h1>
     </div>
   </div>
 
@@ -2068,36 +2073,29 @@ function shippingValueHTML(itemsSubtotal, packQty){
 // way (a mislabeled "Front"/"Back" convention in Studio's 2D editor), which
 // is why they rendered backwards on the arrow. Fixed here.
 const SHAPES = {
-  // Seven profiles spanning two independent axes: steering area and height. Ordered
-  // smallest to largest by side-profile AREA -- the property that actually
-  // drives behaviour. A vane stabilises by creating drag at the rear, which
-  // pushes the centre of pressure behind the centre of gravity; that offset
-  // generates the correcting torque. More area = more correction AND more
-  // drag. A fixed-blade broadhead is a steering surface at the FRONT that
-  // pulls centre of pressure forward, which is why broadheads need more
-  // vane area to stay stable.
+  // Six profiles. Ordered by measured side-profile AREA, which sets how
+  // much the vane steers. HEIGHT is a second, independent axis: it sets
+  // whether the vane clears your rest. IMPACT and RIDGE carry the same
+  // area in different shapes (65x9.8 vs 50x13.8) -- that pair is
+  // deliberate, not a duplicate.
   //
-  // The old nine had seven profiles between 417-464 mm^2 -- an 11% spread,
-  // i.e. the same vane with different outlines, which is why their
-  // descriptions could not be made truthful. Retired: DRIFT, VANDOR,
-  // CROSSOVER, RIPTIDE, and the old TARGET (whose 409 mm^2 was nowhere
-  // near small enough for the job its name claimed -- GHOST fills that
-  // slot properly now, at 244).
+  // Sized against real market data: Amazon bestseller ranks and the stated
+  // standards ("2 to 3 inch is the modern standard" for compound hunting,
+  // "most off-the-shelf hunting arrows ship 2.5-3 inch", "micro vanes
+  // 1.5-2in dominate compound target and 3D").
   //
-  // Areas are measured on the SMOOTHED curve (what prints), not the raw
-  // node polygon, and every profile clears the 40-degree steepness limit.
+  // Areas measured on the SMOOTHED curve (what prints), not the raw node
+  // polygon. All six clear the overhang limit on the rising side.
   ghost: { name:'GHOST', area:244, desc:'Our quietest and fastest. Least area means least drag and least noise \u2014 built for field points, indoor and 3D, where the arrow is already stable and extra surface only costs you speed.', rounding:100, stock:true,
     nodes:[{x:0,h:3.2},{x:10,h:6.4},{x:26,h:7.3},{x:48,h:1.0},{x:50,h:0.4}] },
   compact: { name:'COMPACT', area:323, desc:'A short 50mm vane with real steering behind it. Low drag, quick recovery \u2014 suits mechanicals, small-diameter shafts, and speed-focused builds.', rounding:100, stock:true,
     nodes:[{x:0,h:3.2},{x:14,h:9.6},{x:24,h:10.2},{x:49,h:1.0},{x:50,h:0.4}] },
-  ridge: { name:'RIDGE', area:439, desc:'Short and tall \u2014 the classic high-profile hunting shape. Buys its steering with height instead of length, so you get full correction in a 50mm vane. The pick for fixed blades on a fast, short-fletched setup.', rounding:100, stock:true,
-    nodes:[{x:0,h:3.2},{x:16,h:12.0},{x:25,h:14.7},{x:38,h:8.6},{x:47,h:2.0},{x:50,h:0.4}] },
   impact: { name:'IMPACT', area:434, desc:'Our most used shape \u2014 a smooth, single-curve profile that sits in the middle of the lineup rather than leaning hard any direction. The default pick if you are not sure.', rounding:100, stock:true,
     nodes:[{x:0,h:3.2},{x:13.7,h:9.55},{x:33.83,h:9.95},{x:63.9,h:0.84},{x:65,h:0.36}] },
-  glide: { name:'GLIDE', area:478, desc:'Trades height for length to stay under 8mm off the shaft \u2014 the lowest-profile shape we make. Built for tight rests and drop-aways where clearance is the deciding factor, and quiet in flight as a side effect of running so long and low.', rounding:100, stock:true,
-    nodes:[{x:0,h:3.0},{x:22,h:7.0},{x:50,h:8.2},{x:74,h:3.4},{x:86,h:0.8},{x:88,h:0.4}] },
-  longrange: { name:'LONGRANGE', area:644, desc:'Long and moderately tall, for sustained correction over distance. Built for broadheads and heavier hunting arrows on longer shots.', rounding:100, stock:true,
-    nodes:[{x:0,h:2.5},{x:17,h:11.4},{x:50,h:9.5},{x:91,h:0.4}] },
+  ridge: { name:'RIDGE', area:439, desc:'Short and tall \u2014 the classic high-profile hunting shape. Buys its steering with height instead of length, so you get full correction in a 50mm vane. The pick for fixed blades on a fast, short-fletched setup.', rounding:100, stock:true,
+    nodes:[{x:0,h:3.2},{x:16,h:12.0},{x:25,h:14.7},{x:38,h:8.6},{x:47,h:2.0},{x:50,h:0.4}] },
+  range: { name:'RANGE', area:599, desc:'A true 3-inch vane \u2014 the size most factory-fletched hunting arrows ship with, and the one that handles the widest spread of conditions without being specialised for any of them. Strong correction that still holds a reasonable trajectory.', rounding:100, stock:true,
+    nodes:[{x:0,h:3.2},{x:19,h:9.8},{x:38,h:12.8},{x:62,h:6.2},{x:74,h:1.1},{x:76,h:0.4}] },
   anchor: { name:'ANCHOR', area:795, desc:'The most steering authority we make \u2014 it holds a broadhead on line when nothing smaller will. For aggressive fixed blades, which plane hardest and need the most area behind them. Expect real speed loss in exchange.', rounding:100, stock:true,
     nodes:[{x:0,h:3.2},{x:20,h:11.8},{x:48,h:13.2},{x:92,h:1.2},{x:95,h:0.4}] }
 };
@@ -2343,14 +2341,12 @@ function updatePricing(){
   const numFletches = parseInt(order.fletchCount);
   const pack = parseInt(order.packSize);
 
-  // Flat price per pack size. Deliberately simple: one number per pack,
-  // no length or fletch-count surcharge, so the price a customer sees on
-  // the shape page is the price at checkout regardless of what they
-  // configure. (The old model scaled with length and fletch count between
-  // $38 and $50, which meant the quoted price moved as they adjusted
-  // unrelated settings.)
+  // Flat price per pack size, plus a flat surcharge for 4-fletch: roughly
+  // a third more material and print time than 3, and the old flat pricing
+  // didn't charge for that difference at all.
   const PACK_PRICES = { 12: 30, 18: 40 };
-  const packPrice = PACK_PRICES[pack] ?? PACK_PRICES[18];
+  const FLETCH4_SURCHARGE = 5;
+  const packPrice = (PACK_PRICES[pack] ?? PACK_PRICES[18]) + (numFletches===4 ? FLETCH4_SURCHARGE : 0);
 
   const qty = Math.max(1, parseInt(order.quantity)||1);
   const total = packPrice * qty;
@@ -2664,7 +2660,7 @@ const shapeGrid = document.getElementById('shapeGrid');
    themselves, and (2) each shape's MEASURED side-profile area, which is
    the property that actually drives behaviour:
 
-     GHOST 244 < COMPACT 323 < IMPACT 434 < RIDGE 439 < GLIDE 478 < LONGRANGE 644 < ANCHOR 795
+     GHOST 244 < COMPACT 323 < IMPACT 434 < RIDGE 439 < RANGE 599 < ANCHOR 795
 
    NOTE: area alone no longer orders the lineup meaningfully. IMPACT, RIDGE
    and GLIDE all carry ~440-480 mm^2 but in very different shapes -- 65mm
@@ -2686,14 +2682,14 @@ const shapeGrid = document.getElementById('shapeGrid');
    priority answer nudges one step either way.
 ===================================================================== */
 const RECO_BASE = {
-  fixed: { far:'anchor',    mid:'longrange', close:'ridge'    },
-  mech:  { far:'longrange', mid:'impact',    close:'compact'  },
-  field: { far:'glide',     mid:'compact',   close:'ghost'    },
+  fixed: { far:'anchor',  mid:'range',   close:'ridge'   },
+  mech:  { far:'range',   mid:'impact',  close:'compact' },
+  field: { far:'impact',  mid:'compact', close:'ghost'   },
 };
 // Priority acts as a one-tier override on the tip/distance base pick: one
 // step up or down the SAME ordered lineup above, never a sideways jump.
-const RECO_LESS = { anchor:'longrange', longrange:'glide', glide:'impact', ridge:'impact', impact:'compact', compact:'ghost' };
-const RECO_MORE = { ghost:'compact', compact:'impact', impact:'glide', glide:'longrange', ridge:'longrange', longrange:'anchor' };
+const RECO_LESS = { anchor:'range', range:'ridge', ridge:'impact', impact:'compact', compact:'ghost' };
+const RECO_MORE = { ghost:'compact', compact:'impact', impact:'ridge', ridge:'range', range:'anchor' };
 
 const RECO_ANGLE = {
   fixed: { far:6, mid:5, close:5 },
@@ -2708,6 +2704,10 @@ const RECO_WHY = {
 };
 
 const recoAnswers = {};
+document.getElementById('recoOpenBtn').addEventListener('click', ()=>{
+  document.getElementById('recoBox').style.display = 'block';
+  document.getElementById('recoOpenBtn').style.display = 'none';
+});
 document.querySelectorAll('.reco-opt').forEach(opt=>{
   opt.addEventListener('click', ()=>{
     const q = opt.closest('.reco-q').dataset.q;
@@ -2801,7 +2801,13 @@ function applyRecommendation(key, angleDeg){
 // while the Studio had moved to 0.30 -- which meant this preview was drawing
 // a bore that no longer matched what actually shipped.
 const FIT_CLEARANCE = 0.30;
-const WALL_STANDARD = 0.60;
+// Was 0.60, a leftover from the deleted weight-class system (Standard vs
+// Ultralight). The Studio's actual tube wall -- what really gets printed --
+// is 0.30. This drove Rout in the live preview and the compare page's
+// height numbers, so both were computed off a wall 2x too thick. Not
+// caught until an explicit sync check, since the profile node data itself
+// was never wrong -- only this downstream constant.
+const WALL_STANDARD = 0.30;
 function trueHeightOffShaft(nodes, wall){
   const peak = Math.max(...nodes.map(n=>n.h));
   return peak + 0.2625 + wall*0.4;
@@ -2844,6 +2850,7 @@ function renderShapeCards(){
       document.getElementById('customizeLink').classList.remove('active');
       document.getElementById('customizePanel').style.display = 'none';
       syncHelicalFromAngle(); // tip radius and length both just changed
+      checkFletch4AnchorWarn();
       renderShapeCards();
       render();
     });
@@ -2874,24 +2881,13 @@ function loadShapeIntoEditor(s){
    for why the previous 1-5 ratings were removed.
 ===================================================================== */
 const COMPARE_INFO = {
-  // Replaces the old 1-5 "Broadhead Stabilization / Quietness / Speed
-  // Retention" bars. Those numbers were never measured -- they were
-  // assigned by hand, and several contradicted the geometry (IMPACT was
-  // rated 1/5 for stabilization and called "lowest-profile in the lineup"
-  // while actually sitting mid-pack at 434 mm^2). Publishing performance
-  // scores nobody tested is a credibility problem and a claims-substantiation
-  // problem, so what shows now is the measured geometry plus a directional
-  // statement that follows from it.
-  //
-  // `area` lives on each SHAPES entry; `relative` is that area as a share of
-  // the largest profile, so the bar is a true proportional readout rather
-  // than a rating.
-  ridge:     { bestFor:'Fixed-blade broadheads where you want full correction without a long vane \u2014 short fletching, fast arrows, and setups with room for a tall profile.' },
-  glide:     { bestFor:'Tight rest clearance, drop-aways, and quiet target work \u2014 the lowest-profile shape we make, for setups where a taller vane simply will not clear.' },
+  // Plain-language fit for each shape. No derived or hand-assigned
+  // performance scores -- what renders is the measured geometry plus this.
   ghost:     { bestFor:'Field points, indoor and 3D target work. Minimal correction because a well-tuned target arrow does not need much \u2014 and the quietest, fastest flight of anything we make as a result.' },
   compact:   { bestFor:'Mechanicals, small-diameter shafts, and speed-focused builds that still want dependable steering.' },
   impact:    { bestFor:'The default all-around choice and our most used shape. Mid-range correction for mixed field-point and broadhead use.' },
-  longrange: { bestFor:'Longer shots and heavier hunting arrows needing correction sustained through the whole flight.' },
+  ridge:     { bestFor:'Fixed-blade broadheads where you want full correction without a long vane \u2014 short fletching, fast arrows, and setups with room for a tall profile.' },
+  range:     { bestFor:'The widest-use shape we make. If you shoot a bit of everything, or want one vane that handles field points and broadheads without a compromise either way, start here.' },
   anchor:    { bestFor:'Aggressive fixed-blade broadheads. The most rear area we make, to counteract a head that planes hard at the front.' },
 };
 const SHAPE_AREA_MAX = Math.max(...Object.values(SHAPES).map(s => s.area));
@@ -2903,19 +2899,11 @@ function areaBar(area){
 // same trade-off sentence repeated on all five cards (the trade-off itself is
 // stated once in the page intro). Computed from the area values, not written
 // by hand, so it stays correct if a shape is added, removed or retuned.
-const SHAPES_BY_AREA = Object.entries(SHAPES).sort((a,b)=>a[1].area-b[1].area);
-function areaNote(key){
-  const i = SHAPES_BY_AREA.findIndex(([k])=>k===key);
-  const smallest = SHAPES_BY_AREA[0][1];
-  if(i===0) return `Our smallest \u2014 the baseline the others are measured against.`;
-  const mult = (SHAPES_BY_AREA[i][1].area / smallest.area).toFixed(1);
-  return `${mult}\u00d7 the steering area of ${smallest.name}.`;
-}
 // Height is a SECOND, independent axis: area decides how much the vane
-// steers, height decides whether it clears your rest. Three shapes in this
-// lineup sit within 10% of each other on area (IMPACT, RIDGE, GLIDE) while
-// spanning 7.7mm to 13.8mm tall, so ranking by area alone would imply they
-// are near-interchangeable when they are not.
+// steers, height decides whether it clears your rest. IMPACT and RIDGE
+// carry nearly identical area (434 vs 439 mm^2) in very different heights
+// (9.8mm vs 13.8mm), so ranking by area alone would imply they are
+// interchangeable when they are not.
 const SHAPE_H_MAX = Math.max(...Object.values(SHAPES).map(s => trueHeightOffShaft(s.nodes, WALL_STANDARD)));
 function heightBar(h){
   const pct = Math.round(h / SHAPE_H_MAX * 100);
@@ -2937,15 +2925,16 @@ function renderCompareGrid(){
       <div class="cc-name">${s.name}</div>
       <div class="cc-dims">${lengthIn}in long</div>
       <div class="cc-bestfor">${info.bestFor}</div>
-      <div class="cc-rating">
-        <div class="cc-rating-label"><span>Steering area</span><span class="cc-areaval">${s.area} mm&sup2;</span></div>
-        ${areaBar(s.area)}
-      </div>
-      <div class="cc-rating">
-        <div class="cc-rating-label"><span>Height off shaft</span><span class="cc-areaval">${(height/25.4).toFixed(3)}in</span></div>
-        ${heightBar(height)}
-      </div>
-      <div class="cc-arealegend">${areaNote(key)}</div>`;
+      <div class="cc-ratings-bottom">
+        <div class="cc-rating">
+          <div class="cc-rating-label"><span>Steering area</span><span class="cc-areaval">${s.area} mm&sup2;</span></div>
+          ${areaBar(s.area)}
+        </div>
+        <div class="cc-rating">
+          <div class="cc-rating-label"><span>Height off shaft</span><span class="cc-areaval">${(height/25.4).toFixed(3)}in</span></div>
+          ${heightBar(height)}
+        </div>
+      </div>`;
     grid.appendChild(card);
   });
 }
@@ -3048,9 +3037,19 @@ document.querySelectorAll('.segbtn[data-group]').forEach(btn=>{
     if(group==='offset'){
       document.getElementById('offsetSliderVal').textContent = btn.dataset.val+'\u00b0';
     }
+    if(group==='fletchCount') checkFletch4AnchorWarn();
     render();
   });
 });
+
+// ANCHOR is the largest profile; four of them is a real, honest drag
+// penalty most customers aren't picking on purpose. Warn, don't block --
+// it's still a valid choice for someone who genuinely wants max correction.
+function checkFletch4AnchorWarn(){
+  const warn = document.getElementById('fletch4AnchorWarn');
+  if(!warn) return;
+  warn.style.display = (order.shape==='anchor' && order.fletchCount==='4') ? 'block' : 'none';
+}
 
 // Keeps order.helical (deg/in, what the geometry consumes) in step with the
 // selected vane-to-shaft angle. Called whenever the angle, the shape or the
@@ -3789,6 +3788,7 @@ document.getElementById('compareLink').addEventListener('click', ()=>{ showPage(
    INIT
 ===================================================================== */
 resizeRenderer();
+checkFletch4AnchorWarn();
 render();
 updateCartBadge();
 renderCartItems();
