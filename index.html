@@ -29,7 +29,7 @@
 
  JS (inside the main SCRIPT block, near the bottom of the file):
    3D PREVIEW SCENE       - Three.js camera/lighting/render loop
-   SHAPE LIBRARY          - SHAPES data: GHOST/COMPACT/IMPACT/RIDGE/RANGE/ANCHOR
+   SHAPE LIBRARY          - SHAPES data: GHOST/RIDGE/IMPACT/RANGE/ANCHOR (5 in stock; RIDGE is the display name now on the 'compact' key -- see note atop SHAPES)
    CURVE MATH             - corner-rounding + curve sampling shared by preview/icons/editor
    3D GEOMETRY             - tube + fin mesh construction (preview only, not print-grade)
    PRICING                 - updatePricing(): the live price formula
@@ -313,10 +313,16 @@
   .video-tip b{ color:var(--text); }
 
   /* ---- compare page ---- */
-  .compare-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:20px; }
+  /* flex+wrap+center instead of a 3-col grid: with 5 shapes the last row
+     only has 2 cards, and a grid leaves that row left-aligned with an
+     empty third slot -- looks like a missing/broken card. Flex centers
+     whatever's left in the wrapped row instead. flex-basis below matches
+     a 3-up grid's column math (100% minus two 14px gaps, divided by 3). */
+  .compare-grid{ display:flex; flex-wrap:wrap; justify-content:center; gap:14px; margin-top:20px; }
   .compare-card{
     background:var(--surface); border:1.5px solid var(--line); border-radius:4px; padding:18px 18px 20px;
     display:flex; flex-direction:column;
+    flex:0 1 calc((100% - 28px)/3);
   }
   .compare-card svg{ width:100%; height:32px; display:block; margin-bottom:8px; }
   .compare-card .cc-name{
@@ -354,7 +360,7 @@
   .spec-list{ margin:0; padding-left:18px; }
   .spec-list li{ font-size:14.5px; line-height:1.65; color:var(--text); margin-bottom:6px; }
   .spec-list li:last-child{ margin-bottom:0; }
-  @media(max-width:700px){ .compare-grid{ grid-template-columns:1fr 1fr; } }
+  @media(max-width:700px){ .compare-card{ flex-basis:calc((100% - 14px)/2); } }
 
   /* ---- order summary ---- */
   .order-summary{
@@ -472,7 +478,11 @@
   @media(max-width:700px){ .benefits-grid{ grid-template-columns:1fr; } }
 
   /* ---- shape cards ---- */
-  .shape-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+  /* flex+wrap+center instead of a 3-col grid -- see the matching comment
+     on .compare-grid above. With 5 shapes, this keeps the last row's 2
+     cards centered instead of left-aligned with an empty third slot. */
+  .shape-grid{ display:flex; flex-wrap:wrap; justify-content:center; gap:14px; }
+  .shape-card{ flex:0 1 calc((100% - 28px)/3); }
   .reco-box{ background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:22px 24px; margin-bottom:26px; }
   .reco-q{ margin-bottom:18px; }
   .reco-q:last-of-type{ margin-bottom:0; }
@@ -730,7 +740,7 @@
   footer .footer-contact a:hover{ color:var(--accent); border-color:var(--accent); }
 
   @media(max-width:700px){
-    .shape-grid{ grid-template-columns:repeat(2,1fr); }
+    .shape-card{ flex-basis:calc((100% - 14px)/2); }
     .field-grid{ grid-template-columns:1fr; }
     #canvasHost{ height:38vh; }
     .price-breakdown{ text-align:left; }
@@ -2073,11 +2083,19 @@ function shippingValueHTML(itemsSubtotal, packQty){
 // way (a mislabeled "Front"/"Back" convention in Studio's 2D editor), which
 // is why they rendered backwards on the arrow. Fixed here.
 const SHAPES = {
-  // Six profiles. Ordered by measured side-profile AREA, which sets how
-  // much the vane steers. HEIGHT is a second, independent axis: it sets
-  // whether the vane clears your rest. IMPACT and RIDGE carry the same
-  // area in different shapes (65x9.8 vs 50x13.8) -- that pair is
-  // deliberate, not a duplicate.
+  // Five profiles in stock. Ordered by measured side-profile AREA, which
+  // sets how much the vane steers. HEIGHT is a second, independent axis:
+  // it sets whether the vane clears your rest.
+  //
+  // Sept 2026: the tall, high-profile shape formerly sold here as "RIDGE"
+  // (65x13.8 area 439, key 'ridge' in the Studio) is pulled from sale --
+  // a print-quality issue is still being run down, and it's staying in
+  // active development rather than shipping while that's open. Rather
+  // than leave "Ridge" sitting unused, that name was moved onto the key
+  // 'compact' entry below (area 323, 50x9.9): what used to be called
+  // "Compact" here is now named "RIDGE". Its geometry, area and
+  // description are unchanged -- only the customer-facing name moved.
+  // Matches the same swap in the Studio's presets and on the flyer.
   //
   // Sized against real market data: Amazon bestseller ranks and the stated
   // standards ("2 to 3 inch is the modern standard" for compound hunting,
@@ -2085,15 +2103,14 @@ const SHAPES = {
   // 1.5-2in dominate compound target and 3D").
   //
   // Areas measured on the SMOOTHED curve (what prints), not the raw node
-  // polygon. All six clear the overhang limit on the rising side.
+  // polygon. All five clear the overhang limit on the rising side.
   ghost: { name:'GHOST', area:244, desc:'Our quietest and fastest. Least area means least drag and least noise \u2014 built for field points, indoor and 3D, where the arrow is already stable and extra surface only costs you speed.', rounding:100, stock:true,
     nodes:[{x:0,h:3.2},{x:10,h:6.4},{x:26,h:7.3},{x:48,h:1.0},{x:50,h:0.4}] },
-  compact: { name:'COMPACT', area:323, desc:'A short 50mm vane with real steering behind it. Low drag, quick recovery \u2014 suits mechanicals, small-diameter shafts, and speed-focused builds.', rounding:100, stock:true,
+  // key 'compact' -- now named "RIDGE" for customers (see note above).
+  compact: { name:'RIDGE', area:323, desc:'A short 50mm vane with real steering behind it. Low drag, quick recovery \u2014 suits mechanicals, small-diameter shafts, and speed-focused builds.', rounding:100, stock:true,
     nodes:[{x:0,h:3.2},{x:14,h:9.6},{x:24,h:10.2},{x:49,h:1.0},{x:50,h:0.4}] },
   impact: { name:'IMPACT', area:434, desc:'Our most used shape \u2014 a smooth, single-curve profile that sits in the middle of the lineup rather than leaning hard any direction. The default pick if you are not sure.', rounding:100, stock:true,
     nodes:[{x:0,h:3.2},{x:13.7,h:9.55},{x:33.83,h:9.95},{x:63.9,h:0.84},{x:65,h:0.36}] },
-  ridge: { name:'RIDGE', area:439, desc:'Short and tall \u2014 the classic high-profile hunting shape. Buys its steering with height instead of length, so you get full correction in a 50mm vane. The pick for fixed blades on a fast, short-fletched setup.', rounding:100, stock:true,
-    nodes:[{x:0,h:3.2},{x:16,h:12.0},{x:25,h:14.7},{x:38,h:8.6},{x:47,h:2.0},{x:50,h:0.4}] },
   range: { name:'RANGE', area:599, desc:'A true 3-inch vane \u2014 the size most factory-fletched hunting arrows ship with, and the one that handles the widest spread of conditions without being specialised for any of them. Strong correction that still holds a reasonable trajectory.', rounding:100, stock:true,
     nodes:[{x:0,h:3.2},{x:19,h:9.8},{x:38,h:12.8},{x:62,h:6.2},{x:74,h:1.1},{x:76,h:0.4}] },
   anchor: { name:'ANCHOR', area:795, desc:'The most steering authority we make \u2014 it holds a broadhead on line when nothing smaller will. For aggressive fixed blades, which plane hardest and need the most area behind them. Expect real speed loss in exchange.', rounding:100, stock:true,
@@ -2660,13 +2677,19 @@ const shapeGrid = document.getElementById('shapeGrid');
    themselves, and (2) each shape's MEASURED side-profile area, which is
    the property that actually drives behaviour:
 
-     GHOST 244 < COMPACT 323 < IMPACT 434 < RIDGE 439 < RANGE 599 < ANCHOR 795
+     GHOST 244 < RIDGE 323 < IMPACT 434 < RANGE 599 < ANCHOR 795
 
-   NOTE: area alone no longer orders the lineup meaningfully. IMPACT, RIDGE
-   and GLIDE all carry ~440-480 mm^2 but in very different shapes -- 65mm
-   medium, 50mm tall, 88mm low. Area sets STEERING; height sets rest
-   CLEARANCE. They are two independent axes and the compare page now shows
-   both.
+   (Five in stock. The former high-profile "RIDGE" shape, area 439, is off
+   sale while a print-quality issue is worked out -- see the note atop
+   SHAPES -- and its name was moved onto what used to be sold as
+   "COMPACT," area 323, rather than leave the name unused. Area values
+   above are current display names, not the physical shapes' old names.)
+
+   NOTE: area alone no longer orders the lineup meaningfully. IMPACT and
+   the shelved high-profile shape (RIDGE's old area, 439 mm^2) sit within
+   1% of each other by area but in very different shapes -- 65mm medium
+   vs 50mm tall. Area sets STEERING; height sets rest CLEARANCE. They are
+   two independent axes and the compare page shows both.
 
    A vane stabilises by creating drag at the rear, pushing the centre of
    pressure behind the centre of gravity; that offset is what generates the
@@ -2681,15 +2704,23 @@ const shapeGrid = document.getElementById('shapeGrid');
    raises it (longer flight = more time for error to grow), and the
    priority answer nudges one step either way.
 ===================================================================== */
+// The former high-profile "RIDGE" shape (area 439, key 'ridge') is off
+// sale (see the note atop SHAPES) and pulled out of this chain too, so
+// the quiz can never recommend a shape a customer then can't buy. It sat
+// between IMPACT and RANGE by area, so both maps below now step straight
+// from one to the other; fixed/close (its old slot in RECO_BASE) now
+// lands on IMPACT, the next lower-area shape. Unaffected by the RIDGE/
+// COMPACT display-name swap -- this all keys off 'compact', 'impact' etc,
+// not the customer-facing names.
 const RECO_BASE = {
-  fixed: { far:'anchor',  mid:'range',   close:'ridge'   },
+  fixed: { far:'anchor',  mid:'range',   close:'impact'  },
   mech:  { far:'range',   mid:'impact',  close:'compact' },
   field: { far:'impact',  mid:'compact', close:'ghost'   },
 };
 // Priority acts as a one-tier override on the tip/distance base pick: one
 // step up or down the SAME ordered lineup above, never a sideways jump.
-const RECO_LESS = { anchor:'range', range:'ridge', ridge:'impact', impact:'compact', compact:'ghost' };
-const RECO_MORE = { ghost:'compact', compact:'impact', impact:'ridge', ridge:'range', range:'anchor' };
+const RECO_LESS = { anchor:'range', range:'impact', impact:'compact', compact:'ghost' };
+const RECO_MORE = { ghost:'compact', compact:'impact', impact:'range', range:'anchor' };
 
 const RECO_ANGLE = {
   fixed: { far:6, mid:5, close:5 },
@@ -2884,9 +2915,11 @@ const COMPARE_INFO = {
   // Plain-language fit for each shape. No derived or hand-assigned
   // performance scores -- what renders is the measured geometry plus this.
   ghost:     { bestFor:'Field points, indoor and 3D target work. Minimal correction because a well-tuned target arrow does not need much \u2014 and the quietest, fastest flight of anything we make as a result.' },
+  // key 'compact' -- now sold as "RIDGE" (see note atop SHAPES). No
+  // 'ridge' entry here anymore: that key is off sale and not in SHAPES,
+  // so an orphaned COMPARE_INFO entry for it would just be dead weight.
   compact:   { bestFor:'Mechanicals, small-diameter shafts, and speed-focused builds that still want dependable steering.' },
   impact:    { bestFor:'The default all-around choice and our most used shape. Mid-range correction for mixed field-point and broadhead use.' },
-  ridge:     { bestFor:'Fixed-blade broadheads where you want full correction without a long vane \u2014 short fletching, fast arrows, and setups with room for a tall profile.' },
   range:     { bestFor:'The widest-use shape we make. If you shoot a bit of everything, or want one vane that handles field points and broadheads without a compromise either way, start here.' },
   anchor:    { bestFor:'Aggressive fixed-blade broadheads. The most rear area we make, to counteract a head that planes hard at the front.' },
 };
@@ -2900,10 +2933,12 @@ function areaBar(area){
 // stated once in the page intro). Computed from the area values, not written
 // by hand, so it stays correct if a shape is added, removed or retuned.
 // Height is a SECOND, independent axis: area decides how much the vane
-// steers, height decides whether it clears your rest. IMPACT and RIDGE
-// carry nearly identical area (434 vs 439 mm^2) in very different heights
-// (9.8mm vs 13.8mm), so ranking by area alone would imply they are
-// interchangeable when they are not.
+// steers, height decides whether it clears your rest. IMPACT and the
+// shelved high-profile shape (off sale -- see note atop SHAPES) carry
+// nearly identical area (434 vs 439 mm^2) in very different heights
+// (9.8mm vs 13.8mm); not relevant to the current five-shape lineup's own
+// area ordering, but kept here as the reasoning behind showing height as
+// a separate axis at all, not just area.
 const SHAPE_H_MAX = Math.max(...Object.values(SHAPES).map(s => trueHeightOffShaft(s.nodes, WALL_STANDARD)));
 function heightBar(h){
   const pct = Math.round(h / SHAPE_H_MAX * 100);
