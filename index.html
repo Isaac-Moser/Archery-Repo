@@ -1145,8 +1145,8 @@
     <div id="formError" style="color:var(--accent); font-size:13px; margin-top:10px; display:none;"></div>
 
     <div id="confirmPanel">
-      <h3>Order request ready</h3>
-      <p>Your email app should have opened with your order details filled in — just hit send. If nothing opened, copy your order below and email it to us directly.</p>
+      <h3>We couldn't open checkout automatically</h3>
+      <p>No charge was made. Click "Copy Order Details" below, then paste it into a new email addressed to <b id="confirmEmailAddr">--</b> and we'll follow up to arrange payment directly.</p>
       <div class="confirm-ref">Reference: <span id="confirmOrderRef">--</span></div>
       <button id="copyOrderBtn">Copy Order Details</button>
       <span id="copyStatus"></span>
@@ -1414,6 +1414,10 @@
 ===================================================================== */
 const BUSINESS_EMAIL = "moserarchery.orders@gmail.com"; // <-- CHANGE THIS to your real order inbox
 document.getElementById('footerContactLink').href = 'mailto:' + BUSINESS_EMAIL;
+document.getElementById('confirmEmailAddr').textContent = BUSINESS_EMAIL;
+// Handled by /functions/create-checkout-session.js (a Cloudflare Pages
+// Function) -- Cloudflare routes this path to that file automatically.
+const CHECKOUT_ENDPOINT = '/create-checkout-session';
 
 /* =====================================================================
    ORDER TRACKER (optional) — logs every order to a Google Sheet via a
@@ -3580,7 +3584,9 @@ function buildStudioCopyLines(s, index, total){
   return lines.filter(l => l !== null);
 }
 
-function submitOrder(){
+let checkoutInFlight = false;
+async function submitOrder(){
+  if(checkoutInFlight) return; // ignore double-clicks while a request is already out
   const name = document.getElementById('custName').value.trim();
   const email = document.getElementById('custEmail').value.trim();
   const address = document.getElementById('custAddress').value.trim();
@@ -3684,25 +3690,9 @@ function submitOrder(){
   const body = fullLines.join('\n');
   const subject = 'New Order ' + orderRef + ' — ' + (checkoutItems.length>1 ? checkoutItems.length+' vanes' : firstShapeName + ' vanes') + ' for ' + name;
 
-  // Mailto body: everything EXCEPT the raw JSON backup, which just
-  // duplicates the human-readable lines above it in a much bulkier form
-  // ("backup only" -- never needed to fulfill the order). mailto: links
-  // have a real, fairly low length ceiling (mail clients and the
-  // Windows/macOS shell commonly cap out somewhere around 2000
-  // characters); a long name, address, notes field, or multi-item cart
-  // was pushing the old all-in-one URL over that ceiling, and the
-  // customer's mail app would silently fail to open (or the OS itself
-  // would error) with no obvious cause -- exactly what looks like
-  // "the order just won't submit." Dropping the JSON backup here keeps
-  // the mailto link comfortably under that limit for the vast majority
-  // of orders while losing nothing -- the full text (JSON included) is
-  // still always available via "Copy Order Details" below.
-  const mailLines = [...headerLines, ...studioLines];
-  const mailBody = mailLines.join('\n');
-
   // Fire-and-forget log to the order tracker sheet. This never blocks or
   // delays checkout -- if it's not configured yet, or the request fails,
-  // the email still goes out exactly as before.
+  // checkout still proceeds exactly as before.
   logOrderToTracker({
     orderRef, name, email,
     address: address || '',
@@ -3721,30 +3711,55 @@ function submitOrder(){
     }))
   });
 
-  // Safety net for whatever's left after dropping the JSON backup: a
-  // genuinely huge order (very long notes/address, or a big multi-item
-  // cart) can still land the encoded URL over what mail clients and the
-  // OS will accept. Rather than risk that failing silently (or erroring
-  // out) again, check the length up front and only attempt the mailto
-  // link when it's safely short -- otherwise skip straight to the
-  // "Copy Order Details" fallback the confirmation panel already offers,
-  // so the order is never just lost.
-  const mailtoUrl = 'mailto:' + BUSINESS_EMAIL + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(mailBody);
-  const MAILTO_SAFE_LENGTH = 1800;
-  if(mailtoUrl.length <= MAILTO_SAFE_LENGTH){
-    window.location.href = mailtoUrl;
-  }
-
   window._lastOrderText = subject + '\n\n' + body;
   document.getElementById('confirmOrderRef').textContent = orderRef;
-  document.getElementById('confirmPanel').style.display = 'block';
-  document.getElementById('confirmPanel').scrollIntoView({behavior:'smooth', block:'center'});
 
-  // clear the cart after a successful checkout
-  cart = [];
-  updateCartBadge();
-  renderCartItems();
-  updateOrderSummary(0);
+  // ---- Real checkout: hand off to Stripe for actual payment ----------
+  // create-checkout-session.php re-prices everything server-side (never
+  // trusts what this page sends for amounts), saves the full order text
+  // so the webhook can email it to Isaac once payment actually clears,
+  // and hands back a Stripe-hosted payment page URL to send the customer
+  // to. If that request fails for any reason -- the PHP file isn't
+  // uploaded yet, Stripe is unreachable, whatever -- nothing has been
+  // charged, so fall back to the old "copy your order and email it to
+  // us" panel rather than leaving the customer stuck.
+  const buyBtn = document.getElementById('buyBtn');
+  const buyBtnLabel = buyBtn.innerHTML;
+  checkoutInFlight = true;
+  buyBtn.disabled = true;
+  buyBtn.textContent = 'Starting checkout…';
+
+  try{
+    const res = await fetch(CHECKOUT_ENDPOINT, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        orderRef, name, email, address, notes,
+        fullOrderText: body,
+        items: checkoutItems.map(item => ({
+          packSize: item.pricing.pack,
+          quantity: item.pricing.qty,
+          description: `${shapeDisplayName(item.snapshot)} — ${Math.round(item.snapshot.vaneLength/25.4*100)/100}in, ${item.snapshot.fletchCount}-fletch`
+        }))
+      })
+    });
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok || !data.url) throw new Error(data.error || 'Checkout could not be started');
+
+    // Off to Stripe's hosted payment page -- cart/order state on THIS
+    // page no longer matters once the browser navigates away.
+    window.location.href = data.url;
+    return;
+  }catch(err){
+    checkoutInFlight = false;
+    buyBtn.disabled = false;
+    buyBtn.innerHTML = buyBtnLabel;
+    document.getElementById('confirmPanel').style.display = 'block';
+    document.getElementById('confirmPanel').scrollIntoView({behavior:'smooth', block:'center'});
+    // cart intentionally NOT cleared here -- nothing was charged, and the
+    // customer may come back and try again once you've fixed whatever
+    // broke (or they'll use the copy-paste fallback shown above).
+  }
 }
 document.getElementById('buyBtn').addEventListener('click', submitOrder);
 document.getElementById('stickyBuyBtn').addEventListener('click', ()=>{
