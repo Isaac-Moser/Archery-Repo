@@ -893,7 +893,7 @@
     <div class="shape-grid" id="shapeGrid"></div>
     <div class="stock-msg" id="shapeStockMsg"></div>
     <div class="customize-link" id="compareLink" style="margin-right:18px;">
-      <span>⚖</span> Not sure? Compare all six shapes
+      <span>⚖</span> Not sure? Compare all five shapes
     </div>
     <div class="customize-btn" id="customizeLink">
       <span>✎</span> Design Your Own Custom Shape
@@ -951,11 +951,11 @@
         <div id="arrowSpineDropdown" class="brand-dropdown"></div>
       </div>
     </div>
-    <div class="field-grid">
+    <div class="field-grid" id="shaftSizeField" style="display:none;">
       <div class="field">
-        <label>Shaft Size <span class="opt">only needed if Brand/Model/Spine above don't match one we know</span></label>
+        <label>Shaft Size <span class="opt">- OUTER DIAMETER (OD)</span></label>
         <div style="display:flex; gap:8px; align-items:stretch;">
-          <input type="number" id="shaftOD" step="0.01" placeholder="e.g. 6.15" style="flex:1;">
+          <input type="number" id="shaftOD" step="0.0001" placeholder="e.g. 6.1468" style="flex:1;">
           <div class="unitbtn-row">
             <div class="unitbtn active" data-unit="mm">mm</div>
             <div class="unitbtn" data-unit="in">in</div>
@@ -1167,7 +1167,7 @@
     </svg>
     <div class="wrap">
       <div class="eyebrow-top">Pick With Confidence</div>
-      <h1>Compare the <em>six shapes</em>, side by side.</h1>
+      <h1>Compare the <em>five shapes</em>, side by side.</h1>
     </div>
   </div>
 
@@ -1247,7 +1247,7 @@
     </svg>
     <div class="wrap">
       <div class="eyebrow-top">The Basics</div>
-      <h1>Applying and removing your vanes, <em>in under a minute</em>.</h1>
+      <h1>Applying and removing your vanes,<br><em>in under a minute</em>.</h1>
     </div>
   </div>
 
@@ -1357,7 +1357,7 @@
     </svg>
     <div class="wrap">
       <div class="eyebrow-top">Who's Behind This</div>
-      <h1>Built by someone who <em>actually shoots these</em>.</h1>
+      <h1>Made by a shooter, <em>not a factory</em>.</h1>
     </div>
   </div>
 
@@ -2355,15 +2355,12 @@ function render(){
 ===================================================================== */
 function updatePricing(){
   const length = order.vaneLength;
-  const numFletches = parseInt(order.fletchCount);
   const pack = parseInt(order.packSize);
 
-  // Flat price per pack size, plus a flat surcharge for 4-fletch: roughly
-  // a third more material and print time than 3, and the old flat pricing
-  // didn't charge for that difference at all.
+  // Flat price per pack size -- same price whether the customer picks
+  // 3-fletch or 4-fletch (the old 4-fletch surcharge was removed).
   const PACK_PRICES = { 12: 30, 18: 40 };
-  const FLETCH4_SURCHARGE = 5;
-  const packPrice = (PACK_PRICES[pack] ?? PACK_PRICES[18]) + (numFletches===4 ? FLETCH4_SURCHARGE : 0);
+  const packPrice = (PACK_PRICES[pack] ?? PACK_PRICES[18]);
 
   const qty = Math.max(1, parseInt(order.quantity)||1);
   const total = packPrice * qty;
@@ -2449,7 +2446,7 @@ function updateOrderSummary(total){
     ['Color', `<span class="os-swatch" style="background:${order.color}"></span>${colorName}`],
     ['Vane Length', (Math.round(order.vaneLength/25.4*100)/100) + 'in'],
     ...(yourArrowValue ? [['Your Arrow', yourArrowValue]] : []),
-    ['Shaft Size', order.shaftSizeSource==='unset' ? '<span style="color:var(--accent);">Not entered yet</span>' : order.shaftOD + 'mm'],
+    ['Shaft Size', order.shaftSizeSource==='unset' ? '<span style="color:var(--accent);">Not entered yet</span>' : order.shaftOD.toFixed(4) + 'mm'],
     ['Arrow Wraps', wrapText],
     ['Number of Vanes', order.fletchCount],
     ['Helical', helicalSummaryText()],
@@ -3223,6 +3220,13 @@ function recomputeShaftSizing(){
   const match = findExactShaftMatch();
   const defaultMsg = "Check your shaft's spec sheet — most hunting/target shafts run about 5.7–7.5mm (0.22–0.30in).";
 
+  // Manual Shaft Size box only needs to be shown when Brand/Model/Spine
+  // don't resolve to a known shaft on their own (or the customer has
+  // already typed something in it, so we don't yank the field out from
+  // under them mid-entry).
+  const shaftFieldEl = document.getElementById('shaftSizeField');
+  if(shaftFieldEl) shaftFieldEl.style.display = (match && !manualRaw) ? 'none' : '';
+
   if(manualRaw && !isNaN(manualVal) && manualVal > 0){
     // Manual entry always wins, whatever the toggle is currently set to --
     // even over an exact database match.
@@ -3230,7 +3234,7 @@ function recomputeShaftSizing(){
     order.shaftOD = mm;
     order.shaftSizeSource = 'manual';
     if(mm < SHAFT_OD_REASONABLE_MIN || mm > SHAFT_OD_REASONABLE_MAX){
-      const altVal = shaftUnit==='in' ? (manualVal*25.4).toFixed(2)+'mm' : (manualVal/25.4).toFixed(3)+'in';
+      const altVal = shaftUnit==='in' ? (manualVal*25.4).toFixed(4)+'mm' : (manualVal/25.4).toFixed(3)+'in';
       msgEl.innerHTML = `<b style="color:var(--accent);">That doesn't look right for an arrow shaft in ${shaftUnit} — did you mean ${altVal}?</b>`;
     } else {
       msgEl.textContent = defaultMsg;
@@ -3273,12 +3277,12 @@ document.querySelectorAll('.unitbtn').forEach(btn=>{
     // Convert whatever's currently typed so switching units doesn't
     // silently change the number they meant to enter.
     if(!isNaN(cur) && cur > 0){
-      input.value = shaftUnit==='mm' ? (cur/25.4).toFixed(3) : (cur*25.4).toFixed(2);
+      input.value = shaftUnit==='mm' ? (cur/25.4).toFixed(3) : (cur*25.4).toFixed(4);
     }
     shaftUnit = btn.dataset.unit;
     document.querySelectorAll('.unitbtn').forEach(b=>b.classList.toggle('active', b===btn));
-    input.step = shaftUnit==='mm' ? '0.01' : '0.001';
-    input.placeholder = shaftUnit==='mm' ? 'e.g. 6.15' : 'e.g. 0.242';
+    input.step = shaftUnit==='mm' ? '0.0001' : '0.001';
+    input.placeholder = shaftUnit==='mm' ? 'e.g. 6.1468' : 'e.g. 0.242';
     recomputeShaftSizing();
   });
 });
@@ -3530,7 +3534,7 @@ function buildItemLines(s, pricing, index, total){
     '  Shape:          ' + shapeName + (s.shape==='custom' ? ' (see profile data below for exact curve)' : ''),
     '  Vane Length:    ' + s.vaneLength + 'mm',
     '  Arrow:          ' + arrowIdLine,
-    '  Shaft OD:       ' + s.shaftOD + 'mm (' + sourceNote + ')',
+    '  Shaft OD:       ' + s.shaftOD.toFixed(4) + 'mm (' + sourceNote + ')',
     '  Arrow Wraps:    ' + wrapLine,
     '  Fin Count:      ' + s.fletchCount,
     '  Helical:        ' + helicalSummaryText(s),
@@ -3561,7 +3565,7 @@ function buildStudioCopyLines(s, index, total){
   }
   lines.push(
     'Vane Length (mm): ' + s.vaneLength,
-    'Shaft OD (mm): ' + s.shaftOD,
+    'Shaft OD (mm): ' + s.shaftOD.toFixed(4),
     'Arrow Wraps: ' + s.usingWraps,
     (s.usingWraps==='yes' ? 'Wrap Thickness (mm): ' + (s.wrapThickness || '(not provided)') : null),
     (s.usingWraps==='yes' ? 'Wrap Brand: ' + (s.wrapBrand || '(not provided)') : null),
@@ -3652,7 +3656,7 @@ function submitOrder(){
   });
 
   const divider = '========================================';
-  const lines = [
+  const headerLines = [
     divider,
     'MOSER ARCHERY — NEW ORDER',
     'Ref: ' + orderRef,
@@ -3671,13 +3675,30 @@ function submitOrder(){
     'Shipping:        $' + shippingCharged.toFixed(2) + (shippingCharged===0 ? '  (free shipping promo applied)' : ''),
     'GRAND TOTAL:     $' + grandTotal.toFixed(2),
     divider,
-    '',
-    ...studioLines,
-    '--- raw profile JSON (backup only) ---',
-    JSON.stringify(allProfiles)
+    ''
   ];
-  const body = lines.join('\n');
+  // Full text -- everything, including the raw JSON backup -- is what
+  // "Copy Order Details" puts on the clipboard, since that has no length
+  // limit to worry about.
+  const fullLines = [...headerLines, ...studioLines, '--- raw profile JSON (backup only) ---', JSON.stringify(allProfiles)];
+  const body = fullLines.join('\n');
   const subject = 'New Order ' + orderRef + ' — ' + (checkoutItems.length>1 ? checkoutItems.length+' vanes' : firstShapeName + ' vanes') + ' for ' + name;
+
+  // Mailto body: everything EXCEPT the raw JSON backup, which just
+  // duplicates the human-readable lines above it in a much bulkier form
+  // ("backup only" -- never needed to fulfill the order). mailto: links
+  // have a real, fairly low length ceiling (mail clients and the
+  // Windows/macOS shell commonly cap out somewhere around 2000
+  // characters); a long name, address, notes field, or multi-item cart
+  // was pushing the old all-in-one URL over that ceiling, and the
+  // customer's mail app would silently fail to open (or the OS itself
+  // would error) with no obvious cause -- exactly what looks like
+  // "the order just won't submit." Dropping the JSON backup here keeps
+  // the mailto link comfortably under that limit for the vast majority
+  // of orders while losing nothing -- the full text (JSON included) is
+  // still always available via "Copy Order Details" below.
+  const mailLines = [...headerLines, ...studioLines];
+  const mailBody = mailLines.join('\n');
 
   // Fire-and-forget log to the order tracker sheet. This never blocks or
   // delays checkout -- if it's not configured yet, or the request fails,
@@ -3700,7 +3721,19 @@ function submitOrder(){
     }))
   });
 
-  window.location.href = 'mailto:' + BUSINESS_EMAIL + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+  // Safety net for whatever's left after dropping the JSON backup: a
+  // genuinely huge order (very long notes/address, or a big multi-item
+  // cart) can still land the encoded URL over what mail clients and the
+  // OS will accept. Rather than risk that failing silently (or erroring
+  // out) again, check the length up front and only attempt the mailto
+  // link when it's safely short -- otherwise skip straight to the
+  // "Copy Order Details" fallback the confirmation panel already offers,
+  // so the order is never just lost.
+  const mailtoUrl = 'mailto:' + BUSINESS_EMAIL + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(mailBody);
+  const MAILTO_SAFE_LENGTH = 1800;
+  if(mailtoUrl.length <= MAILTO_SAFE_LENGTH){
+    window.location.href = mailtoUrl;
+  }
 
   window._lastOrderText = subject + '\n\n' + body;
   document.getElementById('confirmOrderRef').textContent = orderRef;
