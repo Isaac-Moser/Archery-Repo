@@ -2123,21 +2123,22 @@ const SHAPE_MAX_H = Math.max(...Object.values(SHAPES).map(s => Math.max(...s.nod
 // To take a color out of stock, change its "stock:true" to "stock:false" below.                                  ******CHANGE_STOCK_HERE******
 // It'll gray out and cross itself out automatically on the site.
 const COLORS = [
-  {name:'White',  hex:'#f2f2ee', stock:true},
-  {name:'Black',  hex:'#1c1c1c', stock:false},
-  {name:'Red',    hex:'#c1272d', stock:false},
-  {name:'Orange', hex:'#ff7a1a', stock:false},
-  {name:'Yellow', hex:'#f4c430', stock:true},
-  {name:'Light Green', hex:'#8BC34A', stock:true},
-  {name:'Blue',   hex:'#1565c0', stock:false},
-  {name:'Purple', hex:'#6a1b9a', stock:false}
+  {name:'White',        hex:'#FFFFFF', stock:true},
+  {name:'Black',        hex:'#000000', stock:true},
+  {name:'Neon Yellow',  hex:'#FEF71D', stock:true},
+  {name:'Neon Magenta', hex:'#FB23AF', stock:true},
+  {name:'Neon Orange',  hex:'#FA8E36', stock:true},
+  {name:'Digital Blue', hex:'#0378D0', stock:true},
+  {name:'Neon Red',     hex:'#FF3F38', stock:true},
+  {name:'Neon Green',   hex:'#2EFF6D', stock:true},
+  {name:'Light Green',  hex:'#A0FD62', stock:true}
 ];
 
 const order = {
   shape:'impact', customNodes:null, customRounding:55,
   vaneLength:55, shaftOD:6.15, arrowBrand:'', arrowModel:'', arrowSpine:'', shaftSizeSource:'unset', usingWraps:'no', wrapThickness:'', wrapBrand:'',
   fletchCount:'3', helicalAngle:'3', helical:'19', helicalDir:'right', offset:'2',
-  color:'#8BC34A', packSize:'18', quantity:1
+  color:'#FFFFFF', packSize:'18', quantity:1
 };
 // Declared early (not down near the rest of the custom-editor code) because
 // renderShapeCards() reads this the moment the page loads, well before that
