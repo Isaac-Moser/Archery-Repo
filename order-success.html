@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Order Confirmed — Moser Archery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0f0f0e; --surface:#1a1917; --line:#39362e; --text:#f2efe6;
+    --muted:#a39c8c; --accent:#c1272d; --good:#7c9161;
+    --display:'Anton','Arial Narrow',sans-serif;
+    --label:'Oswald',sans-serif;
+    --body:'Inter',-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+    background:var(--bg); color:var(--text); font-family:var(--body); line-height:1.6;
+    padding:24px;
+  }
+  .card{
+    max-width:520px; width:100%; text-align:center; background:var(--surface);
+    border:1.5px solid var(--line); border-radius:8px; padding:44px 32px;
+  }
+  .check{ font-size:40px; color:var(--good); margin-bottom:8px; }
+  h1{
+    font-family:var(--display); font-weight:400; text-transform:uppercase;
+    letter-spacing:0.4px; font-size:clamp(24px,5vw,32px); margin:0 0 14px;
+  }
+  p{ color:var(--muted); font-size:15px; margin:0 0 10px; }
+  .ref{
+    font-family:var(--label); letter-spacing:0.5px; font-size:14px;
+    color:var(--text); background:rgba(255,255,255,0.04); border:1px solid var(--line);
+    border-radius:4px; padding:10px 16px; margin:20px 0; display:inline-block;
+  }
+  a.back{
+    display:inline-block; margin-top:22px; font-family:var(--label); font-size:13px;
+    letter-spacing:0.5px; text-transform:uppercase; color:#fff; background:var(--accent);
+    text-decoration:none; padding:12px 24px; border-radius:5px;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="check">✓</div>
+    <h1>Order confirmed</h1>
+    <p>Thanks for your order! Your payment went through and we've been notified.</p>
+    <p>We'll email you shortly to confirm details and let you know once your vanes ship — every order is printed fresh, so most ship within 5–7 business days.</p>
+    <div class="ref">Reference: <span id="refNum">--</span></div>
+    <p style="font-size:13px;">Keep this reference in case you need to follow up with us about your order.</p>
+    <a class="back" href="/index.html">Back to Moser Archery</a>
+  </div>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    document.getElementById('refNum').textContent = params.get('ref') || '--';
+  </script>
+</body>
+</html>
+
