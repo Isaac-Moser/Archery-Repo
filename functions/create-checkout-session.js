@@ -20,6 +20,11 @@
 ===================================================================== */
 
 const PACK_PRICES_CENTS = { 12: 3000, 18: 4000 }; // same prices as index.html's PACK_PRICES -- keep in sync
+// Extra charged per pack for a custom (Studio-designed) shape -- keep in
+// sync with CUSTOM_SHAPE_SURCHARGE in index.html, which only drives the
+// on-page price display; THIS is what actually sets the Stripe charge,
+// since this function never trusts amounts sent from the browser.
+const CUSTOM_SHAPE_SURCHARGE_CENTS = 2000;
 const SHIPPING_FLAT_CENTS = 499;
 const FREE_SHIP_MIN_PACKS = 2;
 const FREE_SHIP_MIN_SUBTOTAL_CENTS = 8000;
@@ -40,6 +45,8 @@ export async function onRequestPost(context) {
     if (!name || !email) return jsonError('Name and email are required', 400);
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return jsonError('Invalid email', 400);
     if (items.length === 0) return jsonError('No items in order', 400);
+    // Order ref only ever becomes a KV key, but it's still whitelisted
+    // before use, same discipline as if it were a filename.
     if (!/^[A-Za-z0-9-]{1,64}$/.test(orderRef)) return jsonError('Invalid order reference', 400);
 
     const lineItems = [];
@@ -50,8 +57,10 @@ export async function onRequestPost(context) {
       const packSize = parseInt(item.packSize, 10);
       const qty = Math.max(1, parseInt(item.quantity, 10) || 1);
       const description = String(item.description || 'Custom vane pack').slice(0, 300);
-      const unitAmount = PACK_PRICES_CENTS[packSize];
-      if (!unitAmount) return jsonError('Unknown pack size: ' + packSize, 400);
+      const basePrice = PACK_PRICES_CENTS[packSize];
+      if (!basePrice) return jsonError('Unknown pack size: ' + packSize, 400);
+      const isCustom = item.isCustom === true;
+      const unitAmount = basePrice + (isCustom ? CUSTOM_SHAPE_SURCHARGE_CENTS : 0);
 
       lineItems.push({
         currency: 'usd',
@@ -70,6 +79,10 @@ export async function onRequestPost(context) {
       lineItems.push({ currency: 'usd', unit_amount: shippingCents, name: 'Shipping', quantity: 1 });
     }
 
+    // Save the full order (specs, studio copy-paste lines, JSON backup) to
+    // KV, keyed by order ref. The webhook reads this back once Stripe
+    // confirms payment -- and it expires on its own after 7 days if a
+    // checkout is started but never completed.
     if (!env.ORDERS_KV) return jsonError('Server misconfigured: ORDERS_KV binding missing', 500);
     await env.ORDERS_KV.put(
       'order:' + orderRef,
@@ -120,4 +133,3 @@ function jsonError(message, status) {
     headers: { 'Content-Type': 'application/json' },
   });
 }
-
