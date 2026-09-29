@@ -918,7 +918,7 @@
       </div>
       <div class="cp-axis-x">LENGTH ALONG VANE (mm) — X &nbsp;·&nbsp; FRONT → BACK</div>
       <div id="cpWarn"></div>
-      <div id="cpNote">Want a head start? Click any shape above to load its curve in here, then tweak it. Otherwise: click empty space to add a point, drag any point to reshape the curve, or type exact X/Y coordinates above. Select a point to delete it. When you're happy with it, hit "Use This Shape" below.</div>
+      <div id="cpNote">Want a head start? Click any shape above to load its curve in here, then tweak it. Otherwise: click empty space to add a point, drag any point to reshape the curve, or type exact X/Y coordinates above. Select a point to delete it. When you're happy with it, hit "Use This Shape" below. Height is capped relative to the shape you started from, and an overly steep curve can't be saved — both keep a custom shape printable.</div>
       <div class="cp-btn primary" id="cpUseShape" style="margin-top:14px; display:inline-block;">Use This Shape</div>
     </div>
   </section>
@@ -2135,7 +2135,7 @@ const COLORS = [
 ];
 
 const order = {
-  shape:'impact', customNodes:null, customRounding:55,
+  shape:'impact', customNodes:null, customRounding:55, customBaseShape:null,
   vaneLength:55, shaftOD:6.15, arrowBrand:'', arrowModel:'', arrowSpine:'', shaftSizeSource:'unset', usingWraps:'no', wrapThickness:'', wrapBrand:'',
   fletchCount:'3', helicalAngle:'3', helical:'19', helicalDir:'right', offset:'2',
   color:'#FA8E36', packSize:'18', quantity:1
@@ -2350,6 +2350,14 @@ function render(){
 /* =====================================================================
    PRICING
 ===================================================================== */
+// Extra charged per pack when the customer builds their own shape in the
+// Studio, instead of ordering one of the 5 stock shapes -- covers the
+// extra time spent reviewing/printing a one-off profile. Keep this in sync
+// with CUSTOM_SHAPE_SURCHARGE_CENTS in functions/create-checkout-session.js,
+// which is what actually sets the Stripe charge (this value only drives the
+// on-page price display). Added at Isaac's request (2026-09-29).
+const CUSTOM_SHAPE_SURCHARGE = 20;
+
 function updatePricing(){
   const length = order.vaneLength;
   const pack = parseInt(order.packSize);
@@ -2357,7 +2365,8 @@ function updatePricing(){
   // Flat price per pack size -- same price whether the customer picks
   // 3-fletch or 4-fletch (the old 4-fletch surcharge was removed).
   const PACK_PRICES = { 12: 30, 18: 40 };
-  const packPrice = (PACK_PRICES[pack] ?? PACK_PRICES[18]);
+  const isCustom = order.shape === 'custom';
+  const packPrice = (PACK_PRICES[pack] ?? PACK_PRICES[18]) + (isCustom ? CUSTOM_SHAPE_SURCHARGE : 0);
 
   const qty = Math.max(1, parseInt(order.quantity)||1);
   const total = packPrice * qty;
@@ -2371,11 +2380,11 @@ function updatePricing(){
   document.getElementById('stickyPrice').textContent = '$'+(cart.length>0 ? cartTotal() : total);
   document.getElementById('sbLabel').textContent = cart.length>0 ? 'cart total' : 'your order total';
   document.getElementById('priceBreakdown').innerHTML =
-    `$${packPrice} per pack of ${pack} &times; ${qty}<br>~${grains.toFixed(0)} grains per vane`;
+    `$${packPrice} per pack of ${pack} &times; ${qty}${isCustom ? ` <span style="color:var(--muted-dim);">(includes +$${CUSTOM_SHAPE_SURCHARGE} custom shape fee)</span>` : ''}<br>~${grains.toFixed(0)} grains per vane`;
 
   updateOrderSummary(total);
 
-  return {packPrice, qty, total, pack, grains};
+  return {packPrice, qty, total, pack, grains, isCustom};
 }
 
 function shapeDisplayName(ord){
@@ -3304,6 +3313,20 @@ document.getElementById('qtyPlus').addEventListener('click', ()=>{
 ===================================================================== */
 let cpNodes = [];
 const CP_OVERHANG_LIMIT = 40;
+// How far above the peak height of the stock shape a customer started from
+// they're allowed to drag a point -- e.g. IMPACT peaks at 9.95mm, so its
+// editor caps out around 13.9mm. Without this, the graph let anyone drag a
+// point up to a flat 20mm regardless of which shape they started from,
+// which is how a customer ends up with something that doesn't print
+// cleanly or fly right. Isaac asked for this after worrying customers would
+// wreck their own custom order (2026-09-29).
+const CP_MAX_DEVIATION_MULT = 1.4;
+// The very front of the vane (x=0, where it meets the shaft) can't be
+// dragged below this height -- too thin here and the fin has nothing to
+// grip the glue with at the leading edge. Isaac's rule (2026-09-29).
+const CP_FRONT_MIN_HEIGHT = 3.2;
+let cpBasePeakH = SHAPE_MAX_H;
+let cpWorstAngle = 0;
 
 document.getElementById('customizeLink').addEventListener('click', ()=>{
   customizeOpen = !customizeOpen;
@@ -3312,8 +3335,15 @@ document.getElementById('customizeLink').addEventListener('click', ()=>{
   panel.style.display = customizeOpen ? 'block' : 'none';
   link.classList.toggle('active', customizeOpen);
   if(customizeOpen){
+    // Which stock shape is this custom curve anchored to? If they're
+    // already editing a saved custom shape, keep using whatever shape it
+    // was originally based on (order.customBaseShape) rather than losing
+    // that anchor the moment order.shape becomes 'custom'.
+    const basePresetKey = order.shape==='custom' ? (order.customBaseShape || 'impact') : order.shape;
+    order.customBaseShape = basePresetKey;
+    cpBasePeakH = Math.max(...SHAPES[basePresetKey].nodes.map(n=>n.h));
     const src = order.shape==='custom' && order.customNodes ? order.customNodes : getScaledCurve().rawScaled;
-    cpNodes = src.map(n=>({x:Math.round(n.x), h:Math.round(n.h*10)/10}));
+    cpNodes = src.map((n,idx)=>({x:Math.round(n.x), h:Math.round(Math.max(idx===0?CP_FRONT_MIN_HEIGHT:0, Math.min(n.h,cpMaxH()))*10)/10}));
     document.getElementById('cpRounding').value = order.shape==='custom' ? order.customRounding : SHAPES[order.shape].rounding;
     document.getElementById('cpRoundingVal').textContent = document.getElementById('cpRounding').value+'%';
     drawCPGraph();
@@ -3331,7 +3361,7 @@ function cpRefreshDims(){
   cpPlotW = cpW-cpPadL-cpPadR; cpPlotH = cpH-cpPadT-cpPadB;
   cpSvg.setAttribute('viewBox', `0 0 ${cpW} ${cpH}`);
 }
-function cpMaxH(){ return 20; }
+function cpMaxH(){ return Math.min(20, cpBasePeakH*CP_MAX_DEVIATION_MULT); }
 function cpXPix(x){ return cpPadL + (x/order.vaneLength)*cpPlotW; }
 function cpYPix(h){ return cpPadT + cpPlotH - (h/cpMaxH())*cpPlotH; }
 function cpPixToX(px){ return Math.max(0, Math.min(order.vaneLength, (px-cpPadL)/cpPlotW*order.vaneLength)); }
@@ -3355,7 +3385,7 @@ function drawCPGraph(){
     xt.textContent = Math.round(x);
     g.appendChild(xt);
   }
-  for(let y=0; y<=20; y+=5){
+  for(let y=0; y<=Math.ceil(cpMaxH()); y+=5){
     const py = cpYPix(y);
     const line = document.createElementNS('http://www.w3.org/2000/svg','line');
     line.setAttribute('x1',cpPadL); line.setAttribute('x2',cpPadL+cpPlotW); line.setAttribute('y1',py); line.setAttribute('y2',py);
@@ -3389,8 +3419,9 @@ function drawCPGraph(){
     if(steep) seg.setAttribute('stroke-dasharray','6 4');
     g.appendChild(seg);
   }
+  cpWorstAngle = worst;
   document.getElementById('cpWarn').textContent = worst>CP_OVERHANG_LIMIT
-    ? 'This part of the curve is quite steep — try flattening it or lengthening the vane.' : '';
+    ? 'This part of the curve is too steep to print reliably — flatten it or lengthen the vane before you can use this shape.' : '';
 
   cpNodes.forEach((n,i)=>{
     const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
@@ -3410,6 +3441,7 @@ function updateCPCoordFields(){
   xInput.value = n.x; yInput.value = n.h;
   const isEndpoint = cpSelected===0 || cpSelected===cpNodes.length-1;
   xInput.disabled = isEndpoint;
+  yInput.min = cpSelected===0 ? CP_FRONT_MIN_HEIGHT : 0;
 }
 function cpSvgPoint(e){
   const pt = cpSvg.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY;
@@ -3433,6 +3465,7 @@ window.addEventListener('pointermove', e=>{
   if(i>0 && i<cpNodes.length-1) xmm = Math.max(cpNodes[i-1].x+1, Math.min(cpNodes[i+1].x-1, xmm));
   else if(i===0) xmm = 0;
   else xmm = order.vaneLength;
+  if(i===0) hmm = Math.max(CP_FRONT_MIN_HEIGHT, hmm);
   cpNodes[i] = {x:xmm, h:hmm};
   drawCPGraph();
 });
@@ -3469,11 +3502,19 @@ document.getElementById('cpNodeX').addEventListener('change', e=>{
 document.getElementById('cpNodeY').addEventListener('change', e=>{
   let v = Math.round(parseFloat(e.target.value)*10)/10;
   if(isNaN(v) || v<0) v = 0;
-  if(v>20) v = 20;
+  if(v>cpMaxH()) v = cpMaxH();
+  if(cpSelected===0 && v<CP_FRONT_MIN_HEIGHT) v = CP_FRONT_MIN_HEIGHT;
   cpNodes[cpSelected].h = v;
   drawCPGraph();
 });
 document.getElementById('cpUseShape').addEventListener('click', ()=>{
+  // Hard stop, not just a warning -- a curve steeper than the overhang
+  // limit doesn't print cleanly, so it can't be saved as-is.
+  if(cpWorstAngle > CP_OVERHANG_LIMIT){
+    document.getElementById('cpWarn').textContent = 'This shape is too steep to print reliably — flatten the curve or lengthen the vane before using it.';
+    document.getElementById('cpWarn').scrollIntoView({behavior:'smooth', block:'center'});
+    return;
+  }
   order.shape = 'custom';
   order.customNodes = cpNodes.map(n=>({x:n.x,h:n.h}));
   order.customRounding = parseFloat(document.getElementById('cpRounding').value);
@@ -3495,6 +3536,7 @@ function buildItemProfileData(name, s){
     shape: s.shape,
     customNodes: s.shape==='custom' ? s.customNodes : undefined,
     customRounding: s.shape==='custom' ? s.customRounding : undefined,
+    customBaseShape: s.shape==='custom' ? s.customBaseShape : undefined,
     vaneLength: s.vaneLength,
     shaftOD: s.shaftOD,
     arrowBrand: s.arrowBrand || undefined,
@@ -3732,6 +3774,7 @@ async function submitOrder(){
         items: checkoutItems.map(item => ({
           packSize: item.pricing.pack,
           quantity: item.pricing.qty,
+          isCustom: item.snapshot.shape === 'custom',
           description: `${shapeDisplayName(item.snapshot)} — ${Math.round(item.snapshot.vaneLength/25.4*100)/100}in, ${item.snapshot.fletchCount}-fletch`
         }))
       })
