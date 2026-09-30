@@ -2356,7 +2356,7 @@ function render(){
 // with CUSTOM_SHAPE_SURCHARGE_CENTS in functions/create-checkout-session.js,
 // which is what actually sets the Stripe charge (this value only drives the
 // on-page price display). Added at Isaac's request (2026-09-29).
-const CUSTOM_SHAPE_SURCHARGE = 20;
+const CUSTOM_SHAPE_SURCHARGE = 10;
 
 function updatePricing(){
   const length = order.vaneLength;
@@ -2868,7 +2868,7 @@ function renderShapeCards(){
       }
       msgEl.textContent = '';
       if(customizeOpen){
-        loadShapeIntoEditor(s);
+        loadShapeIntoEditor(s, key);
         return;
       }
       order.shape = key;
@@ -2892,7 +2892,12 @@ function renderShapeCards(){
   });
 }
 
-function loadShapeIntoEditor(s){
+function loadShapeIntoEditor(s, key){
+  // Loading a new stock shape into the editor re-anchors the "did they
+  // actually change anything" comparison (and the height cap) to THIS
+  // shape, not whatever they started the editor with.
+  order.customBaseShape = key;
+  cpBasePeakH = Math.max(...s.nodes.map(n=>n.h));
   const length = Math.max(40, order.vaneLength);
   const scale = length / s.nodes[s.nodes.length-1].x;
   const scaled = s.nodes.map(n => ({ x: Math.round(n.x*scale), h: Math.round(n.h*10)/10 }));
@@ -3507,12 +3512,56 @@ document.getElementById('cpNodeY').addEventListener('change', e=>{
   cpNodes[cpSelected].h = v;
   drawCPGraph();
 });
+// Scales an arbitrary stock shape's raw nodes to the current vane length,
+// the same way getScaledCurve() does for whichever shape is active -- used
+// so we can compare the editor's current nodes against the UNCHANGED stock
+// profile they started from, even though order.shape now reads 'custom'.
+function cpScaledStockNodes(shapeKey){
+  const raw = SHAPES[shapeKey].nodes;
+  const length = Math.max(40, order.vaneLength);
+  const scale = length / raw[raw.length-1].x;
+  const scaled = raw.map(n=>({x:n.x*scale, h:n.h}));
+  scaled[0].x = 0; scaled[scaled.length-1].x = length;
+  return scaled.map((n,idx)=>({x:Math.round(n.x), h:Math.round(Math.max(idx===0?CP_FRONT_MIN_HEIGHT:0,n.h)*10)/10}));
+}
+// True if nothing in the editor was actually moved from the stock profile
+// they copied in -- same node positions/heights and same smoothness. If
+// so, this should be priced (and treated) as that stock shape, not as a
+// custom one, per Isaac's request (2026-09-29).
+function cpMatchesBaseProfile(basePresetKey){
+  const base = cpScaledStockNodes(basePresetKey);
+  const baseRounding = SHAPES[basePresetKey].rounding;
+  const curRounding = parseFloat(document.getElementById('cpRounding').value);
+  if(curRounding !== baseRounding) return false;
+  if(cpNodes.length !== base.length) return false;
+  for(let i=0;i<cpNodes.length;i++){
+    if(cpNodes[i].x !== base[i].x || Math.abs(cpNodes[i].h - base[i].h) > 0.05) return false;
+  }
+  return true;
+}
 document.getElementById('cpUseShape').addEventListener('click', ()=>{
   // Hard stop, not just a warning -- a curve steeper than the overhang
   // limit doesn't print cleanly, so it can't be saved as-is.
   if(cpWorstAngle > CP_OVERHANG_LIMIT){
     document.getElementById('cpWarn').textContent = 'This shape is too steep to print reliably — flatten the curve or lengthen the vane before using it.';
     document.getElementById('cpWarn').scrollIntoView({behavior:'smooth', block:'center'});
+    return;
+  }
+  const basePresetKey = order.customBaseShape || 'impact';
+  if(cpMatchesBaseProfile(basePresetKey)){
+    // Nothing was actually changed -- this is just the stock shape they
+    // copied in, so treat it as that stock shape (same price, no custom
+    // fee), not as a custom one.
+    order.shape = basePresetKey;
+    order.customNodes = null;
+    order.customRounding = 55;
+    order.customBaseShape = null;
+    document.getElementById('customizePanel').style.display = 'none';
+    document.getElementById('customizeLink').innerHTML = '<span>✎</span> Design Your Own Custom Shape';
+    document.getElementById('customizeLink').classList.remove('active');
+    customizeOpen = false;
+    renderShapeCards();
+    render();
     return;
   }
   order.shape = 'custom';
