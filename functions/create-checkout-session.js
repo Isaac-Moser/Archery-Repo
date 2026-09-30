@@ -24,7 +24,7 @@ const PACK_PRICES_CENTS = { 12: 3000, 18: 4000 }; // same prices as index.html's
 // sync with CUSTOM_SHAPE_SURCHARGE in index.html, which only drives the
 // on-page price display; THIS is what actually sets the Stripe charge,
 // since this function never trusts amounts sent from the browser.
-const CUSTOM_SHAPE_SURCHARGE_CENTS = 2000;
+const CUSTOM_SHAPE_SURCHARGE_CENTS = 1000;
 const SHIPPING_FLAT_CENTS = 499;
 const FREE_SHIP_MIN_PACKS = 2;
 const FREE_SHIP_MIN_SUBTOTAL_CENTS = 8000;
