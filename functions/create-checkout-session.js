@@ -20,10 +20,8 @@
 ===================================================================== */
 
 const PACK_PRICES_CENTS = { 12: 3000, 18: 4000 }; // same prices as index.html's PACK_PRICES -- keep in sync
-// Extra charged per pack for a custom (Studio-designed) shape -- keep in
-// sync with CUSTOM_SHAPE_SURCHARGE in index.html, which only drives the
-// on-page price display; THIS is what actually sets the Stripe charge,
-// since this function never trusts amounts sent from the browser.
+// Added per pack for a customer-designed shape. Keep in sync with
+// CUSTOM_SHAPE_SURCHARGE in index.html (display only -- this is the real charge).
 const CUSTOM_SHAPE_SURCHARGE_CENTS = 1000;
 const SHIPPING_FLAT_CENTS = 499;
 const FREE_SHIP_MIN_PACKS = 2;
@@ -59,13 +57,13 @@ export async function onRequestPost(context) {
       const description = String(item.description || 'Custom vane pack').slice(0, 300);
       const basePrice = PACK_PRICES_CENTS[packSize];
       if (!basePrice) return jsonError('Unknown pack size: ' + packSize, 400);
-      const isCustom = item.isCustom === true;
+      const isCustom = item.customShape === true;
       const unitAmount = basePrice + (isCustom ? CUSTOM_SHAPE_SURCHARGE_CENTS : 0);
 
       lineItems.push({
         currency: 'usd',
         unit_amount: unitAmount,
-        name: `Moser Archery vanes — pack of ${packSize}`,
+        name: `Moser Archery vanes — pack of ${packSize}${isCustom ? ' (custom shape)' : ''}`,
         description,
         quantity: qty,
       });
