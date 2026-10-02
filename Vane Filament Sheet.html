@@ -1,0 +1,538 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Vane Filament Sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: shop spec sheet. Header, then color cards by line, a difference matrix vs the Yellow base, HS-vs-Regular material bars, shared settings, fixes, test plan. */
+:root {
+  --bg: #f3f4f5;
+  --surface: #ffffff;
+  --ink: #14181c;
+  --ink-2: #4c555e;
+  --ink-3: #737c86;
+  --line: #dde1e5;
+  --line-strong: #c2c8cf;
+  --hs: #2a78d6;
+  --reg: #eb6834;
+  --demand: #8a929b;
+  --track: #eef0f2;
+  --delta-bg: #fff2d1;
+  --delta-ink: #6f4b00;
+  --good-ink: #0a6e0a;
+  --good-bg: #e2f2e2;
+  --warn-ink: #7d5200;
+  --warn-bg: #fff0c7;
+  --info-ink: #1d4f8f;
+  --info-bg: #e5eefa;
+  --font-display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131517; --surface: #1b1e21; --ink: #eef1f3; --ink-2: #b6bec6; --ink-3: #8d969f;
+    --line: #2b3035; --line-strong: #3f464d; --hs: #3987e5; --reg: #d95926; --demand: #7f8891; --track: #24282c;
+    --delta-bg: #3a2f12; --delta-ink: #f3d07c; --good-ink: #7fdc7f; --good-bg: #17301a;
+    --warn-ink: #f4c65e; --warn-bg: #382c0f; --info-ink: #9cc3f5; --info-bg: #182a40;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #131517; --surface: #1b1e21; --ink: #eef1f3; --ink-2: #b6bec6; --ink-3: #8d969f;
+  --line: #2b3035; --line-strong: #3f464d; --hs: #3987e5; --reg: #d95926; --demand: #7f8891; --track: #24282c;
+  --delta-bg: #3a2f12; --delta-ink: #f3d07c; --good-ink: #7fdc7f; --good-bg: #17301a;
+  --warn-ink: #f4c65e; --warn-bg: #382c0f; --info-ink: #9cc3f5; --info-bg: #182a40;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 56px; display: grid; gap: 40px; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; letter-spacing: 0.01em; }
+h1 { font-size: clamp(2.2rem, 5vw, 3.2rem); font-weight: 700; line-height: 1; text-transform: uppercase; }
+h2 { font-size: 1.65rem; font-weight: 600; text-transform: uppercase; line-height: 1.1; }
+h3 { font-size: 1.15rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
+p { margin: 0; }
+.eyebrow { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
+.lede { color: var(--ink-2); max-width: 68ch; }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+section { display: grid; gap: 16px; min-width: 0; }
+.section-head { display: grid; gap: 6px; border-top: 2px solid var(--ink); padding-top: 12px; }
+
+/* Header */
+header { display: grid; gap: 14px; }
+.spec-row { display: flex; flex-wrap: wrap; gap: 8px 22px; font-family: var(--font-mono); font-size: 0.8rem; color: var(--ink-2); }
+.spec-row b { color: var(--ink); font-weight: 600; }
+.key { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* Chips and line tags */
+.chip { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 0.72rem; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; white-space: nowrap; }
+.chip.good { background: var(--good-bg); color: var(--good-ink); }
+.chip.info { background: var(--info-bg); color: var(--info-ink); }
+.chip.warn { background: var(--warn-bg); color: var(--warn-ink); }
+.chip.delta { background: var(--delta-bg); color: var(--delta-ink); }
+.linetag { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink); font-weight: 600; }
+.linetag::before { content: ""; width: 12px; height: 12px; border-radius: 2px; background: var(--c); }
+.linetag.hs { --c: var(--hs); }
+.linetag.reg { --c: var(--reg); }
+
+/* Color cards */
+.group { display: grid; gap: 12px; }
+.group-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; }
+.group-head p { color: var(--ink-2); font-size: 0.9rem; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+.card-top { display: flex; align-items: center; gap: 10px; }
+.swatch { width: 34px; height: 34px; border-radius: 50%; background: var(--sw); border: 1px solid var(--line-strong); flex: none; box-shadow: inset 0 0 0 5px rgba(255,255,255,0.18); }
+.card-name { display: grid; gap: 1px; min-width: 0; }
+.card-name strong { font-family: var(--font-display); font-size: 1.35rem; font-weight: 600; line-height: 1.05; text-transform: uppercase; }
+.card-name span { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-3); }
+.temp { display: flex; align-items: baseline; gap: 8px; }
+.temp b { font-family: var(--font-display); font-weight: 700; font-size: 2.6rem; line-height: 0.9; font-variant-numeric: tabular-nums; }
+.temp span { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.06em; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.stats div { background: var(--surface); padding: 6px 8px; display: grid; gap: 1px; }
+.stats dt { font-family: var(--font-mono); font-size: 0.64rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+.stats dd { margin: 0; font-family: var(--font-mono); font-size: 0.95rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.stats .changed { background: var(--delta-bg); }
+.stats .changed dd { color: var(--delta-ink); }
+.preset { font-family: var(--font-mono); font-size: 0.7rem; color: var(--ink-2); background: var(--track); padding: 6px 8px; border-radius: 3px; overflow-wrap: anywhere; }
+.card-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 10px; font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-3); border-top: 1px dashed var(--line); padding-top: 8px; }
+.card-foot .out { color: var(--warn-ink); font-weight: 600; }
+
+/* Matrix */
+.scroll { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+table { border-collapse: collapse; width: 100%; min-width: 860px; font-variant-numeric: tabular-nums; }
+th, td { padding: 9px 10px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+thead th { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2); font-weight: 600; background: var(--surface); }
+thead .grp th { font-size: 0.72rem; border-bottom: none; padding-bottom: 2px; }
+thead .grp th.hs-g { box-shadow: inset 0 3px 0 var(--hs); }
+thead .grp th.reg-g { box-shadow: inset 0 3px 0 var(--reg); }
+.colname { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.dot { width: 11px; height: 11px; border-radius: 50%; background: var(--sw); border: 1px solid var(--line-strong); flex: none; }
+tbody th { font-family: var(--font-body); font-weight: 600; font-size: 0.88rem; white-space: nowrap; }
+tbody th small { display: block; font-weight: 400; color: var(--ink-3); font-size: 0.75rem; white-space: normal; }
+td { font-family: var(--font-mono); font-size: 0.86rem; white-space: nowrap; }
+td.d { background: var(--delta-bg); color: var(--delta-ink); font-weight: 600; }
+td.d small { font-weight: 500; opacity: 0.85; margin-left: 4px; }
+td.base { font-weight: 600; }
+tbody tr:last-child th, tbody tr:last-child td { border-bottom: none; }
+.split { border-left: 2px solid var(--line-strong); }
+
+/* Why list */
+.why { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.why article { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px; display: grid; gap: 6px; align-content: start; }
+.why .who { display: flex; flex-wrap: wrap; gap: 5px; }
+.why p { color: var(--ink-2); font-size: 0.9rem; }
+.why .verdict { font-family: var(--font-mono); font-size: 0.82rem; color: var(--ink); font-weight: 600; }
+
+/* Charts */
+.charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; }
+.chart { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.chart h3 { font-size: 1.05rem; }
+.chart .unit { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-3); }
+.bars { display: grid; gap: 8px; }
+.bar-row { display: grid; grid-template-columns: 64px 1fr; align-items: center; gap: 8px; }
+.bar-row .lbl { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.05em; }
+.track { position: relative; height: 18px; display: flex; align-items: center; }
+.bar { flex: none; height: 14px; border-radius: 0 4px 4px 0; background: var(--c); min-width: 2px; outline-offset: 2px; width: calc(var(--w) * (100% - 52px)); }
+.bar:focus-visible { outline: 2px solid var(--ink); }
+.bar-val { margin-left: 8px; font-family: var(--font-mono); font-size: 0.8rem; font-weight: 600; color: var(--ink); white-space: nowrap; }
+.chart .take { font-size: 0.85rem; color: var(--ink-2); border-top: 1px dashed var(--line); padding-top: 8px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+.wide-chart { grid-column: 1 / -1; }
+
+/* Facts table */
+.facts { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; overflow-x: auto; }
+.facts table { min-width: 560px; }
+.facts td { white-space: normal; }
+
+/* Shared settings */
+.shared { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.shared div { background: var(--surface); padding: 10px 12px; display: grid; gap: 2px; }
+.shared dt { font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+.shared dd { margin: 0; font-weight: 600; font-size: 0.95rem; }
+.shared dd small { display: block; font-weight: 400; color: var(--ink-3); font-size: 0.78rem; }
+
+/* Fixes + steps */
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; align-items: start; }
+.fixes { display: grid; gap: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.fix { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 11px 14px; border-bottom: 1px solid var(--line); }
+.fix:last-child { border-bottom: none; }
+.fix .sym { font-weight: 600; font-size: 0.9rem; }
+.fix .act { font-family: var(--font-mono); font-size: 0.82rem; color: var(--ink-2); }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; counter-reset: s; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 34px 1fr; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; }
+.steps li::before { content: counter(s); font-family: var(--font-display); font-weight: 700; font-size: 1.7rem; line-height: 1; color: var(--ink-3); }
+.steps strong { display: block; font-size: 0.95rem; }
+.steps span { color: var(--ink-2); font-size: 0.88rem; }
+
+footer { display: grid; gap: 8px; font-size: 0.8rem; color: var(--ink-3); border-top: 1px solid var(--line); padding-top: 14px; }
+footer a { color: var(--ink-2); }
+footer ul { margin: 0; padding-left: 18px; display: grid; gap: 2px; }
+
+/* Tooltip */
+#tip { position: fixed; z-index: 10; pointer-events: none; background: var(--ink); color: var(--bg); font-family: var(--font-mono); font-size: 0.75rem; padding: 6px 8px; border-radius: 4px; max-width: 240px; }
+
+@media (max-width: 760px) { .shared { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) {
+  .wrap { padding-inline: 16px; }
+  .fix { grid-template-columns: 1fr; gap: 2px; }
+  .temp b { font-size: 2.3rem; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .bar { transition: filter 120ms; }
+  .bar:hover { filter: brightness(1.08); }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Moser Archery · print reference · updated Oct 2, 2026</p>
+    <h1>Vane Filament Sheet</h1>
+    <p class="lede">Settings for every Overture TPU 95A color you print, what differs between them, and why. Everything is measured against your perfected Neon Yellow HS profile, the base all other profiles were built from.</p>
+    <div class="spec-row">
+      <span>Printer <b>Bambu P1S · 0.4 mm</b></span>
+      <span>Process <b>0.15mm Vane Process</b></span>
+      <span>Mode <b>Spiral vase · 1 wall</b></span>
+      <span>Presets <b>“… - Vane v2”</b></span>
+    </div>
+    <div class="key">
+      <span class="chip good">✓ Perfected</span>
+      <span class="chip info">= Clone of Yellow</span>
+      <span class="chip delta">± Changed from Yellow</span>
+      <span class="chip warn">▲ Starting point · untested</span>
+    </div>
+  </header>
+
+  <section aria-labelledby="s-colors">
+    <div class="section-head">
+      <p class="eyebrow">At the printer</p>
+      <h2 id="s-colors">Pick your color</h2>
+    </div>
+
+    <div class="group">
+      <div class="group-head">
+        <span class="linetag hs">High Speed TPU 95A</span>
+        <p>Dialed in. Only White differs from Yellow.</p>
+      </div>
+      <div class="cards">
+        <article class="card">
+          <div class="card-top"><span class="swatch" style="--sw:#FEF71D"></span><div class="card-name"><strong>Neon Yellow</strong><span>#FEF71D</span></div></div>
+          <div><span class="chip good">✓ Perfected base</span></div>
+          <div class="temp"><b>225</b><span>°C nozzle</span></div>
+          <dl class="stats"><div><dt>Flow</dt><dd>1.00</dd></div><div><dt>PA</dt><dd>0.02</dd></div><div><dt>Fan</dt><dd>35%</dd></div></dl>
+          <div class="preset">OVERTURE TPU Neon Yellow HS - Vane v2</div>
+          <div class="card-foot"><span>Overture $28.99</span><span class="out">Sold out Sep 30</span></div>
+        </article>
+        <article class="card">
+          <div class="card-top"><span class="swatch" style="--sw:#FB23AF"></span><div class="card-name"><strong>Neon Magenta</strong><span>#FB23AF</span></div></div>
+          <div><span class="chip info">= Clone · high confidence</span></div>
+          <div class="temp"><b>225</b><span>°C nozzle</span></div>
+          <dl class="stats"><div><dt>Flow</dt><dd>1.00</dd></div><div><dt>PA</dt><dd>0.02</dd></div><div><dt>Fan</dt><dd>35%</dd></div></dl>
+          <div class="preset">OVERTURE TPU Neon Magenta HS - Vane v2</div>
+          <div class="card-foot"><span>Overture $30.99</span><span>In stock Sep 30</span></div>
+        </article>
+        <article class="card">
+          <div class="card-top"><span class="swatch" style="--sw:#000000"></span><div class="card-name"><strong>Black</strong><span>#000000</span></div></div>
+          <div><span class="chip info">= Clone · high confidence</span></div>
+          <div class="temp"><b>225</b><span>°C nozzle</span></div>
+          <dl class="stats"><div><dt>Flow</dt><dd>1.00</dd></div><div><dt>PA</dt><dd>0.02</dd></div><div><dt>Fan</dt><dd>35%</dd></div></dl>
+          <div class="preset">OVERTURE TPU Black HS - Vane v2</div>
+          <div class="card-foot"><span>Overture $24.99</span><span>In stock Sep 30</span></div>
+        </article>
+        <article class="card">
+          <div class="card-top"><span class="swatch" style="--sw:#FFFFFF"></span><div class="card-name"><strong>White</strong><span>#FFFFFF</span></div></div>
+          <div><span class="chip delta">± Offset · verify flow</span></div>
+          <div class="temp"><b>230</b><span>°C nozzle · +5</span></div>
+          <dl class="stats"><div class="changed"><dt>Flow</dt><dd>1.02</dd></div><div><dt>PA</dt><dd>0.02</dd></div><div><dt>Fan</dt><dd>35%</dd></div></dl>
+          <div class="preset">OVERTURE TPU White HS - Vane v2</div>
+          <div class="card-foot"><span>Overture $27.49</span><span>In stock Sep 30</span></div>
+        </article>
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="group-head">
+        <span class="linetag reg">Regular TPU 95A</span>
+        <p>All four share one starting profile. Test one, then copy to the rest.</p>
+      </div>
+      <div class="cards">
+        <article class="card">
+          <div class="card-top"><span class="swatch" style="--sw:#FF3F38"></span><div class="card-name"><strong>Neon Red</strong><span>#FF3F38</span></div></div>
+          <div><span class="chip warn">▲ Starting point</span></div>
+          <div class="temp"><b>230</b><span>°C nozzle · +5</span></div>
+          <dl class="stats"><div><dt>Flow</dt><dd>1.00</dd></div><div class="changed"><dt>PA</dt><dd>0.03</dd></div><div><dt>Fan</dt><dd>35%</dd></div></dl>
+          <div class="preset">OVERTURE TPU Neon Red - Vane v2</div>
+          <div class="card-foot"><span>Overture $27.49</span><span class="out">Sold out Sep 30</span></div>
+        </article>
+        <article class="card">
+          <div class="card-top"><span class="swatch" style="--sw:#0378D0"></span><div class="card-name"><strong>Digital Blue</strong><span>#0378D0</span></div></div>
+          <div><span class="chip warn">▲ Starting point · test first</span></div>
+          <div class="temp"><b>230</b><span>°C nozzle · +5</span></div>
+          <dl class="stats"><div><dt>Flow</dt><dd>1.00</dd></div><div class="changed"><dt>PA</dt><dd>0.03</dd></div><div><dt>Fan</dt><dd>35%</dd></div></dl>
+          <div class="preset">OVERTURE TPU Digital Blue - Vane v2</div>
+          <div class="card-foot"><span>Overture $24.99</span><span>In stock Sep 30</span></div>
+        </article>
+        <article class="card">
+          <div class="card-top"><span class="swatch" style="--sw:#2EFF6D"></span><div class="card-name"><strong>Neon Green</strong><span>#2EFF6D</span></div></div>
+          <div><span class="chip warn">▲ Starting point</span></div>
+          <div class="temp"><b>230</b><span>°C nozzle · +5</span></div>
+          <dl class="stats"><div><dt>Flow</dt><dd>1.00</dd></div><div class="changed"><dt>PA</dt><dd>0.03</dd></div><div><dt>Fan</dt><dd>35%</dd></div></dl>
+          <div class="preset">OVERTURE TPU Neon Green - Vane v2</div>
+          <div class="card-foot"><span>Overture $29.99</span><span class="out">Sold out Sep 30</span></div>
+        </article>
+        <article class="card">
+          <div class="card-top"><span class="swatch" style="--sw:#FA8E36"></span><div class="card-name"><strong>Neon Orange</strong><span>#FA8E36</span></div></div>
+          <div><span class="chip warn">▲ Starting point · test first</span></div>
+          <div class="temp"><b>230</b><span>°C nozzle · +5</span></div>
+          <dl class="stats"><div><dt>Flow</dt><dd>1.00</dd></div><div class="changed"><dt>PA</dt><dd>0.03</dd></div><div><dt>Fan</dt><dd>35%</dd></div></dl>
+          <div class="preset">OVERTURE TPU Neon Orange - Vane v2</div>
+          <div class="card-foot"><span>Overture $29.99</span><span>In stock Sep 30</span></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="s-diff">
+    <div class="section-head">
+      <p class="eyebrow">Difference chart</p>
+      <h2 id="s-diff">What changes from Yellow</h2>
+      <p class="lede">Only these five settings differ between any of your profiles. Shaded cells are changed from the Yellow base. Every other setting is identical across all eight.</p>
+    </div>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr class="grp">
+            <th></th>
+            <th colspan="4" class="hs-g">High Speed</th>
+            <th colspan="4" class="reg-g split">Regular</th>
+          </tr>
+          <tr>
+            <th scope="col">Setting</th>
+            <th scope="col"><span class="colname"><span class="dot" style="--sw:#FEF71D"></span>Yellow · base</span></th>
+            <th scope="col"><span class="colname"><span class="dot" style="--sw:#FB23AF"></span>Magenta</span></th>
+            <th scope="col"><span class="colname"><span class="dot" style="--sw:#000000"></span>Black</span></th>
+            <th scope="col"><span class="colname"><span class="dot" style="--sw:#FFFFFF"></span>White</span></th>
+            <th scope="col" class="split"><span class="colname"><span class="dot" style="--sw:#FF3F38"></span>Neon Red</span></th>
+            <th scope="col"><span class="colname"><span class="dot" style="--sw:#0378D0"></span>Digital Blue</span></th>
+            <th scope="col"><span class="colname"><span class="dot" style="--sw:#2EFF6D"></span>Neon Green</span></th>
+            <th scope="col"><span class="colname"><span class="dot" style="--sw:#FA8E36"></span>Neon Orange</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">Nozzle temp<small>Layer 1 and rest</small></th>
+            <td class="base">225 °C</td><td>225 °C</td><td>225 °C</td><td class="d">230 °C<small>+5</small></td>
+            <td class="d split">230 °C<small>+5</small></td><td class="d">230 °C<small>+5</small></td><td class="d">230 °C<small>+5</small></td><td class="d">230 °C<small>+5</small></td>
+          </tr>
+          <tr>
+            <th scope="row">Flow ratio</th>
+            <td class="base">1.00</td><td>1.00</td><td>1.00</td><td class="d">1.02<small>+2%</small></td>
+            <td class="split">1.00</td><td>1.00</td><td>1.00</td><td>1.00</td>
+          </tr>
+          <tr>
+            <th scope="row">Pressure advance</th>
+            <td class="base">0.02</td><td>0.02</td><td>0.02</td><td>0.02</td>
+            <td class="d split">0.03<small>+0.01</small></td><td class="d">0.03<small>+0.01</small></td><td class="d">0.03<small>+0.01</small></td><td class="d">0.03<small>+0.01</small></td>
+          </tr>
+          <tr>
+            <th scope="row">Max volumetric speed<small>Safety cap only</small></th>
+            <td class="base">6.0 mm³/s</td><td>6.0 mm³/s</td><td>6.0 mm³/s</td><td>6.0 mm³/s</td>
+            <td class="d split">3.0 mm³/s</td><td class="d">3.0 mm³/s</td><td class="d">3.0 mm³/s</td><td class="d">3.0 mm³/s</td>
+          </tr>
+          <tr>
+            <th scope="row">Density<small>Weight and cost estimate only</small></th>
+            <td class="base">1.19</td><td>1.19</td><td>1.19</td><td>1.19</td>
+            <td class="d split">1.18</td><td class="d">1.18</td><td class="d">1.18</td><td class="d">1.18</td>
+          </tr>
+          <tr>
+            <th scope="row">Confidence</th>
+            <td class="base">Proven</td><td>High</td><td>High</td><td>Medium</td>
+            <td class="split">Medium</td><td>Medium</td><td>Medium</td><td>Medium</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="why">
+      <article>
+        <h3>Neon dyes and Black</h3>
+        <div class="who"><span class="chip info">Magenta</span><span class="chip info">Black</span><span class="chip info">Neon Red · Green · Orange</span></div>
+        <p>Neon dyes and black pigment are added in very small amounts. They do not change how the TPU melts, so they print the same as Yellow within their line.</p>
+        <p class="verdict">No setting change</p>
+      </article>
+      <article>
+        <h3>Digital Blue</h3>
+        <div class="who"><span class="chip info">Digital Blue</span></div>
+        <p>A standard blue pigment at a low loading. It behaves like the neon colors in the regular line.</p>
+        <p class="verdict">No change vs other regular colors</p>
+      </article>
+      <article>
+        <h3>White</h3>
+        <div class="who"><span class="chip delta">White HS</span></div>
+        <p>White uses a heavy load of titanium dioxide pigment, which slightly thickens the melt. A little more heat and flow makes up for it.</p>
+        <p class="verdict">+5 °C · +2% flow · verify with fin-thickness check</p>
+      </article>
+      <article>
+        <h3>Regular vs High Speed</h3>
+        <div class="who"><span class="chip warn">All 4 regular colors</span></div>
+        <p>Regular TPU melt is about 2× thicker. It needs more heat to bond thin fins and slightly more pressure advance. Your vane speed stays the same.</p>
+        <p class="verdict">+5 °C · PA 0.03 · cap 3.0 · density 1.18</p>
+      </article>
+    </div>
+  </section>
+
+  <section aria-labelledby="s-mat">
+    <div class="section-head">
+      <p class="eyebrow">Overture data sheets</p>
+      <h2 id="s-mat">High Speed vs Regular material</h2>
+      <p class="lede">Both are 95A hardness, but the regular TPU melt flows about half as easily. That is the reason the regular profiles differ.</p>
+    </div>
+    <div class="legend">
+      <span class="linetag hs">High Speed</span>
+      <span class="linetag reg">Regular</span>
+      <span class="linetag" style="--c: var(--demand)">Your vane</span>
+    </div>
+    <div class="charts">
+      <div class="chart">
+        <h3>Melt flow</h3>
+        <p class="unit">g/10 min · 210 °C, 1.2 kg · higher flows easier</p>
+        <div class="bars">
+          <div class="bar-row"><span class="lbl">HS</span><div class="track"><div class="bar" style="--c:var(--hs); --w:0.84" tabindex="0" data-tip="High Speed melt flow: 9.5 g/10 min"></div><span class="bar-val">9.5</span></div></div>
+          <div class="bar-row"><span class="lbl">Regular</span><div class="track"><div class="bar" style="--c:var(--reg); --w:0.4" tabindex="0" data-tip="Regular melt flow: 4.5 g/10 min"></div><span class="bar-val">4.5</span></div></div>
+        </div>
+        <p class="take">Regular is about 2.1× thicker when melted.</p>
+      </div>
+      <div class="chart">
+        <h3>Tensile strength</h3>
+        <p class="unit">MPa · X-Y direction · higher is stronger</p>
+        <div class="bars">
+          <div class="bar-row"><span class="lbl">HS</span><div class="track"><div class="bar" style="--c:var(--hs); --w:0.75" tabindex="0" data-tip="High Speed tensile: 27.1 ± 1.2 MPa"></div><span class="bar-val">27.1</span></div></div>
+          <div class="bar-row"><span class="lbl">Regular</span><div class="track"><div class="bar" style="--c:var(--reg); --w:0.84" tabindex="0" data-tip="Regular tensile: 30.1 ± 3.7 MPa"></div><span class="bar-val">30.1</span></div></div>
+        </div>
+        <p class="take">Regular is about 11% stronger, with more scatter (±3.7 vs ±1.2).</p>
+      </div>
+      <div class="chart">
+        <h3>Stretch before break</h3>
+        <p class="unit">Elongation at break, % · higher stretches further</p>
+        <div class="bars">
+          <div class="bar-row"><span class="lbl">HS</span><div class="track"><div class="bar" style="--c:var(--hs); --w:0.76" tabindex="0" data-tip="High Speed elongation: 301.8 ± 12.6%"></div><span class="bar-val">302%</span></div></div>
+          <div class="bar-row"><span class="lbl">Regular</span><div class="track"><div class="bar" style="--c:var(--reg); --w:0.84" tabindex="0" data-tip="Regular elongation: 332.1 ± 15.9%"></div><span class="bar-val">332%</span></div></div>
+        </div>
+        <p class="take">Regular stretches about 10% further before breaking.</p>
+      </div>
+      <div class="chart">
+        <h3>Flow your vane needs</h3>
+        <p class="unit">mm³/s · 25 mm/s × 0.15 mm layer × 0.3 mm line</p>
+        <div class="bars">
+          <div class="bar-row"><span class="lbl">Vane</span><div class="track"><div class="bar" style="--c:var(--demand); --w:0.156" tabindex="0" data-tip="Vane demand: about 1.1 mm³/s"></div><span class="bar-val">1.1</span></div></div>
+          <div class="bar-row"><span class="lbl">Reg cap</span><div class="track"><div class="bar" style="--c:var(--reg); --w:0.42" tabindex="0" data-tip="Regular profile cap: 3.0 mm³/s"></div><span class="bar-val">3.0</span></div></div>
+          <div class="bar-row"><span class="lbl">HS cap</span><div class="track"><div class="bar" style="--c:var(--hs); --w:0.84" tabindex="0" data-tip="High Speed profile cap: 6.0 mm³/s"></div><span class="bar-val">6.0</span></div></div>
+        </div>
+        <p class="take">Your vanes use about a third of the regular cap, so regular prints at the same 25 mm/s.</p>
+      </div>
+    </div>
+
+    <div class="facts">
+      <table>
+        <thead><tr><th scope="col">Overture spec</th><th scope="col"><span class="linetag hs">High Speed</span></th><th scope="col"><span class="linetag reg">Regular</span></th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Hardness</th><td>~95A</td><td>~95A</td></tr>
+          <tr><th scope="row">Density</th><td>1.19 g/cm³</td><td>1.18 g/cm³</td></tr>
+          <tr><th scope="row">Nozzle range</th><td>200–240 °C</td><td>210–240 °C</td></tr>
+          <tr><th scope="row">Bed range</th><td>25–60 °C</td><td>35–50 °C (product page) · 25–60 °C (data sheet)</td></tr>
+          <tr><th scope="row">Overture speed</th><td>60–90 mm/s</td><td>20–40 mm/s</td></tr>
+          <tr><th scope="row">Overture test prints</th><td>225 °C · 30 mm/s · bed 30 °C</td><td>225 °C · 30 mm/s · bed 30 °C</td></tr>
+          <tr><th scope="row">Drying</th><td>70 °C for 7 h</td><td>70 °C for 7–8 h</td></tr>
+          <tr><th scope="row">AMS</th><td>Not compatible</td><td>Not compatible</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="s-shared">
+    <div class="section-head">
+      <p class="eyebrow">Locked</p>
+      <h2 id="s-shared">Same on every profile</h2>
+      <p class="lede">These came from tuning Yellow on your vane shape. They do not depend on color or line, so leave them alone unless a fix below calls for it.</p>
+    </div>
+    <dl class="shared">
+      <div><dt>Print speed</dt><dd>25 mm/s<small>Constant, slowdown off</small></dd></div>
+      <div><dt>First layer</dt><dd>15 mm/s<small>0.15 mm, 0.3 mm line</small></dd></div>
+      <div><dt>Layer / line</dt><dd>0.15 / 0.3 mm<small>Spiral vase, 1 wall</small></dd></div>
+      <div><dt>Part fan</dt><dd>35%<small>Off layers 1–3, full by layer 10</small></dd></div>
+      <div><dt>Bed</dt><dd>35 °C<small>Inside both lines' range</small></dd></div>
+      <div><dt>Retraction</dt><dd>Printer default<small>Not used mid-vane in vase mode</small></dd></div>
+      <div><dt>Overhang fan</dt><dd>100%<small>Above 95% overhang</small></dd></div>
+      <div><dt>Slicer cost</dt><dd>$24.99/kg<small>Same on all 8 profiles</small></dd></div>
+    </dl>
+  </section>
+
+  <section aria-labelledby="s-fix">
+    <div class="two">
+      <div class="group">
+        <div class="section-head">
+          <p class="eyebrow">Troubleshooting</p>
+          <h2 id="s-fix">If a vane looks wrong</h2>
+        </div>
+        <div class="fixes">
+          <div class="fix"><span class="sym">Stringing, bubbles, rough or uneven walls</span><span class="act">Dry the spool first: 70 °C, 7 h. Don't over-dry, it turns brittle.</span></div>
+          <div class="fix"><span class="sym">Gloss or zits near the top</span><span class="act">Fan +15%. Still there: nozzle −5 °C.</span></div>
+          <div class="fix"><span class="sym">Fins split when flexed</span><span class="act">Fan −10% or nozzle +5 °C.</span></div>
+          <div class="fix"><span class="sym">Fin thicker than 0.60 mm</span><span class="act">Flow = 0.60 ÷ measured thickness.</span></div>
+          <div class="fix"><span class="sym">Blobs only at fin tips or roots</span><span class="act">Run pressure advance calibration.</span></div>
+          <div class="fix"><span class="sym">New spool, same color</span><span class="act">Quick fin-thickness check. Lots can shift flow 1–2%.</span></div>
+        </div>
+      </div>
+      <div class="group">
+        <div class="section-head">
+          <p class="eyebrow">Next up</p>
+          <h2>Testing regular TPU</h2>
+        </div>
+        <ol class="steps">
+          <li><div><strong>Start with Digital Blue or Neon Orange</strong><span>Both were in stock on Sep 30. Neon Red and Neon Green were sold out.</span></div></li>
+          <li><div><strong>Temperature: 225, 230, 235 °C</strong><span>Keep whichever gives the best fin flex and surface.</span></div></li>
+          <li><div><strong>Fin thickness</strong><span>Measure it. Set flow to 0.60 ÷ measured.</span></div></li>
+          <li><div><strong>Pressure advance, only if needed</strong><span>Run it only if fin tips or roots blob.</span></div></li>
+          <li><div><strong>Copy to the other three</strong><span>Once one regular color passes, the rest take the same settings.</span></div></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Prices and stock from Overture's site on Sep 30, 2026. Overture prices change often, so check before ordering.</p>
+    <ul>
+      <li><a href="https://overture3d.com/cdn/shop/files/OVERTURE__HIGH_SPEED_TPU_TDS_EN_V5.1_112e83e3-da49-495b-bd52-96b491f2fc64.pdf?v=708369137709490471" target="_blank" rel="noopener">Overture High Speed TPU data sheet</a></li>
+      <li><a href="https://overture3d.com/cdn/shop/files/OVERTURE_TPU_95A_2.0_TDS_EN.pdf?v=15133463082842758050" target="_blank" rel="noopener">Overture TPU 95A data sheet</a></li>
+      <li><a href="https://overture3d.com/products/overture-high-speed-tpu-3d-printer-filament-1-75mm" target="_blank" rel="noopener">Overture High Speed TPU product page</a></li>
+      <li><a href="https://overture3d.com/products/overture-tpu" target="_blank" rel="noopener">Overture TPU 95A product page</a></li>
+    </ul>
+  </footer>
+</div>
+<div id="tip" hidden></div>
+<script>
+(function () {
+  var tip = document.getElementById('tip');
+  function show(el, x, y) {
+    tip.textContent = el.getAttribute('data-tip');
+    tip.hidden = false;
+    var w = tip.offsetWidth, h = tip.offsetHeight;
+    var left = Math.min(x + 12, window.innerWidth - w - 8);
+    var top = y - h - 10 < 8 ? y + 16 : y - h - 10;
+    tip.style.left = Math.max(8, left) + 'px';
+    tip.style.top = top + 'px';
+  }
+  function hide() { tip.hidden = true; }
+  document.querySelectorAll('[data-tip]').forEach(function (el) {
+    el.addEventListener('pointermove', function (e) { show(el, e.clientX, e.clientY); });
+    el.addEventListener('pointerleave', hide);
+    el.addEventListener('focus', function () { var r = el.getBoundingClientRect(); show(el, r.right, r.top); });
+    el.addEventListener('blur', hide);
+  });
+})();
+</script>
+
+</body></html>
