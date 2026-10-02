@@ -3831,6 +3831,7 @@ function buildItemProfileData(name, s){
   const shapeName = shapeDisplayName(s);
   return {
     displayName: name + ' - ' + shapeName,
+    customerName: name, // Studio names the exported STL after this
     shape: s.shape,
     customNodes: s.shape==='custom' ? s.customNodes : undefined,
     customRounding: s.shape==='custom' ? s.customRounding : undefined,
