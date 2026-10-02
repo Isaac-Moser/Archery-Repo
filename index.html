@@ -567,6 +567,34 @@
   #cpGraphWrap{ height:200px; background:var(--bg2); border-radius:4px; border:1px solid var(--line-soft); flex:1; }
   #cpGraph{ width:100%; height:100%; display:block; }
   #cpNote{ font-size:12px; color:var(--muted); margin-top:12px; line-height:1.5; }
+  .cp-btn.disabled{ opacity:0.35; cursor:not-allowed; }
+  .cp-btn.disabled:hover{ border-color:var(--line); }
+  .cp-units{ display:flex; gap:4px; margin-left:4px; }
+  .cp-unitbtn{
+    background:var(--surface2); border:1.5px solid var(--line); color:var(--muted); padding:7px 11px;
+    border-radius:3px; font-size:12px; font-weight:600; cursor:pointer; user-select:none; transition:all .12s;
+  }
+  .cp-unitbtn:hover{ border-color:var(--accent); }
+  .cp-unitbtn.active{ background:var(--accent); border-color:var(--accent); color:#fff; }
+  .cp-smooth-row{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:4px 0 4px;
+    font-family:var(--label); font-size:12px; text-transform:uppercase; letter-spacing:0.5px; color:var(--muted);
+  }
+  .cp-smooth-row input[type=range]{ width:160px; accent-color:var(--accent); }
+  .cp-smooth-end{ font-size:11px; color:var(--muted-dim); }
+  .cp-smooth-row.disabled input, .cp-smooth-row.disabled .cp-smooth-end{ opacity:0.35; }
+  #cpRoundAll{ text-transform:none; letter-spacing:0; font-family:var(--body); }
+  #cpRoundingVal{ color:var(--text); text-transform:none; letter-spacing:0; font-family:var(--body); font-weight:600; min-width:120px; }
+  .cp-smooth-help{ font-size:11.5px; color:var(--muted-dim); line-height:1.5; margin-bottom:12px; }
+  .cp-fee-box{
+    margin-top:14px; padding:11px 14px; border-radius:4px; font-size:12.5px; line-height:1.55;
+    background:var(--surface2); border:1px solid var(--line); color:var(--muted);
+  }
+  .cp-fee-box b{ color:var(--text); }
+  #cpFeeStatus{ display:block; margin-top:5px; font-weight:600; }
+  #cpFeeStatus.unchanged{ color:var(--good); }
+  #cpFeeStatus.changed{ color:#e0a05a; }
+  #cpResultMsg{ font-size:12.5px; margin-top:10px; min-height:0; line-height:1.5; }
   #cpWarn{ font-size:12.5px; color:#e08a56; margin-top:8px; min-height:0; }
 
   .cp-coord-row{
@@ -575,7 +603,7 @@
   }
   .cp-coord-field{ display:flex; align-items:center; gap:6px; }
   .cp-coord-field input[type=number]{
-    width:64px; background:var(--surface2); border:1.5px solid var(--line); color:var(--text);
+    width:78px; background:var(--surface2); border:1.5px solid var(--line); color:var(--text);
     padding:6px 8px; border-radius:3px; font-family:var(--body); font-size:13px; text-transform:none; letter-spacing:0;
   }
   .cp-coord-field input:focus{ outline:none; border-color:var(--accent); }
@@ -898,27 +926,47 @@
     <div class="customize-btn" id="customizeLink">
       <span>✎</span> Design Your Own Custom Shape
     </div>
+    <div id="cpResultMsg"></div>
     <div id="customizePanel">
       <div class="cp-head">
         <div class="cp-title">Custom Profile Editor</div>
         <div class="cp-controls">
+          <div class="cp-btn disabled" id="cpUndo" title="Undo (Ctrl+Z)">&#8630; Undo</div>
+          <div class="cp-btn disabled" id="cpRedo" title="Redo (Ctrl+Y)">&#8631; Redo</div>
           <div class="cp-btn" id="cpAddNode">+ Add Point</div>
           <div class="cp-btn" id="cpDeleteNode">Delete Point</div>
-          <div class="cp-slider-wrap">Smoothness <input type="range" id="cpRounding" min="0" max="100" value="55"><span id="cpRoundingVal">55%</span></div>
+          <div class="cp-btn" id="cpReset" title="Start over from the stock shape you began with">Reset</div>
+          <div class="cp-units" title="Show measurements in millimeters or inches">
+            <div class="cp-unitbtn active" data-cpunit="mm">mm</div>
+            <div class="cp-unitbtn" data-cpunit="in">in</div>
+          </div>
         </div>
       </div>
+      <div class="cp-smooth-row">
+        <label for="cpRounding" id="cpRoundingLabel">Corner Rounding — Selected Point</label>
+        <span class="cp-smooth-end">Sharp</span>
+        <input type="range" id="cpRounding" min="0" max="100" step="5" value="55">
+        <span class="cp-smooth-end">Round</span>
+        <span id="cpRoundingVal">Medium</span>
+        <div class="cp-btn" id="cpRoundAll" title="Give every point this same rounding">Apply to All Points</div>
+      </div>
+      <div class="cp-smooth-help">How much the curve is rounded off where it bends at the <b>selected point</b>. <b>Sharp</b> keeps a crisp corner right on the point; <b>Round</b> turns the bend into an arc that sits just inside it (the dashed line shows where your points are). Click a point to set its own rounding, or use "Apply to All Points". The two end points can't be rounded. All of our stock shapes are fully round, which also flies quieter.</div>
       <div class="cp-coord-row">
         <span class="cp-coord-label">Selected Point:</span>
-        <span class="cp-coord-field">X <input type="number" id="cpNodeX" step="1"> mm</span>
-        <span class="cp-coord-field">Y <input type="number" id="cpNodeY" step="0.1"> mm</span>
+        <span class="cp-coord-field">X <input type="number" id="cpNodeX" step="1"> <span class="cpUnitLbl">mm</span></span>
+        <span class="cp-coord-field">Y <input type="number" id="cpNodeY" step="0.1"> <span class="cpUnitLbl">mm</span></span>
       </div>
       <div class="cp-graph-outer">
-        <div class="cp-axis-y">HEIGHT (mm) — Y</div>
+        <div class="cp-axis-y" id="cpAxisY">HEIGHT (mm) — Y</div>
         <div id="cpGraphWrap"><svg id="cpGraph" viewBox="0 0 700 200"></svg></div>
       </div>
-      <div class="cp-axis-x">LENGTH ALONG VANE (mm) — X &nbsp;·&nbsp; FRONT → BACK</div>
+      <div class="cp-axis-x" id="cpAxisX">LENGTH ALONG VANE (mm) — X &nbsp;·&nbsp; FRONT → BACK</div>
       <div id="cpWarn"></div>
-      <div id="cpNote">Want a head start? Click any shape above to load its curve in here, then tweak it. Otherwise: click empty space to add a point, drag any point to reshape the curve, or type exact X/Y coordinates above. Select a point to delete it. When you're happy with it, hit "Use This Shape" below.</div>
+      <div id="cpNote">Want a head start? Click any shape above to load its curve in here, then tweak it. Click empty space to add a point, drag any point to reshape the curve, or type exact X/Y values above. With a point selected, the arrow keys nudge it (hold Shift for bigger steps) and Delete removes it. Ctrl+Z undoes, Ctrl+Y redoes.</div>
+      <div class="cp-fee-box">
+        <b>Custom shape fee: +$<span class="cpFeeAmt">10</span> per pack.</b>
+        <span id="cpFeeStatus" class="unchanged">No changes yet: stock price applies.</span>
+      </div>
       <div class="cp-btn primary" id="cpUseShape" style="margin-top:14px; display:inline-block;">Use This Shape</div>
     </div>
   </section>
@@ -2151,12 +2199,21 @@ let customizeOpen = false;
 /* =====================================================================
    CURVE MATH (shared by 3D preview, mini-icons, and the custom editor)
 ===================================================================== */
+// Each interior node may carry its own rounding as `r` (0-100, set in the
+// custom editor). Nodes without `r` -- every stock shape -- use roundPct.
+// Same math as the Studio's rebuildSmoothedCurve (per-node `round`), so a
+// custom order's STL matches what the customer saw here.
 function smoothCurve(nodes, roundPct){
-  const t = Math.min(0.48, (roundPct/100)*0.48);
-  if(nodes.length<3 || t<=0.001) return nodes.map(n=>({x:n.x,h:n.h}));
-  const out=[nodes[0]];
+  if(nodes.length<3) return nodes.map(n=>({x:n.x,h:n.h}));
+  const out=[{x:nodes[0].x, h:nodes[0].h}];
   for(let i=1;i<nodes.length-1;i++){
     const prev=nodes[i-1], cur=nodes[i], next=nodes[i+1];
+    const pct = (cur.r!==undefined && cur.r!==null) ? cur.r : roundPct;
+    const t = Math.min(0.48, (pct/100)*0.48);
+    if(t<=0.001){
+      if(out[out.length-1].x<cur.x) out.push({x:cur.x, h:cur.h});
+      continue;
+    }
     const a={x:cur.x-t*(cur.x-prev.x), h:cur.h-t*(cur.h-prev.h)};
     const b={x:cur.x+t*(next.x-cur.x), h:cur.h+t*(next.h-cur.h)};
     if(out[out.length-1].x<a.x) out.push(a);
@@ -2166,7 +2223,8 @@ function smoothCurve(nodes, roundPct){
     }
     out.push(b);
   }
-  out.push(nodes[nodes.length-1]);
+  const last = nodes[nodes.length-1];
+  out.push({x:last.x, h:last.h});
   const cleaned=[out[0]];
   for(let i=1;i<out.length;i++) if(out[i].x>cleaned[cleaned.length-1].x) cleaned.push(out[i]);
   return cleaned;
@@ -2273,7 +2331,7 @@ function getScaledCurve(){
   const length = Math.max(40, order.vaneLength);
   const raw = activeNodes();
   const scale = length / raw[raw.length-1].x;
-  const scaled = raw.map(n=>({x:n.x*scale, h:n.h}));
+  const scaled = raw.map(n=>({x:n.x*scale, h:n.h, r:n.r}));
   scaled[0].x = 0; scaled[scaled.length-1].x = length;
   return { length, curve: smoothCurve(scaled, activeRounding()), rawScaled: scaled };
 }
@@ -2428,7 +2486,8 @@ function updateOrderSummary(total){
     grid.innerHTML = cart.map(item => {
       const shapeName = shapeDisplayName(item.snapshot);
       const colorName = colorDisplayName(item.snapshot.color);
-      return `<div class="os-row"><span class="os-label"><span class="os-swatch" style="background:${item.snapshot.color}"></span>${shapeName} &middot; ${colorName} &middot; Pack of ${item.snapshot.packSize} &times;${item.snapshot.quantity}</span><span class="os-value">$${item.pricing.total}</span></div>`;
+      const feeNote = item.snapshot.shape==='custom' ? ` <span style="color:var(--muted-dim);">(incl. +$${CUSTOM_SHAPE_SURCHARGE}/pack custom shape fee)</span>` : '';
+      return `<div class="os-row"><span class="os-label"><span class="os-swatch" style="background:${item.snapshot.color}"></span>${shapeName} &middot; ${colorName} &middot; Pack of ${item.snapshot.packSize} &times;${item.snapshot.quantity}${feeNote}</span><span class="os-value">$${item.pricing.total}</span></div>`;
     }).join('');
     const subtotal = cartTotal(), packQty = cartPackQty();
     document.getElementById('osShipping').innerHTML = shippingValueHTML(subtotal, packQty);
@@ -2463,6 +2522,7 @@ function updateOrderSummary(total){
     ['Helical', helicalSummaryText()],
     ['Pack Size', 'Pack of ' + order.packSize],
     ['Quantity', order.quantity + ' pack' + (order.quantity==1?'':'s')],
+    ...(order.shape==='custom' ? [['Custom Shape Fee', `+$${CUSTOM_SHAPE_SURCHARGE} per pack (included in total)`]] : []),
   ];
   grid.innerHTML = rows.map(([label,value]) =>
     `<div class="os-row"><span class="os-label">${label}</span><span class="os-value">${value}</span></div>`
@@ -2587,7 +2647,7 @@ function renderCartItems(){
           <div class="cart-item-swatch" style="background:${s.color}"></div>
           <div class="cart-item-body">
             <div class="cart-item-title">${shapeName} &middot; ${colorName}</div>
-            <div class="cart-item-specs">${Math.round(s.vaneLength/25.4*100)/100}in &middot; ${s.fletchCount} vanes &middot; Pack of ${s.packSize}</div>
+            <div class="cart-item-specs">${Math.round(s.vaneLength/25.4*100)/100}in &middot; ${s.fletchCount} vanes &middot; Pack of ${s.packSize}${s.shape==='custom' ? `<br>Includes +$${CUSTOM_SHAPE_SURCHARGE}/pack custom shape fee` : ''}</div>
             <div class="cart-item-qty-row">
               <div class="cart-qty-stepper">
                 <button class="cart-qty-minus" data-id="${item.id}" aria-label="Decrease quantity">&minus;</button>
@@ -2839,7 +2899,7 @@ function applyRecommendation(key, angleDeg){
 // Diametral glue gap, matched to the Studio's tested value. Was 0.525 here
 // while the Studio had moved to 0.30 -- which meant this preview was drawing
 // a bore that no longer matched what actually shipped.
-const FIT_CLEARANCE = 0.075; // Oct 2026: tightened from 0.30 to match the Studio
+const FIT_CLEARANCE = 0.085; // Oct 2026: tightened from 0.30 to match the Studio
 // Was 0.60, a leftover from the deleted weight-class system (Standard vs
 // Ultralight). The Studio's actual tube wall -- what really gets printed --
 // is 0.30. This drove Rout in the live preview and the compare page's
@@ -2873,10 +2933,11 @@ function renderShapeCards(){
       }
       msgEl.textContent = '';
       if(customizeOpen){
-        loadShapeIntoEditor(s);
+        loadShapeIntoEditor(s, key);
         return;
       }
       order.shape = key;
+      resetCustomizeLinkLabel();
       // Clicking a shape loads its own designed length too, clamped to the
       // 35-100mm range we can produce. If you edit the length field
       // afterward, it rescales from there as normal -- this only sets the
@@ -2897,15 +2958,22 @@ function renderShapeCards(){
   });
 }
 
-function loadShapeIntoEditor(s){
+// A stock shape's points exactly as the editor shows them at the current
+// vane length (x to whole mm, height to 0.1mm). Shared by "load into
+// editor", Reset, and the did-they-actually-change-anything check, so all
+// three agree on what "unchanged" means.
+function stockEditorNodes(s){
   const length = Math.max(40, order.vaneLength);
   const scale = length / s.nodes[s.nodes.length-1].x;
   const scaled = s.nodes.map(n => ({ x: Math.round(n.x*scale), h: Math.round(n.h*10)/10 }));
   scaled[0].x = 0;
   scaled[scaled.length-1].x = Math.round(length);
-  cpNodes = scaled;
-  document.getElementById('cpRounding').value = s.rounding;
-  document.getElementById('cpRoundingVal').textContent = s.rounding+'%';
+  return scaled;
+}
+function loadShapeIntoEditor(s, key){
+  if(cpNodes.length) cpPushHistory(cpSnapshot());
+  if(key) cpBaseKey = key;
+  cpNodes = cpWithRounding(stockEditorNodes(s), s.rounding);
   cpSelected = Math.min(2, cpNodes.length-1);
   drawCPGraph();
   document.getElementById('customizePanel').scrollIntoView({behavior:'smooth', block:'center'});
@@ -3318,6 +3386,140 @@ document.getElementById('qtyPlus').addEventListener('click', ()=>{
 ===================================================================== */
 let cpNodes = [];
 const CP_OVERHANG_LIMIT = 40;
+const CP_MM_PER_IN = 25.4;
+let cpUnit = 'mm';          // display only -- every value is stored in mm
+let cpBaseKey = 'impact';   // stock shape the editor started from (Reset target)
+let cpFocused = false;      // keyboard shortcuts only act after clicking in the editor
+
+/* ---- undo / redo ------------------------------------------------------
+   Each snapshot is {nodes, rounding, sel}. A snapshot is taken BEFORE an
+   action and only pushed if the action actually changed something, so
+   simply clicking a point to select it never creates an empty undo step. */
+let cpHistory = [], cpFuture = [];
+function cpSnapshot(){
+  return { nodes: cpNodes.map(n=>({x:n.x,h:n.h,r:n.r})), sel: cpSelected };
+}
+function cpStateKey(snap){ return JSON.stringify(snap.nodes); }
+function cpPushHistory(before){
+  cpHistory.push(before);
+  if(cpHistory.length > 150) cpHistory.shift();
+  cpFuture = [];
+  cpUpdateUndoButtons();
+}
+function cpCommit(before){
+  if(before && cpStateKey(before) !== cpStateKey(cpSnapshot())) cpPushHistory(before);
+}
+function cpRestore(snap){
+  cpNodes = snap.nodes.map(n=>({x:n.x,h:n.h,r:n.r}));
+  cpSelected = Math.min(snap.sel, cpNodes.length-1);
+  drawCPGraph();
+}
+function cpUndo(){
+  if(!cpHistory.length) return;
+  cpFuture.push(cpSnapshot());
+  cpRestore(cpHistory.pop());
+  cpUpdateUndoButtons();
+}
+function cpRedo(){
+  if(!cpFuture.length) return;
+  cpHistory.push(cpSnapshot());
+  cpRestore(cpFuture.pop());
+  cpUpdateUndoButtons();
+}
+function cpUpdateUndoButtons(){
+  document.getElementById('cpUndo').classList.toggle('disabled', cpHistory.length===0);
+  document.getElementById('cpRedo').classList.toggle('disabled', cpFuture.length===0);
+}
+
+/* ---- corner rounding -------------------------------------------------- */
+function roundingLabel(v){
+  v = Number(v);
+  if(v<=0) return 'Sharp corners';
+  if(v<=25) return 'Slightly rounded';
+  if(v<=60) return 'Medium';
+  if(v<=90) return 'Rounded';
+  return 'Fully round';
+}
+// Interior points carry their own rounding `r`; the two end points never
+// round (they only have one neighbour), so they get none.
+function cpWithRounding(nodes, fallback){
+  return nodes.map((n,i)=>{
+    const end = i===0 || i===nodes.length-1;
+    const r = end ? undefined : (n.r!==undefined && n.r!==null ? n.r : fallback);
+    return {x:n.x, h:n.h, r};
+  });
+}
+// Point the slider at the selected node's rounding (disabled on end points).
+function syncCPRoundingControl(){
+  const row = document.querySelector('.cp-smooth-row');
+  const slider = document.getElementById('cpRounding');
+  const n = cpNodes[cpSelected];
+  const isEnd = !n || cpSelected===0 || cpSelected===cpNodes.length-1;
+  row.classList.toggle('disabled', isEnd);
+  slider.disabled = isEnd;
+  if(isEnd){
+    document.getElementById('cpRoundingVal').textContent = 'End points stay sharp';
+  } else {
+    slider.value = n.r!==undefined ? n.r : 100;
+    document.getElementById('cpRoundingVal').textContent = roundingLabel(slider.value);
+  }
+}
+
+/* ---- units ------------------------------------------------------------ */
+function cpToDisplay(mm){ return cpUnit==='in' ? mm/CP_MM_PER_IN : mm; }
+function cpFromDisplay(v){ return cpUnit==='in' ? v*CP_MM_PER_IN : v; }
+function cpApplyUnitLabels(){
+  const u = cpUnit;
+  document.querySelectorAll('.cpUnitLbl').forEach(el=>el.textContent = u);
+  document.getElementById('cpAxisY').textContent = `HEIGHT (${u}) — Y`;
+  document.getElementById('cpAxisX').innerHTML = `LENGTH ALONG VANE (${u}) — X &nbsp;·&nbsp; FRONT → BACK`;
+  document.getElementById('cpNodeX').step = u==='in' ? '0.01' : '1';
+  document.getElementById('cpNodeY').step = u==='in' ? '0.005' : '0.1';
+}
+document.querySelectorAll('.cp-unitbtn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    cpUnit = btn.dataset.cpunit;
+    document.querySelectorAll('.cp-unitbtn').forEach(b=>b.classList.toggle('active', b===btn));
+    cpApplyUnitLabels();
+    drawCPGraph();
+  });
+});
+
+/* ---- did the customer actually change anything? -----------------------
+   Returns the key of the stock shape the editor currently matches exactly
+   (same points and same rounding at this vane length), or null if it's a
+   genuinely new shape. Checks every stock shape, not just the one they
+   started from, so loading GHOST and clicking Use This Shape is free. */
+function cpMatchingStockShape(){
+  for(const [key, s] of Object.entries(SHAPES)){
+    if(!s.stock) continue;
+    const ref = stockEditorNodes(s);
+    if(ref.length !== cpNodes.length) continue;
+    const same = ref.every((n,i)=>{
+      if(Math.abs(n.x-cpNodes[i].x)>=0.5 || Math.abs(n.h-cpNodes[i].h)>=0.05) return false;
+      const end = i===0 || i===ref.length-1;
+      return end || Number(cpNodes[i].r)===Number(s.rounding);
+    });
+    if(same) return key;
+  }
+  return null;
+}
+function cpUpdateFeeStatus(){
+  const el = document.getElementById('cpFeeStatus');
+  const match = cpMatchingStockShape();
+  if(match){
+    el.className = 'unchanged';
+    el.textContent = `No changes: this is still ${SHAPES[match].name}, so stock price applies.`;
+  } else {
+    el.className = 'changed';
+    el.textContent = `Shape changed: the +$${CUSTOM_SHAPE_SURCHARGE} per pack custom fee will apply.`;
+  }
+}
+document.querySelectorAll('.cpFeeAmt').forEach(el=>el.textContent = CUSTOM_SHAPE_SURCHARGE);
+
+function resetCustomizeLinkLabel(){
+  document.getElementById('customizeLink').innerHTML = '<span>✎</span> Design Your Own Custom Shape';
+}
 
 document.getElementById('customizeLink').addEventListener('click', ()=>{
   customizeOpen = !customizeOpen;
@@ -3325,19 +3527,23 @@ document.getElementById('customizeLink').addEventListener('click', ()=>{
   const link = document.getElementById('customizeLink');
   panel.style.display = customizeOpen ? 'block' : 'none';
   link.classList.toggle('active', customizeOpen);
+  document.getElementById('cpResultMsg').textContent = '';
   if(customizeOpen){
     const src = order.shape==='custom' && order.customNodes ? order.customNodes : getScaledCurve().rawScaled;
-    cpNodes = src.map(n=>({x:Math.round(n.x), h:Math.round(n.h*10)/10}));
-    document.getElementById('cpRounding').value = order.shape==='custom' ? order.customRounding : SHAPES[order.shape].rounding;
-    document.getElementById('cpRoundingVal').textContent = document.getElementById('cpRounding').value+'%';
+    const fallback = order.shape==='custom' ? order.customRounding : SHAPES[order.shape].rounding;
+    cpNodes = cpWithRounding(src.map(n=>({x:Math.round(n.x), h:Math.round(n.h*10)/10, r:n.r})), fallback);
+    cpBaseKey = order.shape==='custom' ? (order.customBaseShape || 'impact') : order.shape;
+    cpHistory = []; cpFuture = []; cpUpdateUndoButtons();
+    cpSelected = Math.min(cpSelected, cpNodes.length-1);
+    cpApplyUnitLabels();
     drawCPGraph();
   }
 });
 
 const cpSvg = document.getElementById('cpGraph');
-const cpPadL=34, cpPadR=14, cpPadT=12, cpPadB=22;
+const cpPadL=40, cpPadR=14, cpPadT=12, cpPadB=22;
 let cpW=700, cpH=200, cpPlotW=652, cpPlotH=166;
-let cpSelected = 1, cpDragging = false;
+let cpSelected = 1, cpDragging = false, cpDragBefore = null;
 
 function cpRefreshDims(){
   const r = cpSvg.getBoundingClientRect();
@@ -3351,55 +3557,62 @@ function cpYPix(h){ return cpPadT + cpPlotH - (h/cpMaxH())*cpPlotH; }
 function cpPixToX(px){ return Math.max(0, Math.min(order.vaneLength, (px-cpPadL)/cpPlotW*order.vaneLength)); }
 function cpPixToH(py){ return Math.max(0, Math.min(cpMaxH(), (cpPadT+cpPlotH-py)/cpPlotH*cpMaxH())); }
 
+function cpSvgEl(tag, attrs){
+  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for(const k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
 function drawCPGraph(){
   cpRefreshDims();
   cpSvg.innerHTML = '';
-  const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+  const g = cpSvgEl('g', {});
   cpSvg.appendChild(g);
 
-  for(let x=0; x<=order.vaneLength+0.001; x+=10){
+  // Gridlines in whichever unit is showing: every 10mm / 2mm-ish, or every
+  // 0.25in along the length and 0.1in in height.
+  const xStepMm = cpUnit==='in' ? 0.25*CP_MM_PER_IN : 10;
+  const yStepMm = cpUnit==='in' ? 0.1*CP_MM_PER_IN : 5;
+  for(let x=0; x<=order.vaneLength+0.001; x+=xStepMm){
     const px = cpXPix(Math.min(x,order.vaneLength));
-    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
-    line.setAttribute('x1',px); line.setAttribute('x2',px); line.setAttribute('y1',cpPadT); line.setAttribute('y2',cpPadT+cpPlotH);
-    line.setAttribute('stroke','#2c2a24'); line.setAttribute('stroke-width','1');
-    g.appendChild(line);
-    const xt = document.createElementNS('http://www.w3.org/2000/svg','text');
-    xt.setAttribute('x',px); xt.setAttribute('y',cpPadT+cpPlotH+14);
-    xt.setAttribute('fill','#726b5b'); xt.setAttribute('font-size','9.5'); xt.setAttribute('text-anchor','middle');
-    xt.textContent = Math.round(x);
+    g.appendChild(cpSvgEl('line', {x1:px, x2:px, y1:cpPadT, y2:cpPadT+cpPlotH, stroke:'#2c2a24', 'stroke-width':1}));
+    const xt = cpSvgEl('text', {x:px, y:cpPadT+cpPlotH+14, fill:'#726b5b', 'font-size':9.5, 'text-anchor':'middle'});
+    xt.textContent = cpUnit==='in' ? (x/CP_MM_PER_IN).toFixed(2) : Math.round(x);
     g.appendChild(xt);
   }
-  for(let y=0; y<=20; y+=5){
+  for(let y=0; y<=cpMaxH()+0.001; y+=yStepMm){
     const py = cpYPix(y);
-    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
-    line.setAttribute('x1',cpPadL); line.setAttribute('x2',cpPadL+cpPlotW); line.setAttribute('y1',py); line.setAttribute('y2',py);
-    line.setAttribute('stroke','#2c2a24'); line.setAttribute('stroke-width','1');
-    g.appendChild(line);
-    const yt = document.createElementNS('http://www.w3.org/2000/svg','text');
-    yt.setAttribute('x',cpPadL-7); yt.setAttribute('y',py+3);
-    yt.setAttribute('fill','#726b5b'); yt.setAttribute('font-size','9.5'); yt.setAttribute('text-anchor','end');
-    yt.textContent = y;
+    g.appendChild(cpSvgEl('line', {x1:cpPadL, x2:cpPadL+cpPlotW, y1:py, y2:py, stroke:'#2c2a24', 'stroke-width':1}));
+    const yt = cpSvgEl('text', {x:cpPadL-7, y:py+3, fill:'#726b5b', 'font-size':9.5, 'text-anchor':'end'});
+    yt.textContent = cpUnit==='in' ? (y/CP_MM_PER_IN).toFixed(1) : Math.round(y);
     g.appendChild(yt);
   }
 
-  const roundPct = parseFloat(document.getElementById('cpRounding').value);
-  const curve = smoothCurve(cpNodes, roundPct);
+  const curve = smoothCurve(cpNodes, 100);
+  const anyRound = cpNodes.some(n=>n.r>0);
   const pts = curve.map(n=>`${cpXPix(n.x)},${cpYPix(n.h)}`).join(' ');
-  const poly = document.createElementNS('http://www.w3.org/2000/svg','polygon');
-  poly.setAttribute('points', `${cpXPix(curve[0].x)},${cpYPix(0)} ${pts} ${cpXPix(curve[curve.length-1].x)},${cpYPix(0)}`);
-  poly.setAttribute('fill','rgba(209,106,53,0.16)');
-  g.appendChild(poly);
+  g.appendChild(cpSvgEl('polygon', {
+    points: `${cpXPix(curve[0].x)},${cpYPix(0)} ${pts} ${cpXPix(curve[curve.length-1].x)},${cpYPix(0)}`,
+    fill:'rgba(209,106,53,0.16)'
+  }));
+
+  // Dashed line through the raw points, so the effect of Corner Rounding is
+  // visible: the solid curve pulls away from it as rounding goes up.
+  if(anyRound){
+    g.appendChild(cpSvgEl('polyline', {
+      points: cpNodes.map(n=>`${cpXPix(n.x)},${cpYPix(n.h)}`).join(' '),
+      fill:'none', stroke:'#5a5446', 'stroke-width':1, 'stroke-dasharray':'3 3'
+    }));
+  }
 
   let worst = 0;
   for(let i=0;i<curve.length-1;i++){
     const dx=curve[i+1].x-curve[i].x, dh=Math.abs(curve[i+1].h-curve[i].h);
     const steep = dx>0.0001 && (dh/dx) > Math.tan(CP_OVERHANG_LIMIT*Math.PI/180);
     if(dx>0.0001) worst = Math.max(worst, Math.atan(dh/dx)*180/Math.PI);
-    const seg = document.createElementNS('http://www.w3.org/2000/svg','line');
-    seg.setAttribute('x1',cpXPix(curve[i].x)); seg.setAttribute('y1',cpYPix(curve[i].h));
-    seg.setAttribute('x2',cpXPix(curve[i+1].x)); seg.setAttribute('y2',cpYPix(curve[i+1].h));
-    seg.setAttribute('stroke', steep ? '#e05a3d' : '#d16a35');
-    seg.setAttribute('stroke-width', steep ? '4' : '2.5');
+    const seg = cpSvgEl('line', {
+      x1:cpXPix(curve[i].x), y1:cpYPix(curve[i].h), x2:cpXPix(curve[i+1].x), y2:cpYPix(curve[i+1].h),
+      stroke: steep ? '#e05a3d' : '#d16a35', 'stroke-width': steep ? 4 : 2.5
+    });
     if(steep) seg.setAttribute('stroke-dasharray','6 4');
     g.appendChild(seg);
   }
@@ -3407,23 +3620,35 @@ function drawCPGraph(){
     ? 'This part of the curve is quite steep — try flattening it or lengthening the vane.' : '';
 
   cpNodes.forEach((n,i)=>{
-    const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
-    c.setAttribute('cx', cpXPix(n.x)); c.setAttribute('cy', cpYPix(n.h)); c.setAttribute('r', i===cpSelected?7:5.5);
-    c.setAttribute('fill', i===cpSelected ? '#e05a1f' : '#f2efe6');
-    c.setAttribute('stroke', '#0f0f0e'); c.setAttribute('stroke-width','1.5');
+    const c = cpSvgEl('circle', {
+      cx:cpXPix(n.x), cy:cpYPix(n.h), r: i===cpSelected?7:5.5,
+      fill: i===cpSelected ? '#e05a1f' : '#f2efe6', stroke:'#0f0f0e', 'stroke-width':1.5
+    });
     c.style.cursor = 'pointer';
-    c.addEventListener('pointerdown', e=>{ e.stopPropagation(); cpSelected=i; cpDragging=true; drawCPGraph(); });
+    c.addEventListener('pointerdown', e=>{
+      e.stopPropagation();
+      cpDragBefore = cpSnapshot();
+      cpSelected=i; cpDragging=true; drawCPGraph();
+    });
     g.appendChild(c);
   });
 
   updateCPCoordFields();
+  syncCPRoundingControl();
+  cpUpdateFeeStatus();
 }
 function updateCPCoordFields(){
   const n = cpNodes[cpSelected];
   const xInput = document.getElementById('cpNodeX'), yInput = document.getElementById('cpNodeY');
-  xInput.value = n.x; yInput.value = n.h;
+  if(cpUnit==='in'){
+    xInput.value = (n.x/CP_MM_PER_IN).toFixed(3);
+    yInput.value = (n.h/CP_MM_PER_IN).toFixed(3);
+  } else {
+    xInput.value = n.x; yInput.value = n.h;
+  }
   const isEndpoint = cpSelected===0 || cpSelected===cpNodes.length-1;
   xInput.disabled = isEndpoint;
+  document.getElementById('cpDeleteNode').classList.toggle('disabled', isEndpoint || cpNodes.length<=2);
 }
 function cpSvgPoint(e){
   const pt = cpSvg.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY;
@@ -3431,11 +3656,12 @@ function cpSvgPoint(e){
 }
 cpSvg.addEventListener('pointerdown', e=>{
   if(e.target.tagName==='circle') return;
+  cpDragBefore = cpSnapshot();
   const p = cpSvgPoint(e);
   const xmm = Math.round(cpPixToX(p.x)), hmm = Math.round(cpPixToH(p.y)*10)/10;
   let insertAt = cpNodes.length-1;
   for(let i=0;i<cpNodes.length-1;i++){ if(xmm>=cpNodes[i].x && xmm<=cpNodes[i+1].x){ insertAt=i+1; break; } }
-  cpNodes.splice(insertAt,0,{x:xmm,h:hmm});
+  cpNodes.splice(insertAt,0,{x:xmm,h:hmm,r:cpNewPointRounding(insertAt)});
   cpSelected = insertAt; cpDragging = true;
   drawCPGraph();
 });
@@ -3447,53 +3673,152 @@ window.addEventListener('pointermove', e=>{
   if(i>0 && i<cpNodes.length-1) xmm = Math.max(cpNodes[i-1].x+1, Math.min(cpNodes[i+1].x-1, xmm));
   else if(i===0) xmm = 0;
   else xmm = order.vaneLength;
-  cpNodes[i] = {x:xmm, h:hmm};
+  cpNodes[i] = {x:xmm, h:hmm, r:cpNodes[i].r};
   drawCPGraph();
 });
-window.addEventListener('pointerup', ()=>{ cpDragging=false; });
+window.addEventListener('pointerup', ()=>{
+  if(cpDragging) cpCommit(cpDragBefore);
+  cpDragging=false; cpDragBefore=null;
+});
+// Keyboard shortcuts only after the customer has clicked inside the editor,
+// so arrow keys still scroll the page normally everywhere else.
+document.addEventListener('pointerdown', e=>{
+  cpFocused = customizeOpen && !!e.target.closest('#customizePanel');
+}, true);
+
+// New points copy the rounding of the interior point next to them, so
+// adding detail to a fully-round shape doesn't drop a sharp corner into it.
+function cpNewPointRounding(at){
+  const left = cpNodes[at-1], right = cpNodes[at];
+  const pick = [left, right].find(n=>n && n.r!==undefined);
+  return pick ? pick.r : 100;
+}
+let cpSliderBefore = null;
 document.getElementById('cpRounding').addEventListener('input', e=>{
-  document.getElementById('cpRoundingVal').textContent = e.target.value+'%';
+  const n = cpNodes[cpSelected];
+  if(!n || cpSelected===0 || cpSelected===cpNodes.length-1) return;
+  if(!cpSliderBefore) cpSliderBefore = cpSnapshot();   // state before this drag
+  n.r = Number(e.target.value);
   drawCPGraph();
 });
+document.getElementById('cpRounding').addEventListener('change', ()=>{
+  cpCommit(cpSliderBefore);
+  cpSliderBefore = null;
+});
+document.getElementById('cpRoundAll').addEventListener('click', ()=>{
+  const n = cpNodes[cpSelected];
+  const v = (n && n.r!==undefined) ? n.r : Number(document.getElementById('cpRounding').value);
+  const before = cpSnapshot();
+  cpNodes = cpWithRounding(cpNodes.map(p=>({x:p.x,h:p.h})), v);
+  cpCommit(before);
+  drawCPGraph();
+});
+
 document.getElementById('cpAddNode').addEventListener('click', ()=>{
+  const before = cpSnapshot();
   let wIdx=0, wGap=-1;
   for(let i=0;i<cpNodes.length-1;i++){ const g=cpNodes[i+1].x-cpNodes[i].x; if(g>wGap){wGap=g; wIdx=i;} }
+  if(wGap < 2) return; // no room for another whole-mm point
   const xmm = Math.round((cpNodes[wIdx].x+cpNodes[wIdx+1].x)/2);
-  const roundPct = parseFloat(document.getElementById('cpRounding').value);
-  const hmm = Math.round(curveHeightAt(smoothCurve(cpNodes,roundPct), xmm)*10)/10;
-  cpNodes.splice(wIdx+1,0,{x:xmm,h:hmm});
+  const hmm = Math.round(curveHeightAt(smoothCurve(cpNodes,100), xmm)*10)/10;
+  cpNodes.splice(wIdx+1,0,{x:xmm,h:hmm,r:cpNewPointRounding(wIdx+1)});
   cpSelected = wIdx+1;
+  cpCommit(before);
   drawCPGraph();
 });
-document.getElementById('cpDeleteNode').addEventListener('click', ()=>{
+function cpDeleteSelected(){
   if(cpSelected===0 || cpSelected===cpNodes.length-1 || cpNodes.length<=2) return;
+  const before = cpSnapshot();
   cpNodes.splice(cpSelected,1);
   cpSelected = Math.max(0,cpSelected-1);
+  cpCommit(before);
+  drawCPGraph();
+}
+document.getElementById('cpDeleteNode').addEventListener('click', cpDeleteSelected);
+document.getElementById('cpUndo').addEventListener('click', cpUndo);
+document.getElementById('cpRedo').addEventListener('click', cpRedo);
+document.getElementById('cpReset').addEventListener('click', ()=>{
+  const base = SHAPES[cpBaseKey] || SHAPES.impact;
+  const before = cpSnapshot();
+  cpNodes = cpWithRounding(stockEditorNodes(base), base.rounding);
+  cpSelected = Math.min(2, cpNodes.length-1);
+  cpCommit(before);
   drawCPGraph();
 });
+
 document.getElementById('cpNodeX').addEventListener('change', e=>{
   const i = cpSelected;
   if(i===0 || i===cpNodes.length-1) return;
-  let v = Math.round(parseFloat(e.target.value));
+  const before = cpSnapshot();
+  let v = Math.round(cpFromDisplay(parseFloat(e.target.value)));
   if(isNaN(v)) v = cpNodes[i].x;
   v = Math.max(cpNodes[i-1].x+1, Math.min(cpNodes[i+1].x-1, v));
   cpNodes[i].x = v;
+  cpCommit(before);
   drawCPGraph();
 });
 document.getElementById('cpNodeY').addEventListener('change', e=>{
-  let v = Math.round(parseFloat(e.target.value)*10)/10;
+  const before = cpSnapshot();
+  let v = Math.round(cpFromDisplay(parseFloat(e.target.value))*10)/10;
   if(isNaN(v) || v<0) v = 0;
-  if(v>20) v = 20;
+  if(v>cpMaxH()) v = cpMaxH();
   cpNodes[cpSelected].h = v;
+  cpCommit(before);
   drawCPGraph();
 });
+
+document.addEventListener('keydown', e=>{
+  if(!customizeOpen || !cpFocused) return;
+  const tag = (e.target.tagName||'').toLowerCase();
+  const typing = tag==='input' && e.target.type!=='range' || tag==='textarea';
+  const mod = e.ctrlKey || e.metaKey;
+  if(mod && !typing && e.key.toLowerCase()==='z'){ e.preventDefault(); e.shiftKey ? cpRedo() : cpUndo(); return; }
+  if(mod && !typing && e.key.toLowerCase()==='y'){ e.preventDefault(); cpRedo(); return; }
+  if(typing || mod || tag==='input') return;
+  if(e.key==='Delete' || e.key==='Backspace'){ e.preventDefault(); cpDeleteSelected(); return; }
+  const i = cpSelected, n = cpNodes[i];
+  if(!n) return;
+  const before = cpSnapshot();
+  if(e.key==='ArrowUp' || e.key==='ArrowDown'){
+    e.preventDefault();
+    const step = (e.shiftKey ? 1 : 0.1) * (e.key==='ArrowUp' ? 1 : -1);
+    n.h = Math.max(0, Math.min(cpMaxH(), Math.round((n.h+step)*10)/10));
+  } else if(e.key==='ArrowLeft' || e.key==='ArrowRight'){
+    e.preventDefault();
+    if(i===0 || i===cpNodes.length-1) return;
+    const step = (e.shiftKey ? 5 : 1) * (e.key==='ArrowRight' ? 1 : -1);
+    n.x = Math.max(cpNodes[i-1].x+1, Math.min(cpNodes[i+1].x-1, n.x+step));
+  } else return;
+  cpCommit(before);
+  drawCPGraph();
+});
+
 document.getElementById('cpUseShape').addEventListener('click', ()=>{
-  order.shape = 'custom';
-  order.customNodes = cpNodes.map(n=>({x:n.x,h:n.h}));
-  order.customRounding = parseFloat(document.getElementById('cpRounding').value);
+  const msg = document.getElementById('cpResultMsg');
+  const match = cpMatchingStockShape();
+  if(match){
+    // Nothing actually changed -- keep (or switch to) the stock shape, so
+    // the customer is not charged the custom fee for an unmodified curve.
+    order.shape = match;
+    order.customNodes = null;
+    resetCustomizeLinkLabel();
+    document.getElementById('customizeLink').classList.remove('active');
+    msg.style.color = 'var(--good)';
+    msg.textContent = `No changes made, so you're getting the stock ${SHAPES[match].name} shape. No custom fee.`;
+  } else {
+    order.shape = 'custom';
+    // Each interior node carries its own rounding as `r`; customRounding is
+    // kept only as a fallback for anything reading the old single value.
+    order.customNodes = cpNodes.map((n,i)=> (i===0||i===cpNodes.length-1) ? {x:n.x,h:n.h} : {x:n.x,h:n.h,r:n.r});
+    const rs = cpNodes.filter(n=>n.r!==undefined).map(n=>n.r);
+    order.customRounding = rs.length ? rs[0] : 100;
+    order.customBaseShape = cpBaseKey;
+    document.getElementById('customizeLink').innerHTML = '<span>✓</span> Custom shape selected — click to edit again';
+    document.getElementById('customizeLink').classList.add('active');
+    msg.style.color = 'var(--muted)';
+    msg.innerHTML = `Custom shape saved. A <b style="color:var(--text);">+$${CUSTOM_SHAPE_SURCHARGE} per pack</b> custom shape fee is now included in your price.`;
+  }
   document.getElementById('customizePanel').style.display = 'none';
-  document.getElementById('customizeLink').innerHTML = '<span>✓</span> Custom shape selected — click to edit again';
-  document.getElementById('customizeLink').classList.add('active');
   customizeOpen = false;
   renderShapeCards();
   render();
