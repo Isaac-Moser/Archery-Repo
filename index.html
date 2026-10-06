@@ -884,7 +884,7 @@
     <div class="stage-badge">Live Preview</div>
     <div class="arrow-view-btn" id="arrowViewBtn">See on Arrow</div>
     <div class="arrow-view-note" id="arrowViewNote">Illustrative arrow length — not your exact arrow.</div>
-    <div class="pin-toggle-btn" id="pinToggleBtn" title="Pinned: the preview stays on screen while you scroll. Unpin to let it scroll away.">📌 Unpin</div>
+    <div class="pin-toggle-btn" id="pinToggleBtn" title="Keep the preview at the top of the screen while you scroll down through the options">📌 Pin to Top of Page</div>
     <div class="view-ctrls" id="viewCtrls">
       <button type="button" class="view-ctrl" id="zoomInBtn" title="Zoom in">+</button>
       <button type="button" class="view-ctrl" id="zoomOutBtn" title="Zoom out">&minus;</button>
@@ -1890,14 +1890,8 @@ document.getElementById('focusVaneBtn').addEventListener('click', ()=>{
   rotY = 1.15; rotX = -0.15; // keep the same broadside angle as the arrow view
 });
 function updateCamera(){
-  if(isDragging){
-    // live drag already applied directly in pointermove above
-  } else if(Math.abs(rotVelY)>0.0001 || Math.abs(rotVelX)>0.0001){
-    // momentum: keep coasting after release, gradually slowing down
-    rotY += rotVelY; rotX += rotVelX;
-    rotX = Math.max(-1.3, Math.min(1.3, rotX));
-    rotVelY *= 0.92; rotVelX *= 0.92;
-  }
+  // No momentum: the model stops exactly where you let go, so a view you
+  // lined up stays lined up. (Rotation is applied directly in pointermove.)
   camera.position.x = lookAtX + camDist*Math.sin(rotY)*Math.cos(rotX);
   camera.position.z = lookAtZ + camDist*Math.cos(rotY)*Math.cos(rotX);
   camera.position.y = camDist*Math.sin(rotX)+lookAtY;
@@ -4496,7 +4490,7 @@ window.addEventListener('resize', ()=>{ headerH = setHeaderHeightVar(); });
 
 const stageFrameEl = document.querySelector('.stage-frame');
 const stageSentinelEl = document.getElementById('stageSentinel');
-let previewPinned = true; // when false, .preview-unpinned forces static positioning -- the preview
+let previewPinned = false; // starts unpinned; when false, .preview-unpinned forces static positioning -- the preview
                            // stops following scroll entirely and stays wherever it naturally sits
                            // (the top of the page), until the button up there is clicked again.
 const pinToggleBtn = document.getElementById('pinToggleBtn');
@@ -4504,11 +4498,16 @@ function setPreviewPinned(pinned){
   previewPinned = pinned;
   stageFrameEl.classList.toggle('preview-unpinned', !pinned);
   if(!pinned) stageFrameEl.classList.remove('stuck'); // back to full-size default preview
-  pinToggleBtn.textContent = pinned ? '📌 Unpin' : '📌 Pin';
+  // Pinning while already scrolled down: go straight to the compact strip
+  // instead of waiting for the next scroll to notice.
+  else if(stageSentinelEl) stageFrameEl.classList.toggle('stuck', stageSentinelEl.getBoundingClientRect().top < headerH);
+  pinToggleBtn.textContent = pinned ? '📌 Unpin' : '📌 Pin to Top of Page';
+  pinToggleBtn.title = pinned ? 'Let the preview scroll away with the page' : 'Keep the preview at the top of the screen while you scroll down through the options';
   resizeRenderer();
   render();
 }
 pinToggleBtn?.addEventListener('click', ()=> setPreviewPinned(!previewPinned));
+setPreviewPinned(false); // default: unpinned
 if(stageFrameEl && stageSentinelEl && 'IntersectionObserver' in window){
   const stageIO = new IntersectionObserver((entries)=>{
     entries.forEach(en=>{
