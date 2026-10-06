@@ -98,11 +98,22 @@
   #stats b{ color:var(--text); }
   #warn{ margin-top:8px; font-size:11.5px; color:#ffb37a; line-height:1.5; display:none; }
   hr{ border:none; border-top:1px solid var(--line); margin:16px 0; }
+  #orderSummaryBox{ margin-top:8px; padding:9px 11px; background:var(--panel2); border:1px solid var(--line); border-radius:6px; font-size:11.5px; line-height:1.55; }
+  #orderSummaryBox .row{ display:flex; justify-content:space-between; gap:8px; }
+  #orderSummaryBox .row span:first-child{ color:var(--muted); }
+  #orderSummaryBox .row span:last-child{ color:var(--text); text-align:right; }
+  #orderSummaryBox .head{ font-weight:700; color:var(--text); margin-bottom:4px; }
+  #unmatchedArrowBanner.hard{ background:rgba(255,60,60,0.16)!important; border-color:#ff4d4d!important; color:#ffb0a0!important; }
+  #unmatchedArrowBanner a{ color:#ffd2c4; cursor:pointer; text-decoration:underline; }
+  #downloadBtn.blocked{ background:#5a2a20!important; border-color:#ff8a6a!important; color:#ffd2c4!important; cursor:not-allowed; }
+  .mmread{ text-transform:none; letter-spacing:0; color:var(--accent); font-family:var(--mono); }
   #status{ font-size:11.5px; color:var(--accent2); min-height:14px; margin-top:6px; }
 
   #right{ flex:1; display:flex; flex-direction:column; min-width:0; }
   #viewer{ flex:1; position:relative; min-height:120px; }
   #canvasHost{ width:100%; height:100%; }
+  #viewBtns{ position:absolute; top:10px; right:10px; display:flex; gap:6px; }
+  #viewBtns .btn{ flex:none; }
   #hint{
     position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
     font-size:11px; color:var(--muted); background:rgba(20,24,29,0.7); padding:5px 12px; border-radius:20px;
@@ -196,7 +207,7 @@
 
   <div class="group">
     <label>Paste Order From Email</label>
-    <textarea id="orderPasteBox" rows="4" placeholder="Paste the &quot;raw profile JSON (backup only)&quot; block from the bottom of the order email here"></textarea>
+    <textarea id="orderPasteBox" rows="4" placeholder="Open the order email, press Ctrl+A then Ctrl+C, and paste the whole thing here"></textarea>
     <div class="btnrow" style="margin-top:6px;">
       <div class="btn small accentbtn" id="loadOrderBtn">Load Order</div>
     </div>
@@ -205,6 +216,7 @@
       <div id="orderItemLabel" style="font-size:11px; color:var(--muted); text-align:center; flex:2;"></div>
       <div class="btn small" id="nextItemBtn">Next &#9654;</div>
     </div>
+    <div id="orderSummaryBox" style="display:none;"></div>
     <div id="unmatchedArrowBanner" style="display:none; margin-top:8px; padding:9px 11px; background:rgba(255,138,106,0.12); border:1px solid #ff8a6a; border-radius:6px; font-size:11.5px; color:#ff8a6a; line-height:1.4;"></div>
   </div>
 
@@ -232,8 +244,8 @@
   <hr>
 
   <div class="group">
-    <label>Vane Length (mm)</label>
-    <input type="number" id="vaneLength" value="70" step="1">
+    <label>Vane Length (in) <span class="mmread" id="vaneLengthMM"></span></label>
+    <input type="number" id="vaneLength" value="2.756" step="0.001">
   </div>
 
   <div class="group">
@@ -247,8 +259,8 @@
   </div>
 
   <div class="group">
-    <label>Shaft Outside Diameter (mm)</label>
-    <input type="number" id="shaftOD" value="6.1468" step="0.0001">
+    <label>Shaft Outside Diameter (in) <span class="mmread" id="shaftODMM"></span></label>
+    <input type="number" id="shaftOD" value="0.2420" step="0.0001">
   </div>
 
   <div class="group">
@@ -294,7 +306,7 @@
       <div class="btn" data-helical-angle="5">5&deg;</div>
       <div class="btn" data-helical-angle="6">6&deg;</div>
     </div>
-    <div style="font-size:11px; color:var(--muted); margin-top:6px;">= <span id="helicalPerInVal">0.00</span>&deg;/in &middot; <span id="helicalTotalVal">0.0</span>&deg; rotation around the tube for this <span id="helicalLenVal">70</span>mm vane</div>
+    <div style="font-size:11px; color:var(--muted); margin-top:6px;">= <span id="helicalPerInVal">0.00</span>&deg;/in &middot; <span id="helicalTotalVal">0.0</span>&deg; rotation around the tube for this <span id="helicalLenVal">2.76in</span> vane</div>
     <details style="margin-top:8px;">
       <summary style="font-size:11px; color:var(--muted); cursor:pointer;">Set exact &deg;/in instead (for testing beyond the 1-6&deg; range)</summary>
       <div class="slider-row" style="margin-top:6px;">
@@ -324,6 +336,7 @@
 
   <hr>
   <button id="downloadBtn" class="btn" style="width:100%; background:var(--accent2); border-color:var(--accent2); color:#08130a; font-weight:700; padding:12px;">Download STL</button>
+  <div style="font-size:11px; color:var(--muted); margin-top:6px; word-break:break-all;">Saves as: <span id="stlNamePreview" style="color:var(--text); font-family:var(--mono);">--</span></div>
 
   <hr>
   <div style="font-size:11px; color:var(--muted); margin-bottom:8px;">
@@ -335,7 +348,10 @@
 <div id="right">
   <div id="viewer">
     <div id="canvasHost"></div>
-    <div id="hint">Drag to rotate · scroll to zoom</div>
+    <div id="hint">Drag to rotate · Right-drag or Shift-drag to move · Scroll to zoom at the cursor · Double-click to zoom in</div>
+    <div id="viewBtns">
+      <div class="btn small" id="studioResetView" title="Put the camera back where it started">Reset View</div>
+    </div>
   </div>
 
   <div id="resizeHandle" title="Drag to resize"><div id="resizeGrip"></div></div>
@@ -404,26 +420,79 @@ scene.add(new THREE.AmbientLight(0x8899aa,0.55));
 const modelGroup = new THREE.Group();
 scene.add(modelGroup);
 
-let isDragging=false, prevX=0, prevY=0, rotY=0.6, rotX=-0.25, camDist=90;
-renderer.domElement.addEventListener('pointerdown', e=>{isDragging=true; prevX=e.clientX; prevY=e.clientY;});
-window.addEventListener('pointerup', ()=>isDragging=false);
-window.addEventListener('pointermove', e=>{
-  if(!isDragging) return;
-  const dx=e.clientX-prevX, dy=e.clientY-prevY;
-  rotY -= dx*0.008; rotX += dy*0.008;
-  rotX = Math.max(-1.3, Math.min(1.3, rotX));
+let isDragging=false, isPanning=false, prevX=0, prevY=0, rotY=0.6, rotX=-0.25, camDist=90;
+let lookX=0, lookY=15, lookZ=0;
+function resetStudioView(){ rotY=0.6; rotX=-0.25; camDist=90; lookX=0; lookY=15; lookZ=0; }
+renderer.domElement.addEventListener('contextmenu', e=>e.preventDefault());
+renderer.domElement.addEventListener('pointerdown', e=>{
+  isPanning = e.button===2 || e.shiftKey;
+  isDragging = !isPanning;
   prevX=e.clientX; prevY=e.clientY;
 });
+window.addEventListener('pointerup', ()=>{ isDragging=false; isPanning=false; });
+window.addEventListener('pointermove', e=>{
+  if(!isDragging && !isPanning) return;
+  const dx=e.clientX-prevX, dy=e.clientY-prevY;
+  prevX=e.clientX; prevY=e.clientY;
+  if(isPanning){
+    // move the target along the camera's own right/up directions
+    const fx=-Math.sin(rotY)*Math.cos(rotX), fz=-Math.cos(rotY)*Math.cos(rotX);
+    const rx=-fz, rz=fx, rl=Math.hypot(rx,rz)||1;
+    const scale = 2*camDist*Math.tan(22.5*Math.PI/180)/Math.max(1,host.clientHeight);
+    lookX += (-rx/rl*dx)*scale; lookZ += (-rz/rl*dx)*scale; lookY += dy*scale*Math.cos(rotX);
+    return;
+  }
+  rotY -= dx*0.008; rotX += dy*0.008;
+  rotX = Math.max(-1.3, Math.min(1.3, rotX));
+});
+// Zoom toward whatever is under the cursor (the point stays put on screen).
+function studioZoomAt(clientX, clientY, factor){
+  let p = null;
+  try{
+    updateCamera(); camera.updateMatrixWorld();
+    const rect = renderer.domElement.getBoundingClientRect();
+    const v = new THREE.Vector3(((clientX-rect.left)/rect.width)*2-1, -((clientY-rect.top)/rect.height)*2+1, 0.5).unproject(camera);
+    const cam = camera.position.clone();
+    p = pickPointOnAxis(cam, v.sub(cam).normalize(), {x:lookX, y:lookY, z:lookZ});
+  }catch(err){ p = null; }
+  const old = camDist;
+  camDist = Math.max(8, Math.min(400, camDist*factor));
+  const k = 1 - camDist/old;
+  if(!p || Math.abs(k) < 1e-9) return;
+  lookX += (p.x-lookX)*k; lookY += (p.y-lookY)*k; lookZ += (p.z-lookZ)*k;
+}
+// The vane (and the arrow) sit along the z axis. Find where the cursor's
+// line of sight passes closest to that axis; if it passes near the part,
+// that's the spot being pointed at. Otherwise fall back to the plane
+// through the current target.
+function pickPointOnAxis(camPos, dir, look){
+  const w0x = camPos.x, w0y = camPos.y, w0z = camPos.z;      // ray origin minus axis origin (0,0,0)
+  const b = dir.z, d = dir.x*w0x + dir.y*w0y + dir.z*w0z, e = w0z;
+  const denom = 1 - b*b;                                      // a=|dir|^2=1, c=|axis|^2=1
+  if(denom > 1e-6){
+    const t = (b*e - d)/denom;
+    if(t > 0){
+      const px = camPos.x + dir.x*t, py = camPos.y + dir.y*t, pz = camPos.z + dir.z*t;
+      if(Math.hypot(px, py) < 25) return {x:px, y:py, z:pz};
+    }
+  }
+  const n = {x:look.x-camPos.x, y:look.y-camPos.y, z:look.z-camPos.z};
+  const nl = Math.hypot(n.x,n.y,n.z)||1; n.x/=nl; n.y/=nl; n.z/=nl;
+  const den = dir.x*n.x + dir.y*n.y + dir.z*n.z;
+  if(Math.abs(den) < 1e-6) return null;
+  const t = ((look.x-camPos.x)*n.x + (look.y-camPos.y)*n.y + (look.z-camPos.z)*n.z)/den;
+  return {x:camPos.x+dir.x*t, y:camPos.y+dir.y*t, z:camPos.z+dir.z*t};
+}
 renderer.domElement.addEventListener('wheel', e=>{
-  camDist *= (1 + e.deltaY*0.001);
-  camDist = Math.max(15, Math.min(400, camDist));
   e.preventDefault();
+  studioZoomAt(e.clientX, e.clientY, Math.exp(e.deltaY*0.0015));
 }, {passive:false});
+renderer.domElement.addEventListener('dblclick', e=> studioZoomAt(e.clientX, e.clientY, 0.5));
 function updateCamera(){
-  camera.position.x = camDist*Math.sin(rotY)*Math.cos(rotX);
-  camera.position.z = camDist*Math.cos(rotY)*Math.cos(rotX);
-  camera.position.y = camDist*Math.sin(rotX)+15;
-  camera.lookAt(0,15,0);
+  camera.position.x = lookX + camDist*Math.sin(rotY)*Math.cos(rotX);
+  camera.position.z = lookZ + camDist*Math.cos(rotY)*Math.cos(rotX);
+  camera.position.y = lookY + camDist*Math.sin(rotX);
+  camera.lookAt(lookX, lookY, lookZ);
 }
 function resizeRenderer(){
   camera.aspect = host.clientWidth/Math.max(1,host.clientHeight);
@@ -433,6 +502,8 @@ function resizeRenderer(){
 window.addEventListener('resize', ()=>{ resizeRenderer(); if(typeof drawGraph==='function' && nodes.length) drawGraph(); });
 function animate(){ requestAnimationFrame(animate); updateCamera(); renderer.render(scene,camera); }
 animate();
+
+document.getElementById('studioResetView').addEventListener('click', resetStudioView);
 
 /* ===================== UI STATE ===================== */
 const state = { tubeWallThickness:0.30, finThickness:0.60, fletchCount:'3', helicalDir:'right', packSize:'18', color:'#FFFFFF', usingWraps:'no' };
@@ -479,7 +550,7 @@ document.getElementById('finThickness').addEventListener('change', (e)=>{
 // inline there since it also needs Rin for the ID readout) so the angle
 // buttons can get a radius without waiting for a full generate() pass.
 function currentRoutEstimate(){
-  const shaftOD = parseFloat(document.getElementById('shaftOD').value) || 0;
+  const shaftOD = currentShaftOD() || 0;
   const clearance = parseFloat(document.getElementById('clearance').value) || 0;
   const wrapThickness = state.usingWraps==='yes' ? (parseFloat(document.getElementById('wrapThickness').value)||0) : 0;
   const effectiveShaftOD = shaftOD + 2*wrapThickness;
@@ -515,7 +586,7 @@ function updateHelicalReadout(){
   document.getElementById('helicalVal').textContent = perIn.toFixed(2)+'°/in';
   document.getElementById('helicalPerInVal').textContent = perIn.toFixed(2);
   document.getElementById('helicalTotalVal').textContent = totalDeg.toFixed(1);
-  document.getElementById('helicalLenVal').textContent = length;
+  document.getElementById('helicalLenVal').textContent = (length/25.4).toFixed(2)+'in';
   // Highlight a button only if the current deg/in produces (within rounding)
   // exactly that button's vane-to-shaft angle at the current geometry --
   // e.g. after typing a custom deg/in value, or after geometry changes enough
@@ -538,7 +609,7 @@ function setHelicalFromAngle(angleDeg){
   const rawRad = R>0 ? (length*Math.tan(angleRad))/R : 0;
   const totalDeg = rawRad*180/Math.PI;
   const perIn = totalDeg / (length/25.4);
-  document.getElementById('helical').value = perIn.toFixed(2);
+  document.getElementById('helical').value = perIn.toFixed(4);
 }
 document.querySelectorAll('#helicalAngleBtns .btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
@@ -615,7 +686,7 @@ function applyNamedPreset(p, label){
   currentProfileLabel = p.testOnly ? 'TEST-'+label : label;
   setTestOnlyBanner(!!p.testOnly);
   const presetLength = p.nodes[p.nodes.length-1].x;
-  document.getElementById('vaneLength').value = presetLength;
+  setVaneLengthMM(presetLength);
   lastLength = presetLength;
   const scaled = p.nodes.map(n => ({ x: snapX(n.x), h: n.h, round: p.rounding }));
   scaled[0].x = 0;
@@ -714,7 +785,23 @@ const NAMED_PRESETS = {
   anchor: { rounding:100, stock:true,
     nodes:[{x:0,h:3.2},{x:20,h:11.8},{x:48,h:13.2},{x:92,h:1.2},{x:95,h:0.4}] },
 };
-function currentLength(){ return parseFloat(document.getElementById('vaneLength').value)||70; }
+// Vane length and shaft OD are SHOWN in inches but kept internally in
+// exact mm (what the geometry, the orders and saved profiles all use), so
+// converting for display never rounds the printed part.
+let vaneLenMM = 70;
+let shaftODmm = 6.1468;
+function currentLength(){ return vaneLenMM; }
+function currentShaftOD(){ return shaftODmm; }
+function setVaneLengthMM(mm){
+  vaneLenMM = mm;
+  document.getElementById('vaneLength').value = (mm/25.4).toFixed(3);
+  document.getElementById('vaneLengthMM').textContent = '= ' + mm.toFixed(2) + ' mm';
+}
+function setShaftODmm(mm){
+  shaftODmm = mm;
+  document.getElementById('shaftOD').value = (mm/25.4).toFixed(4);
+  document.getElementById('shaftODMM').textContent = '= ' + mm.toFixed(4) + ' mm';
+}
 // Helical twist (the 'helical' slider/field) is degrees PER INCH of vane
 // length, not a flat total -- actual total twist = this value * vane length
 // in inches, matching the storefront's render() logic. This is our own
@@ -1130,8 +1217,15 @@ document.getElementById('customModeToggle').addEventListener('click', ()=>{
 });
 
 let lastLength = 70;
+document.getElementById('shaftOD').addEventListener('change', e=>{
+  const v = parseFloat(e.target.value);
+  if(isFinite(v) && v>0) setShaftODmm(v*25.4); else setShaftODmm(shaftODmm);
+  generate();
+});
 document.getElementById('vaneLength').addEventListener('change', e=>{
-  const newLen = parseFloat(e.target.value)||70;
+  const vin = parseFloat(e.target.value);
+  const newLen = (isFinite(vin) && vin>0) ? vin*25.4 : vaneLenMM;
+  setVaneLengthMM(newLen);
   const scale = newLen/lastLength;
   // Keep each node's own rounding. Dropping it here (the old behavior) fell
   // every node back to DEFAULT_NODE_ROUND (55%) instead of the presets' 100%,
@@ -1488,7 +1582,7 @@ function generate(){
   allTriangles=[];
   rebuildSmoothedCurve();
   const length = currentLength();
-  const shaftOD = parseFloat(document.getElementById('shaftOD').value);
+  const shaftOD = currentShaftOD();
   const clearance = parseFloat(document.getElementById('clearance').value);
   const wrapThickness = state.usingWraps==='yes' ? (parseFloat(document.getElementById('wrapThickness').value)||0) : 0;
   const effectiveShaftOD = shaftOD + 2*wrapThickness;
@@ -1581,6 +1675,7 @@ function generate(){
   document.getElementById('statTris').textContent = allTriangles.length;
 
   updateWeightEstimate();
+  updateSTLNamePreview();
 
   const warnEl = document.getElementById('warn');
   const warnings = [];
@@ -1651,10 +1746,35 @@ function exportSTL(filenameOverride){
 }
 
 // Filename format: (#vanes)-(length)-(shaft diameter)-(profile)-(color)-(pack size).stl
+// Customer name from the last order loaded with "Load Order". When set, STLs
+// are named after the customer (e.g. Jane-Archer.stl, or Jane-Archer-2.stl
+// for item 2 of a multi-item order) instead of the spec-based name below.
+// Cleared by Import Profile; ignored by Download All Profiles.
+let orderCustomerName = '';
+let orderItemSuffix = '';
+let suppressCustomerName = false;
+function cleanNameForFile(n){
+  return String(n||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').normalize('NFC')   // é -> e
+    .replace(/[^\p{L}\p{N} \-]/gu,'').trim().replace(/\s+/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'');  // letters in any language, digits, dashes
+}
 function buildSTLFilename(){
+  const customer = cleanNameForFile(orderCustomerName);
+  if(customer && !suppressCustomerName){
+    const test = String(currentProfileLabel).startsWith('TEST-') ? 'TEST-' : '';
+    return test + customer + orderItemSuffix + '.stl';
+  }
+  return specSTLFilename();
+}
+function updateSTLNamePreview(){
+  const el = document.getElementById('stlNamePreview');
+  if(el) el.textContent = buildSTLFilename();
+}
+// Fallback when no customer name is available:
+// (#vanes)-(length)-(shaft diameter)-(profile)-(color)-(pack size).stl
+function specSTLFilename(){
   const fletchCount = state.fletchCount;
-  const length = document.getElementById('vaneLength').value;
-  const shaftOD = document.getElementById('shaftOD').value;
+  const length = (currentLength()/25.4).toFixed(2) + 'in';
+  const shaftOD = (currentShaftOD()/25.4).toFixed(4) + 'in';
   const profile = currentProfileLabel; // display name (GHOST/RIDGE/IMPACT/RANGE/ANCHOR), TEST-COMPACT, or CUSTOM once hand-edited
   const colorName = (COLORS.find(c => c.hex.toLowerCase() === String(state.color).toLowerCase()) || {name:'Color'}).name;
   const packSize = state.packSize;
@@ -1684,8 +1804,9 @@ function downloadBlob(content, filename, type){
 // state first and restores it after, so running this doesn't disturb
 // whatever you're actively designing.
 function downloadAllProfilesBatch(){
+  suppressCustomerName = true; // batch files are named by preset, not by customer
   const savedNodes = JSON.parse(JSON.stringify(nodes));
-  const savedLength = document.getElementById('vaneLength').value;
+  const savedLength = vaneLenMM;
   const savedLabel = currentProfileLabel;
 
   // Production presets only -- testOnly (shelved) ones are skipped so a
@@ -1696,10 +1817,11 @@ function downloadAllProfilesBatch(){
   function next(){
     if(i>=profileKeys.length){
       nodes = savedNodes;
-      document.getElementById('vaneLength').value = savedLength;
-      lastLength = parseFloat(savedLength);
+      setVaneLengthMM(savedLength);
+      lastLength = savedLength;
       currentProfileLabel = savedLabel;
       setTestOnlyBanner(savedLabel.startsWith('TEST-'));
+      suppressCustomerName = false;
       drawGraph(); generate();
       return;
     }
@@ -1715,7 +1837,10 @@ function downloadAllProfilesBatch(){
   }
   next();
 }
-document.getElementById('downloadBtn').addEventListener('click', ()=>exportSTL());
+document.getElementById('downloadBtn').addEventListener('click', ()=>{
+  if(orderBlocked){ statusMsg('Blocked: this order has a problem. Read the red box (or override it there).', true); return; }
+  exportSTL();
+});
 document.getElementById('twistTestBtn').addEventListener('click', downloadAllProfilesBatch);
 
 /* ===================== PROFILE EXPORT / IMPORT ===================== */
@@ -1729,7 +1854,7 @@ function currentProfileData(name){
   return {
     displayName: name,
     vaneLength: currentLength(),
-    shaftOD: parseFloat(document.getElementById('shaftOD').value),
+    shaftOD: currentShaftOD(),
     clearance: parseFloat(document.getElementById('clearance').value),
     usingWraps: state.usingWraps,
     wrapThickness: parseFloat(document.getElementById('wrapThickness').value),
@@ -1745,9 +1870,12 @@ function currentProfileData(name){
   };
 }
 function applyProfileData(data){
-  document.getElementById('vaneLength').value = data.vaneLength;
+  orderCustomerName = ''; orderItemSuffix = ''; // a saved profile isn't a customer order
+  setOrderBlocked(false);
+  document.getElementById('orderSummaryBox').style.display = 'none';
+  setVaneLengthMM(Number(data.vaneLength));
   lastLength = data.vaneLength;
-  document.getElementById('shaftOD').value = data.shaftOD;
+  setShaftODmm(Number(data.shaftOD));
   document.getElementById('clearance').value = data.clearance;
   document.getElementById('helical').value = data.helical;
   updateHelicalReadout();
@@ -1831,155 +1959,328 @@ let orderItemIndex = 0;
 // Standing production defaults for every order (see Studio notes): 0.30mm
 // tube wall = the 0.30mm vase-mode line width, 0.60mm fin = two beads.
 const ORDER_TUBE_WALL = 0.30, ORDER_FIN_THICKNESS = 0.60;
+// What the storefront allows. An order outside these can't have come from
+// a normal checkout, so it blocks the STL download until you've checked it.
+const ORDER_LIMITS = { lenMin:35, lenMax:100, odMin:3, odMax:12, maxPacks:10, wrapMax:1.0, maxPoints:25, hMax:20, overhang:40 };
+const STANDARD_CLEARANCE = 0.085;
+let orderBlocked = false;
 
-function applyOrderItem(item, index, total){
-  const problems = [];
-  document.getElementById('shaftOD').value = item.shaftOD;
-  const od = parseFloat(item.shaftOD);
-  if(!(od>3 && od<12)) problems.push('Shaft OD "'+item.shaftOD+'" looks invalid -- confirm before printing');
-  // The storefront marks sizes the customer typed in themselves as 'manual'
-  // (it never sends unlistedArrow). A wrong OD is a wrong fit, so flag it.
-  if(item.shaftSizeSource==='manual') problems.push('Shaft OD '+item.shaftOD+'mm was typed in by the customer, not matched from the database -- confirm');
+/* ---- reading the email ------------------------------------------------
+   New orders carry a base64 "STUDIO IMPORT CODE" block with a checksum
+   (see buildStudioCodeLines in index.html). Older orders carry raw JSON
+   after "--- raw profile JSON (backup only) ---". A bare JSON paste also
+   still works. Whatever was pasted, only the LAST code block is used, so
+   text a customer typed in their notes can't get in the way. */
+function fnv1aHex(str){
+  let h = 0x811c9dc5;
+  for(let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+  return h.toString(16).padStart(8,'0');
+}
+function parseOrderText(raw){
+  const text = String(raw||'').replace(/\r/g,'');
+  const startIdx = text.lastIndexOf('=== STUDIO IMPORT CODE');
+  if(startIdx >= 0){
+    let body = text.slice(startIdx);
+    const nl = body.indexOf('\n');
+    if(nl < 0) throw new Error('The import code is cut off. Copy the whole email again.');
+    body = body.slice(nl+1);
+    const endIdx = body.indexOf('=== END STUDIO IMPORT CODE');
+    if(endIdx < 0) throw new Error('The import code is cut off (its END line is missing). Copy the whole email again.');
+    body = body.slice(0, endIdx);
+    // strip reply/forward quoting ("> ") and any whitespace an email client added
+    const lines = body.split('\n').map(l=>l.replace(/^[\s>]+/,'').trim()).filter(Boolean);
+    const head = /^MA2\.(\d+)\.([0-9a-f]{8})$/.exec(lines[0]||'');
+    if(!head) throw new Error('The import code\'s first line is damaged. Copy the whole email again.');
+    const b64 = lines.slice(1).join('');
+    if(!b64 || !/^[A-Za-z0-9+/]+={0,2}$/.test(b64)) throw new Error('The import code has unexpected characters in it. Copy the whole email again (don\'t edit it).');
+    let json;
+    try{
+      const bin = atob(b64);
+      const bytes = new Uint8Array(bin.length);
+      for(let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+      json = new TextDecoder('utf-8', {fatal:true}).decode(bytes);
+    }catch(e){ throw new Error('The import code is damaged and can\'t be decoded. Copy the whole email again.'); }
+    if(fnv1aHex(json) !== head[2]) throw new Error('The import code\'s checksum doesn\'t match, so part of it was changed or cut off. Copy the whole email again.');
+    const items = JSON.parse(json);
+    if(!Array.isArray(items) || items.length !== Number(head[1])) throw new Error('The import code says '+head[1]+' item(s) but contains a different number. Copy the whole email again.');
+    return { items, source:'code' };
+  }
+  // Older order emails: raw JSON after the backup marker, or a bare JSON paste.
+  let jsonText = text;
+  const legacy = text.lastIndexOf('--- raw profile JSON (backup only) ---');
+  if(legacy >= 0) jsonText = text.slice(legacy + '--- raw profile JSON (backup only) ---'.length);
+  jsonText = jsonText.trim();
+  const first = jsonText.search(/[\[{]/);
+  if(first < 0) throw new Error('No order data found. Paste the whole order email (Ctrl+A, Ctrl+C in the email).');
+  jsonText = jsonText.slice(first);
+  let data;
+  try{ data = JSON.parse(jsonText); }
+  catch(e){
+    // an email client may have wrapped the long JSON line
+    try{ data = JSON.parse(jsonText.replace(/\n/g,'')); }
+    catch(e2){ throw new Error('Couldn\'t read the order data. Copy the whole email again.'); }
+  }
+  const items = Array.isArray(data) ? data : [data];
+  if(!items.length) throw new Error('That order has no items in it.');
+  return { items, source:'legacy' };
+}
 
-  // Shape + length. Built here directly instead of through applyNamedPreset,
-  // which (a) forces the preset's NATIVE length -- a customer who ordered
-  // IMPACT at 2.2in was getting a 65mm STL -- and (b) silently ignores
-  // out-of-stock presets. The curve is scaled to the ordered length exactly
-  // the way the storefront's getScaledCurve() does, with the shape's own
-  // rounding, so the STL matches the preview the customer approved.
-  const presetKey = String(item.shape||'').toLowerCase();
-  let srcNodes = null, srcRound = DEFAULT_NODE_ROUND, label = null;
-  if(presetKey==='custom'){
-    if(Array.isArray(item.customNodes) && item.customNodes.length>=2){
-      srcNodes = item.customNodes;
-      srcRound = item.customRounding!==undefined ? item.customRounding : DEFAULT_NODE_ROUND;
-      label = 'CUSTOM';
-    }else problems.push('Custom-shape order has no customNodes -- curve NOT loaded');
-  }else if(NAMED_PRESETS[presetKey]){
-    srcNodes = NAMED_PRESETS[presetKey].nodes;
-    srcRound = NAMED_PRESETS[presetKey].rounding;
-    // Display name, not key.toUpperCase(): key 'compact' is sold as RIDGE.
-    label = PRESET_DISPLAY_NAME[presetKey] || presetKey.toUpperCase();
-    if(NAMED_PRESETS[presetKey].testOnly){
-      label = 'TEST-'+label;
-      problems.push(label.slice(5)+' is SHELVED (test only) -- this order should not have been possible, check with the customer');
+/* ---- checking one item ------------------------------------------------
+   hard = can't be right, blocks the STL download until you override.
+   soft = needs a human look, doesn't block. */
+function checkOrderItem(item, index, total, legacy){
+  const hard = [], soft = [];
+  const L = ORDER_LIMITS;
+  if(!item || typeof item!=='object'){ hard.push('Item data is missing.'); return {hard, soft}; }
+  if(!legacy){
+    if(item.item !== index+1 || item.itemCount !== total) hard.push('Item numbering doesn\'t match the order (expected item '+(index+1)+' of '+total+').');
+  }
+  const key = String(item.shape||'').toLowerCase();
+  if(key==='custom'){
+    const nodes = item.customNodes;
+    if(!Array.isArray(nodes) || nodes.length<2 || nodes.length>L.maxPoints) hard.push('Custom shape has a missing or invalid point list.');
+    else {
+      let bad = false;
+      nodes.forEach((n,i)=>{
+        if(!n || !isFinite(n.x) || !isFinite(n.h) || n.h<0 || n.h>L.hMax) bad = true;
+        if(n && n.r!==undefined && n.r!==null && !(n.r>=0 && n.r<=100)) bad = true;
+        if(i>0 && !(n.x > nodes[i-1].x)) bad = true;
+      });
+      if(nodes[0] && nodes[0].x!==0) bad = true;
+      if(bad) hard.push('Custom shape points are invalid (out of order, out of range, or not numbers).');
     }
-  }else{
-    problems.push('Unrecognized shape "'+item.shape+'" -- curve NOT loaded');
+  } else if(!NAMED_PRESETS[key]){
+    hard.push('Unknown shape "'+item.shape+'".');
+  } else if(NAMED_PRESETS[key].testOnly){
+    hard.push((PRESET_DISPLAY_NAME[key]||key)+' is SHELVED (test only). This order should not have been possible; check with the customer.');
   }
-  if(srcNodes){
-    const nativeLen = srcNodes[srcNodes.length-1].x;
-    const orderLen = parseFloat(item.vaneLength);
-    const L = (isFinite(orderLen) && orderLen>0) ? orderLen : nativeLen;
-    if(!(isFinite(orderLen) && orderLen>0)) problems.push('Order has no vane length -- using native '+nativeLen+'mm');
-    const scale = L/nativeLen;
-    // Storefront custom orders carry per-point rounding as `r` on each
-    // interior node; fall back to the order's single customRounding (or the
-    // preset's rounding) for older orders and stock shapes.
-    nodes = srcNodes.map(n=>({ x: snapX(n.x*scale), h: n.h, round: (n.r!==undefined && n.r!==null) ? n.r : srcRound }));
-    nodes[0].x = 0;
-    nodes[nodes.length-1].x = L;
-    document.getElementById('vaneLength').value = L;
-    lastLength = L;
-    currentProfileLabel = label;
-    selectedIdx = Math.min(2, nodes.length-1);
+  const len = Number(item.vaneLength);
+  if(!(len>=L.lenMin && len<=L.lenMax)) hard.push('Vane length '+item.vaneLength+'mm is outside 1.38–3.94in (35–100mm).');
+  const od = Number(item.shaftOD);
+  if(!(od>=L.odMin && od<=L.odMax)) hard.push('Shaft OD '+item.shaftOD+'mm isn\'t a realistic arrow shaft.');
+  if(!['3','4'].includes(String(item.fletchCount))) hard.push('Vanes per arrow is "'+item.fletchCount+'" (must be 3 or 4).');
+  if(item.helicalAngle!==undefined){
+    const ha = Number(item.helicalAngle);
+    if(!(Number.isInteger(ha) && ha>=1 && ha<=6)) hard.push('Helical angle "'+item.helicalAngle+'" is not 1–6°.');
+  } else if(!(isFinite(item.helical) && item.helical>=0 && item.helical<=25)){
+    hard.push('No helical angle in this order.');
+  } else {
+    soft.push('Older order format: helical comes from its deg/in value, not a 1–6° angle.');
   }
-  setTestOnlyBanner(!!(label && label.startsWith('TEST-')));
+  const off = Number(item.offset);
+  if(!(isFinite(off) && off>=0 && off<=3)) hard.push('Offset "'+item.offset+'" is not 0–3°.');
+  if(!['right','left'].includes(item.helicalDir)) hard.push('Twist direction "'+item.helicalDir+'" is not right/left.');
+  if(!COLORS.some(c=>c.hex.toLowerCase()===String(item.color).toLowerCase())) hard.push('Color '+item.color+' is not one of the filament colors.');
+  if(!['12','18'].includes(String(item.packSize))) hard.push('Pack size "'+item.packSize+'" is not 12 or 18.');
+  const q = Number(item.quantity);
+  if(!(Number.isInteger(q) && q>=1 && q<=L.maxPacks)) (legacy ? soft : hard).push('Quantity "'+item.quantity+'" is outside 1–'+L.maxPacks+' packs.');
+  if(item.usingWraps==='yes'){
+    if(item.wrapThickness===undefined || item.wrapThickness===null || String(item.wrapThickness).trim()===''){
+      soft.push('Wraps: customer gave no thickness, so 0.006in (0.15mm) is assumed. Confirm.');
+    } else {
+      const w = parseFloat(item.wrapThickness);
+      if(!(w>0 && w<=L.wrapMax)) hard.push('Wrap thickness "'+item.wrapThickness+'"mm is not realistic.');
+    }
+  } else if(item.usingWraps!==undefined && item.usingWraps!=='no') hard.push('Wraps setting "'+item.usingWraps+'" is not yes/no.');
+  if(item.shaftSizeSource==='manual') soft.push('Shaft OD was TYPED IN by the customer, not matched from the database. Confirm it.');
+  return {hard, soft};
+}
 
-  // Max fletch count is 4 -- clamp here too, in case this is an older order
-  // export from before that cap existed.
-  state.fletchCount = clampFletchCount(item.fletchCount!==undefined ? item.fletchCount : state.fletchCount);
-  state.helicalDir = item.helicalDir || 'right';
-  // Always the standing defaults. This used to set BOTH tube and fin to 0.60
-  // (a leftover of the deleted Standard/Ultralight weight class). In vase
-  // mode the bore is OD minus 2x the 0.30 line width, so a 0.60 tube wall
-  // printed the bore 0.60mm oversized (0.90mm glue gap instead of 0.30).
+function setOrderBlocked(on){
+  orderBlocked = on;
+  const btn = document.getElementById('downloadBtn');
+  btn.classList.toggle('blocked', on);
+  btn.textContent = on ? 'Download Blocked: see order problems' : 'Download STL';
+}
+
+function applyOrderItem(item, index, total, legacy){
+  const {hard, soft} = checkOrderItem(item, index, total, legacy);
+  const key = String(item.shape||'').toLowerCase();
+
+  // ---- geometry inputs first (helical depends on all of them) ----
+  if(isFinite(item.shaftOD) && Number(item.shaftOD)>0) setShaftODmm(Number(item.shaftOD));
+  state.usingWraps = item.usingWraps==='yes' ? 'yes' : 'no';
+  let wrapMM = 0.15;
+  if(state.usingWraps==='yes'){
+    const w = parseFloat(item.wrapThickness);
+    if(w>0) wrapMM = w;
+  }
+  document.getElementById('wrapThickness').value = wrapMM;
+  document.querySelectorAll('.btn[data-group="usingWraps"]').forEach(b=>b.classList.toggle('active', b.dataset.val===state.usingWraps));
+  document.getElementById('wrapThicknessRow').style.display = (state.usingWraps==='yes') ? 'block' : 'none';
+
   state.tubeWallThickness = ORDER_TUBE_WALL;
   state.finThickness = ORDER_FIN_THICKNESS;
-  if(item.packSize) state.packSize = String(item.packSize);
-  if(item.color) state.color = item.color;
-  state.usingWraps = item.usingWraps || 'no';
-
-  document.getElementById('helical').value = item.helical!==undefined ? item.helical : 0;
-  updateHelicalReadout();
-  document.getElementById('offset').value = item.offset!==undefined ? item.offset : 0;
-  document.getElementById('offsetVal').textContent = document.getElementById('offset').value+'°';
-
   document.getElementById('tubeWallThickness').value = state.tubeWallThickness;
   document.getElementById('tubeWallVal').textContent = state.tubeWallThickness.toFixed(2);
   document.getElementById('finThickness').value = state.finThickness;
   document.getElementById('finThicknessVal').textContent = state.finThickness.toFixed(2);
+  const clr = parseFloat(document.getElementById('clearance').value);
+  if(Math.abs(clr-STANDARD_CLEARANCE) > 1e-9) soft.push('Fit Clearance is set to '+clr+'mm, not the standard '+STANDARD_CLEARANCE+'mm.');
+
+  // ---- shape + length: exact ordered length, exact points, no rounding ----
+  let srcNodes = null, srcRound = DEFAULT_NODE_ROUND, label = null;
+  if(key==='custom' && Array.isArray(item.customNodes) && item.customNodes.length>=2){
+    srcNodes = item.customNodes;
+    srcRound = item.customRounding!==undefined ? item.customRounding : DEFAULT_NODE_ROUND;
+    label = 'CUSTOM';
+  } else if(NAMED_PRESETS[key]){
+    srcNodes = NAMED_PRESETS[key].nodes;
+    srcRound = NAMED_PRESETS[key].rounding;
+    label = (NAMED_PRESETS[key].testOnly ? 'TEST-' : '') + (PRESET_DISPLAY_NAME[key] || key.toUpperCase());
+  }
+  if(srcNodes){
+    const nativeLen = srcNodes[srcNodes.length-1].x;
+    const orderLen = Number(item.vaneLength);
+    const Lmm = (isFinite(orderLen) && orderLen>0) ? orderLen : nativeLen;
+    const scale = Lmm/nativeLen;
+    nodes = srcNodes.map(n=>({ x: n.x*scale, h: n.h, round: (n.r!==undefined && n.r!==null) ? n.r : srcRound }));
+    nodes[0].x = 0;
+    nodes[nodes.length-1].x = Lmm;
+    setVaneLengthMM(Lmm);
+    lastLength = Lmm;
+    currentProfileLabel = label;
+    selectedIdx = Math.min(2, nodes.length-1);
+  } else {
+    hard.push('Shape could not be loaded. The preview is NOT this order.');
+  }
+  setTestOnlyBanner(!!(label && label.startsWith('TEST-')));
+
+  // ---- the rest ----
+  state.fletchCount = ['3','4'].includes(String(item.fletchCount)) ? String(item.fletchCount) : state.fletchCount;
+  state.helicalDir = item.helicalDir==='left' ? 'left' : 'right';
+  if(item.packSize) state.packSize = String(item.packSize);
+  if(item.color){ state.color = String(item.color).toUpperCase(); }
+  document.getElementById('offset').value = isFinite(item.offset) ? Number(item.offset) : 0;
+  document.getElementById('offsetVal').textContent = document.getElementById('offset').value+'°';
   document.querySelectorAll('.btn[data-group="fletchCount"]').forEach(b=>{ b.classList.toggle('active', b.dataset.val===state.fletchCount); b.classList.toggle('green', b.dataset.val===state.fletchCount); });
   document.querySelectorAll('.btn[data-group="helicalDir"]').forEach(b=>{ b.classList.toggle('active', b.dataset.val===state.helicalDir); b.classList.toggle('green', b.dataset.val===state.helicalDir); });
-  document.querySelectorAll('.btn[data-group="usingWraps"]').forEach(b=>b.classList.toggle('active', b.dataset.val===state.usingWraps));
-  document.getElementById('wrapThicknessRow').style.display = (state.usingWraps==='yes') ? 'block' : 'none';
-  if(state.usingWraps==='yes'){
-    // Same fallback the storefront preview uses when the customer left it blank.
-    const w = parseFloat(item.wrapThickness);
-    document.getElementById('wrapThickness').value = isNaN(w) ? 0.15 : w;
-    if(isNaN(w)) problems.push('Wraps: customer gave no thickness -- 0.15mm assumed, confirm');
-  }
+  const colorMatch = COLORS.find(c=>c.hex.toLowerCase()===state.color.toLowerCase());
+  if(colorMatch){ state.color = colorMatch.hex; colorSelect.value = colorMatch.hex; }
+  updateColorSwatchPreview();
 
-  if(state.color){
-    colorSelect.value = state.color;
-    updateColorSwatchPreview();
-    if(!COLORS.some(c=>c.hex.toLowerCase()===String(state.color).toLowerCase())) problems.push('Color '+state.color+' is not in the Studio color list');
+  // ---- helical: set from the 1-6 deg angle using THIS Studio's geometry ----
+  rebuildSmoothedCurve();
+  if(item.helicalAngle!==undefined && isFinite(item.helicalAngle)){
+    setHelicalFromAngle(Number(item.helicalAngle));
+    const mine = parseFloat(document.getElementById('helical').value);
+    const theirs = Number(item.helical);
+    if(isFinite(theirs) && theirs>0 && Math.abs(mine-theirs)/theirs > 0.03){
+      soft.push('Helical: the website previewed '+theirs.toFixed(2)+'°/in, the Studio computes '+mine.toFixed(2)+'°/in for '+item.helicalAngle+'°. The angle is what was ordered; check the Studio settings (shaft OD, wraps, clearance).');
+    }
+  } else {
+    document.getElementById('helical').value = isFinite(item.helical) ? Number(item.helical) : 0;
   }
+  updateHelicalReadout();
 
+  // ---- name / filename ----
   document.getElementById('profileName').value = item.displayName || ('Order item '+(index+1));
+  const dn = String(item.displayName||'');
+  orderCustomerName = item.customerName || (dn.includes(' - ') ? dn.slice(0, dn.lastIndexOf(' - ')) : '');
+  orderItemSuffix = total>1 ? '-'+(index+1) : '';
+  if(!cleanNameForFile(orderCustomerName)) soft.push('No customer name on this order, so the STL gets the spec-based filename.');
 
   drawGraph(); generate();
 
-  const qtyNote = item.quantity && item.quantity>1 ? ' -- customer ordered '+item.quantity+' pack(s), remember to print enough' : '';
-  const navNote = total>1 ? ' (item '+(index+1)+' of '+total+')' : '';
+  // Printability: the same 40deg check the storefront enforces, on the
+  // curve actually built here. Applies to stock shapes too -- the website
+  // gives each stock shape a minimum length so it never goes past 40deg.
+  if(srcNodes){
+    let worst = 0;
+    for(let i=0;i<smoothedCurve.length-1;i++){
+      const dx=smoothedCurve[i+1].x-smoothedCurve[i].x, dh=Math.abs(smoothedCurve[i+1].h-smoothedCurve[i].h);
+      if(dx>0.0001) worst = Math.max(worst, Math.atan(dh/dx)*180/Math.PI);
+    }
+    if(worst > ORDER_LIMITS.overhang + 0.01) hard.push((key==='custom' ? 'Custom curve' : 'This shape at this length')+' is too steep to print ('+worst.toFixed(1)+'° > '+ORDER_LIMITS.overhang+'°).');
+  }
 
-  // One persistent banner for anything that needs a human check. statusMsg
-  // clears itself, and a later statusMsg used to overwrite the
-  // "Unrecognized shape" error with "Loaded ..." -- so a custom order
-  // silently printed whatever curve was left on screen.
+  renderOrderSummary(item, index, total);
+
   const banner = document.getElementById('unmatchedArrowBanner');
-  const bannerLines = problems.map(p=>'⚠ '+p);
-  if(item.unlistedArrow){
-    bannerLines.unshift('⚠ Not matched to the shaft database — customer shoots: <b>"'+item.unlistedArrow+'"</b>. Confirm the real OD before generating this STL; the '+item.shaftOD+'mm currently loaded is only a placeholder.');
-  }
-  if(bannerLines.length){
+  const lines = [...hard.map(p=>'⛔ '+p), ...soft.map(p=>'⚠ '+p)];
+  if(item.unlistedArrow) lines.unshift('⚠ Not matched to the shaft database. Customer shoots: <b>"'+item.unlistedArrow+'"</b>. Confirm the real OD.');
+  setOrderBlocked(hard.length>0);
+  if(lines.length){
     banner.style.display = 'block';
-    banner.innerHTML = bannerLines.join('<br>');
-    statusMsg('⚠ CHECK BANNER before printing'+navNote, true);
-  }else{
+    banner.classList.toggle('hard', hard.length>0);
+    banner.innerHTML = lines.join('<br>') + (hard.length ? '<br><a id="overrideBlock">I\'ve checked this. Allow the download anyway.</a>' : '');
+    const ov = document.getElementById('overrideBlock');
+    if(ov) ov.addEventListener('click', ()=>{ setOrderBlocked(false); ov.remove(); statusMsg('Download unlocked for this item'); });
+    statusMsg(hard.length ? '⛔ ORDER PROBLEM: read the red box before printing' : '⚠ Check the notes box before printing', true);
+  } else {
     banner.style.display = 'none';
-    statusMsg('Loaded "'+(item.displayName||presetKey)+'"'+navNote+qtyNote);
+    banner.classList.remove('hard');
+    statusMsg('Loaded '+(item.displayName||key)+(total>1 ? ' (item '+(index+1)+' of '+total+')' : ''));
   }
+  document.getElementById('orderItemLabel').textContent = total>1 ? 'Item '+(index+1)+' of '+total : '';
+}
 
-  document.getElementById('orderItemLabel').textContent = total>1
-    ? 'Item '+(index+1)+' of '+total+' — '+(item.displayName||presetKey)
-    : '';
+// Same facts as the order email, in the same words, so the two can be
+// checked against each other at a glance.
+function renderOrderSummary(item, index, total){
+  const box = document.getElementById('orderSummaryBox');
+  const esc = v => String(v==null?'':v).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const inmm = (mm, d) => isFinite(mm) ? (Number(mm)/25.4).toFixed(d)+'in ('+Number(mm).toFixed(d===2?1:4)+'mm)' : esc(mm);
+  const key = String(item.shape||'').toLowerCase();
+  const shapeName = key==='custom' ? 'Custom Shape' : (PRESET_DISPLAY_NAME[key] || esc(item.shape));
+  const colorName = (COLORS.find(c=>c.hex.toLowerCase()===String(item.color).toLowerCase())||{}).name || esc(item.color);
+  const wraps = item.usingWraps==='yes'
+    ? 'Yes, ' + (parseFloat(item.wrapThickness)>0 ? (parseFloat(item.wrapThickness)/25.4).toFixed(4)+'in ('+parseFloat(item.wrapThickness).toFixed(3)+'mm)' : 'thickness not given')
+    : 'No';
+  const rows = [
+    ['Customer', esc(item.customerName || '(none)')],
+    ...(item.orderRef ? [['Order', esc(item.orderRef)]] : []),
+    ['Shape', shapeName],
+    ['Vane Length', inmm(item.vaneLength, 2)],
+    ['Shaft OD', inmm(item.shaftOD, 4)],
+    ['Arrow Wraps', wraps],
+    ['Vanes per Arrow', esc(item.fletchCount)],
+    ['Helical', item.helicalAngle!==undefined ? esc(item.helicalAngle)+'°' : esc(item.helical)+'°/in (old order)'],
+    ['Offset', esc(item.offset)+'°'],
+    ['Twist Direction', item.helicalDir==='left' ? 'Left' : 'Right'],
+    ['Color', esc(colorName)],
+    ['Pack Size', esc(item.packSize)+' vanes'],
+    ['Quantity', esc(item.quantity)+' pack(s) = '+(Number(item.quantity)*Number(item.packSize)||'?')+' vanes'],
+  ];
+  box.style.display = 'block';
+  box.innerHTML = '<div class="head">Item '+(index+1)+' of '+total+'</div>' +
+    rows.map(([k,v])=>'<div class="row"><span>'+k+'</span><span>'+v+'</span></div>').join('');
 }
 
 function loadOrderFromPaste(){
-  const raw = document.getElementById('orderPasteBox').value.trim();
-  if(!raw){ statusMsg('Paste an order JSON block first', true); return; }
-  let data;
-  try{ data = JSON.parse(raw); }
-  catch(err){ statusMsg('Could not read that as JSON -- check you copied the whole block', true); return; }
-
-  orderItems = Array.isArray(data) ? data : [data];
-  if(orderItems.length===0){ statusMsg('That JSON had no items in it', true); return; }
+  const raw = document.getElementById('orderPasteBox').value;
+  if(!raw.trim()){ statusMsg('Paste the order email first', true); return; }
+  let parsed;
+  try{ parsed = parseOrderText(raw); }
+  catch(err){
+    const banner = document.getElementById('unmatchedArrowBanner');
+    banner.style.display = 'block'; banner.classList.add('hard');
+    banner.innerHTML = '⛔ '+err.message+'<br>Nothing was loaded. The preview still shows whatever was there before, so the download is blocked until an order loads.';
+    document.getElementById('orderSummaryBox').style.display = 'none';
+    document.getElementById('orderNavRow').style.display = 'none';
+    orderItems = [];
+    setOrderBlocked(true);
+    statusMsg('Order NOT loaded', true);
+    return;
+  }
+  orderItems = parsed.items;
+  orderLegacy = parsed.source !== 'code';
   orderItemIndex = 0;
-  applyOrderItem(orderItems[0], 0, orderItems.length);
+  applyOrderItem(orderItems[0], 0, orderItems.length, orderLegacy);
   document.getElementById('orderNavRow').style.display = orderItems.length>1 ? 'flex' : 'none';
 }
+let orderLegacy = false;
 
 document.getElementById('loadOrderBtn').addEventListener('click', loadOrderFromPaste);
 document.getElementById('prevItemBtn').addEventListener('click', ()=>{
   if(orderItems.length<2) return;
   orderItemIndex = (orderItemIndex-1+orderItems.length) % orderItems.length;
-  applyOrderItem(orderItems[orderItemIndex], orderItemIndex, orderItems.length);
+  applyOrderItem(orderItems[orderItemIndex], orderItemIndex, orderItems.length, orderLegacy);
 });
 document.getElementById('nextItemBtn').addEventListener('click', ()=>{
   if(orderItems.length<2) return;
   orderItemIndex = (orderItemIndex+1) % orderItems.length;
-  applyOrderItem(orderItems[orderItemIndex], orderItemIndex, orderItems.length);
+  applyOrderItem(orderItems[orderItemIndex], orderItemIndex, orderItems.length, orderLegacy);
 });
 
 /* ===================== PANEL RESIZE (drag handle) ===================== */
@@ -2022,6 +2323,7 @@ window.addEventListener('pointerup', ()=>{
 /* ===================== INIT ===================== */
 setPanelHeightPercent(panelHeightPct);
 resizeRenderer();
+setShaftODmm(6.1468);
 applyNamedPreset(NAMED_PRESETS.impact, 'IMPACT');
 applyCustomModeUI();
 updateHelicalReadout();
