@@ -24,6 +24,8 @@ const PACK_PRICES_CENTS = { 12: 3000, 18: 4000 }; // same prices as index.html's
 // CUSTOM_SHAPE_SURCHARGE in index.html (display only -- this is the real charge).
 const CUSTOM_SHAPE_SURCHARGE_CENTS = 1000;
 const SHIPPING_FLAT_CENTS = 499;
+const MAX_PACKS_PER_ITEM = 10; // same cap as index.html's MAX_PACKS_PER_ITEM
+const MAX_ITEMS = 25;          // sanity cap on cart lines
 const FREE_SHIP_MIN_PACKS = 2;
 const FREE_SHIP_MIN_SUBTOTAL_CENTS = 8000;
 
@@ -43,6 +45,7 @@ export async function onRequestPost(context) {
     if (!name || !email) return jsonError('Name and email are required', 400);
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return jsonError('Invalid email', 400);
     if (items.length === 0) return jsonError('No items in order', 400);
+    if (items.length > MAX_ITEMS) return jsonError('Too many items in one order', 400);
     // Order ref only ever becomes a KV key, but it's still whitelisted
     // before use, same discipline as if it were a filename.
     if (!/^[A-Za-z0-9-]{1,64}$/.test(orderRef)) return jsonError('Invalid order reference', 400);
@@ -53,7 +56,10 @@ export async function onRequestPost(context) {
 
     for (const item of items) {
       const packSize = parseInt(item.packSize, 10);
-      const qty = Math.max(1, parseInt(item.quantity, 10) || 1);
+      const qty = Number(item.quantity);
+      if (!Number.isInteger(qty) || qty < 1 || qty > MAX_PACKS_PER_ITEM) {
+        return jsonError(`Quantity must be 1 to ${MAX_PACKS_PER_ITEM} packs per item`, 400);
+      }
       const description = String(item.description || 'Custom vane pack').slice(0, 300);
       const basePrice = PACK_PRICES_CENTS[packSize];
       if (!basePrice) return jsonError('Unknown pack size: ' + packSize, 400);
