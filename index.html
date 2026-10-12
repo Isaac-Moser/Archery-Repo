@@ -304,7 +304,7 @@ textarea.input{min-height:84px;resize:vertical;line-height:1.45}
 .swatch i{width:40px;height:40px;border-radius:50%;border:1px solid rgba(28,36,33,.25)}
 .swatch[aria-checked="true"]{border-color:var(--ink);background:var(--white)}
 .swatch:disabled{opacity:.4;cursor:not-allowed;text-decoration:line-through}
-.pack-pick .choice{flex:1 1 160px}
+.pack-pick .choice{flex:1 1 110px}
 .total-line{display:flex;align-items:baseline;gap:12px;margin:18px 0 6px}
 
 /* ---- sections on the build page ---- */
@@ -636,7 +636,8 @@ try{ if(!SITE_PASSWORD || localStorage.getItem('moserArcheryGateOK')==='1') docu
               <div class="help" id="lengthHelp"></div>
             </div>
             <div class="field">
-              <button class="btn btn-ghost" type="button" id="customToggle" aria-expanded="false">Draw your own profile (+$10 per pack)</button>
+              <button class="btn btn-ghost" type="button" id="customToggle" aria-expanded="false" hidden>Draw your own profile (+$10 per pack)</button>
+              <p class="help" id="customNote">Want a shape we don't list? Custom profiles are still in development. <a class="biz-email" data-subject="Custom profile request">Email us</a> your idea or a sketch and we'll check whether it prints.</p>
               <div class="editor" id="editor" hidden>
                 <div class="editor-top">
                   <button class="tool" type="button" id="cpUndo" disabled>Undo</button>
@@ -755,10 +756,11 @@ try{ if(!SITE_PASSWORD || localStorage.getItem('moserArcheryGateOK')==='1') docu
     <div class="wrap narrow">
       <h2>Questions</h2>
       <div class="faq">
-        <details><summary>What's in a pack?</summary><p>One sleeve per arrow, and each sleeve carries all of that arrow's fins. A pack of 12 fletches 12 arrows; a pack of 18 fletches 18.</p></details>
+        <details><summary>What's in a pack?</summary><p>One sleeve per arrow, and each sleeve carries all of that arrow's fins. A pack of 6 fletches 6 arrows, 12 fletches 12, and 18 fletches 18.</p></details>
         <details><summary>How do I pay?</summary><p>By card on Stripe's secure checkout page. Nothing is charged until you finish there.</p></details>
         <details><summary>How long until my order ships?</summary><p>Every order is printed for you. Most ship within 5&ndash;7 business days of payment. Need it sooner for a hunt or a shoot? Say so in the order notes and we'll do what we can.</p></details>
-        <details><summary>What if it doesn't fit or arrives damaged?</summary><p>Email us within 14 days of delivery and we'll reprint it at no charge.</p></details>
+        <details><summary>What if a vane arrives damaged?</summary><p>Email photos of the damage to <a class="biz-email" data-subject="Damaged vanes"></a> within 14 days of delivery and we'll ship you replacements.</p></details>
+        <details><summary>What if it doesn't fit?</summary><p>Email us within 14 days of delivery with your arrow and shaft size. If we printed it wrong, we reprint it free. If the size entered was off, we'll work out a fix with you.</p></details>
         <details><summary>How snug is the fit?</summary><p>Each sleeve is printed to the shaft size you give us, with a small built-in gap for glue: snug enough not to wobble, loose enough to slide on. If your shaft is an unusual size, mention it in the notes and we'll check with you before printing.</p></details>
         <details><summary>Which profile and twist should I pick?</summary><p>Answer the three questions in step 2 for a suggestion, or see <a href="#compare" data-page="compare">Compare</a> for the full breakdown.</p></details>
       </div>
@@ -803,7 +805,7 @@ try{ if(!SITE_PASSWORD || localStorage.getItem('moserArcheryGateOK')==='1') docu
 
 <!-- ============================== COMPARE ============================== -->
 <section id="page-compare" class="page" hidden>
-  <div class="page-head"><svg class="topo" aria-hidden="true"><use href="#topoPattern" width="100%" height="100%"/></svg><div class="wrap"><h1>Compare profiles</h1><p>Six shapes, drawn to true scale. Area decides how hard a vane steers; height decides whether it clears your rest.</p></div></div>
+  <div class="page-head"><svg class="topo" aria-hidden="true"><use href="#topoPattern" width="100%" height="100%"/></svg><div class="wrap"><h1>Compare profiles</h1><p>Every shape we make, drawn to true scale. Area decides how hard a vane steers; height decides whether it clears your rest.</p></div></div>
   <div class="wrap prose">
     <div class="chart" id="compareChart"></div>
     <p class="help">Measured from each profile's printed curve at its standard length. Use them as a starting point; your shaft, point weight and twist all change how an arrow flies.</p>
@@ -829,7 +831,7 @@ try{ if(!SITE_PASSWORD || localStorage.getItem('moserArcheryGateOK')==='1') docu
         <tr><td>Fixed-blade broadhead</td><td>Helical 3&deg;</td><td>Helical 2&deg;</td></tr>
       </tbody>
     </table>
-    <p>Long vanes catch more air at the same angle, so we cap helical by length: up to 4&deg; on vanes 2.25in and shorter, 3&deg; up to 2.70in, and 2&deg; above that. Offset comes in 1&deg; and 2&deg;. Past about 3&deg;, more twist mostly adds drag and drop at distance.</p>
+    <p>Helical comes in 1&deg; to 4&deg; and offset in 1&deg; to 3&deg;, on any length. Long vanes catch more air at the same angle, so on vanes over about 2.70in, 2&ndash;3&deg; is usually plenty. Past about 3&deg;, more twist mostly adds drag and drop at distance.</p>
 
     <h2>Right or left?</h2>
     <p>Right spins the arrow clockwise as it flies away from you; left spins it counter-clockwise. Neither is more accurate. We default to right because screw-in points and inserts are right-hand threaded, so a clockwise spin tends to snug them rather than loosen them. Pick left only if you shoot single-bevel heads made for a left spin, and keep every arrow in your quiver the same.</p>
@@ -927,9 +929,10 @@ const BUSINESS_EMAIL = 'moserarchery.orders@gmail.com';
 const CHECKOUT_ENDPOINT = '/create-checkout-session';
 const STUDIO_URL = '';                  // leave blank unless the Studio is behind a real login
 const HOWTO_VIDEOS = {apply:'', remove:''};  // a YouTube video ID, or a file name like 'apply-vane.mp4'
-const PACK_PRICES = {12:30, 18:40};     // must match the checkout function
+const PACK_PRICES = {6:20, 12:30, 18:40};  // must match the checkout function
 const CUSTOM_FEE = 10;                  // per pack, must match the checkout function
-const SHIPPING = {flat:4.99, freeAtPacks:2, freeAtSubtotal:80};
+const CUSTOM_ENABLED = false;           // true brings back the Draw your own profile editor
+const SHIPPING = {flat:4.99, freeAtSubtotal:40};   // must match the checkout function
 const MAX_PACKS = 10;
 
 // Add reviews as they come in: {name:'Jane D.', rating:5, date:'2026-10', text:'...', photo:null}
@@ -943,7 +946,7 @@ const SHAPES = {
             nodes:[[0,3.2],[14,9.6],[24,10.2],[49,1.0],[50,0.4]]},
   impact:  {name:'IMPACT',  stock:true, use:'The all-rounder, for a mix of field points and broadheads.',
             nodes:[[0,3.2],[13.7,9.55],[33.83,9.95],[63.9,0.84],[65,0.36]]},
-  compact: {name:'COMPACT', stock:true, use:'Short and tall, for fixed blades. Big steering in a small vane.',
+  compact: {name:'COMPACT', stock:false, use:'Short and tall, for fixed blades. Big steering in a small vane.',
             nodes:[[0,3.2],[16,12.0],[25,14.7],[38,8.6],[47,2.0],[50,0.4]]},
   range:   {name:'RANGE',   stock:true, use:'A full 3in vane. Strong correction, quieter than a tall one.',
             nodes:[[0,3.2],[19,9.8],[38,12.8],[62,6.2],[74,1.1],[76,0.4]]},
@@ -970,8 +973,8 @@ const RULES = {
   wrapMax:1.0, wrapDefault:0.15,   // mm
   steepMax:40,                     // deg, steepest printable slope on a profile
   finRatioMax:4.5,                 // tallest fin / sleeve radius
-  helicalCaps:[[57.15,4],[68.58,3],[Infinity,2]],   // [up to this length mm, max helical deg]
-  offsetMax:2,
+  helicalCaps:[[Infinity,4]],   // [up to this length mm, max helical deg]; 4° on every length
+  offsetMax:3,
   customMaxPoints:25, customMaxH:20
 };
 const SLEEVE = {gap:0.04, wall:0.30, fin:0.60};  // preview only; the Studio sets the real numbers
@@ -1175,7 +1178,8 @@ function sanitizeSaved(s){
   const out = {};
   for(const k of Object.keys(DEFAULT_BUILD)) if(k in s) out[k] = s[k];
   if(out.shape && out.shape!=='custom' && !SHAPES[out.shape]) delete out.shape;
-  if(out.shape==='custom' && !(out.custom && Array.isArray(out.custom.nodes))) out.shape = 'impact';
+  if(out.shape==='custom' && (!CUSTOM_ENABLED || !(out.custom && Array.isArray(out.custom.nodes)))){ out.shape = 'impact'; out.custom = null; }
+  if(out.shape && SHAPES[out.shape] && !SHAPES[out.shape].stock) out.shape = 'impact';
   return out;
 }
 const saveBuild = ()=>store.set('ma_build_v2', B);
@@ -1232,11 +1236,12 @@ function problems(b){
   }
   const w = wrapMM(b);
   if(w!==null && w > RULES.wrapMax) add('arrow', 'That wrap thickness looks too big. Wraps are usually 0.002 to 0.010in. Fix it or leave it blank.');
-  if(b.shape==='custom'){
+  if(b.shape==='custom' && !CUSTOM_ENABLED) add('profile', 'Custom shapes are paused for now. Pick one of our profiles.');
+  else if(b.shape==='custom'){
     const p = customProblem(b.custom && b.custom.nodes, b.lengthMM);
     if(p) add('profile', p);
   } else if(!SHAPES[b.shape]) add('profile', 'Pick a profile.');
-  else if(!SHAPES[b.shape].stock) add('profile', `${SHAPES[b.shape].name} is out of stock right now. Pick another profile.`);
+  else if(!SHAPES[b.shape].stock) add('profile', `${SHAPES[b.shape].name} isn't available right now. Pick another profile.`);
   if(!(b.lengthMM >= minLenFor(b)-1e-6 && b.lengthMM <= RULES.lengthMax+1e-6)){
     add('profile', `Vane length has to be ${inch(minLenFor(b))} to ${inch(RULES.lengthMax)} for this profile.`);
   }
@@ -1246,7 +1251,7 @@ function problems(b){
   }
   if(![3,4].includes(b.fletch)) add('spin', 'Pick 3 or 4 vanes.');
   if(b.twist==='helical' && !(Number.isInteger(b.twistDeg) && b.twistDeg>=1 && b.twistDeg<=helicalCap(b.lengthMM))) add('spin', `Helical on a ${inch(b.lengthMM)} vane goes up to ${helicalCap(b.lengthMM)}°.`);
-  if(b.twist==='offset' && !(Number.isInteger(b.twistDeg) && b.twistDeg>=1 && b.twistDeg<=RULES.offsetMax)) add('spin', 'Offset comes in 1° or 2°.');
+  if(b.twist==='offset' && !(Number.isInteger(b.twistDeg) && b.twistDeg>=1 && b.twistDeg<=RULES.offsetMax)) add('spin', `Offset comes in 1° to ${RULES.offsetMax}°.`);
   if(!['straight','offset','helical'].includes(b.twist)) add('spin', 'Pick a twist.');
   if(!['right','left'].includes(b.dir)) add('spin', 'Pick a direction.');
   const col = colorOf(b.color);
@@ -1281,8 +1286,12 @@ const SUGGEST_TWIST = {
   fixed: {near:['helical',3], far:['helical',2]}
 };
 function suggest(a, b){
-  const ladder = ORDER;   // smallest to largest steering area
-  let i = ladder.indexOf(SUGGEST_SHAPE[a.qTip][a.qPrio]);
+  // Profiles on sale, smallest to largest steering area. Size shifts happen on this
+  // list, so a shelved profile is never suggested and never bounced back to.
+  const ladder = ORDER.filter(k=>SHAPES[k].stock);
+  const base = SUGGEST_SHAPE[a.qTip][a.qPrio];
+  let i = ladder.indexOf(base);
+  if(i<0){ const pos = ORDER.indexOf(base); i = ladder.findIndex(k=>ORDER.indexOf(k) > pos); if(i<0) i = ladder.length-1; }  // shelved: next size up
   const why = [];
   why.push({field:'Field points barely steer, so a smaller, low-drag vane does the job.',
             mech:'Mechanicals fly close to field points, so moderate area and spin are plenty.',
@@ -1559,7 +1568,16 @@ function renderLength(){
 /* =====================================================================
    STEP 4 — SPIN
 ===================================================================== */
-const AMOUNTS = {offset:[[1,'Light'],[2,'Medium']], helical:[[1,'Light'],[2,'Medium'],[3,'Hard'],[4,'Max']]};
+const AMOUNTS = {offset:[[1,'Light'],[2,'Medium'],[3,'Hard']], helical:[[1,'Light'],[2,'Medium'],[3,'Hard'],[4,'Max']]};
+// Pre-filled email for a helical request past what the builder offers; approved by hand before they pay.
+function moreTwistMail(){
+  const od = odMM(B), lines = [
+    'I would like more than 4° helical. Here is my setup:', '',
+    `Profile: ${profileName(B)}, ${inch(B.lengthMM)} long`,
+    `Shaft: ${od ? inch(od,4) + ' outside diameter' : 'not picked yet'}${arrowText(B) ? ' (' + arrowText(B) + ')' : ''}`,
+    `Vanes per arrow: ${B.fletch}`, 'Helical I want: ', ''];
+  return `mailto:${BUSINESS_EMAIL}?subject=${encodeURIComponent('More helical request')}&body=${encodeURIComponent(lines.join('\n'))}`;
+}
 function fitTwistToLength(){
   if(B.twist==='helical'){
     const cap = helicalCap(B.lengthMM);
@@ -1594,12 +1612,12 @@ function renderSpin(){
     const cap = B.twist==='helical' ? helicalCap(B.lengthMM) : RULES.offsetMax;
     setHTML($('#amountChoices'), AMOUNTS[B.twist].map(([d,word])=>{
       const off = d > cap;
-      return `<button type="button" class="choice" role="radio" data-val="${d}" ${off?'disabled':''}>${d}° ${word}<small>${off ? 'Vanes up to ' + inch(RULES.helicalCaps.find(c=>c[1]>=d)[0]) : (B.twist==='helical' && d===4 ? 'Short vanes only' : '&nbsp;')}</small></button>`;
+      return `<button type="button" class="choice" role="radio" data-val="${d}" ${off?'disabled':''}>${d}° ${word}<small>${off ? 'Vanes up to ' + inch(RULES.helicalCaps.find(c=>c[1]>=d)[0]) : (B.twist==='helical' && d===4 && B.lengthMM > 68.58 ? 'Heavy drag at this length' : '&nbsp;')}</small></button>`;
     }).join(''));
     setChecked($('#amountChoices'), B.twistDeg);
-    $('#amountNote').textContent = (B.twist==='helical'
-      ? `Most hunting setups use 2–3°. Longer vanes are capped lower because they catch more air at the same angle.`
-      : 'Offset adds spin with very little drag. Most people use 1–2°.');
+    $('#amountNote').innerHTML = B.twist==='helical'
+      ? `Most hunting setups use 2–3°. Long vanes catch more air at the same angle, so they need less twist.<br>Want more than 4°? <a href="${moreTwistMail()}">Email us before you order</a> and we'll check it for your arrow.`
+      : 'Offset adds spin with very little drag. Most people use 1–2°.';
   }
   const r = $('#spinReadout');
   if(B.twist==='straight') r.innerHTML = 'Straight vanes run along the shaft. The arrow will barely spin, which is fine for field points but not ideal for broadheads.';
@@ -1904,7 +1922,7 @@ const Editor = (()=>{
     $('#editor').hidden = false; $('#customToggle').setAttribute('aria-expanded','true'); $('#customToggle').hidden = true;
     draw();
   }
-  function close(){ $('#editor').hidden = true; $('#customToggle').setAttribute('aria-expanded','false'); $('#customToggle').hidden = false; }
+  function close(){ $('#editor').hidden = true; $('#customToggle').setAttribute('aria-expanded','false'); $('#customToggle').hidden = !CUSTOM_ENABLED; }
   function matchStock(){
     for(const key of ORDER){
       if(!SHAPES[key].stock) continue;
@@ -2055,7 +2073,7 @@ let cart = (store.get('ma_cart_v2') || []).filter(it=>it && it.b && it.id);
 const saveCart = ()=>store.set('ma_cart_v2', cart);
 const cartSubtotal = ()=>cart.reduce((s,it)=>s + lineTotal(it.b), 0);
 const cartPacks = ()=>cart.reduce((s,it)=>s + it.b.qty, 0);
-const shippingFor = (sub, packs)=>(packs >= SHIPPING.freeAtPacks || sub >= SHIPPING.freeAtSubtotal) ? 0 : SHIPPING.flat;
+const shippingFor = sub=>sub >= SHIPPING.freeAtSubtotal ? 0 : SHIPPING.flat;
 
 function addToCart(){
   const p = problems(B);
@@ -2109,8 +2127,7 @@ function promoHTML(){
   const sub = cartSubtotal(), packs = cartPacks();
   if(!cart.length) return ['', ''];
   if(shippingFor(sub, packs)===0) return ['unlocked', 'Free shipping is on.'];
-  const more = SHIPPING.freeAtPacks - packs, spend = SHIPPING.freeAtSubtotal - sub;
-  return ['locked', `Add ${more} more pack${more===1?'':'s'}, or ${money(spend)} more, for free shipping.`];
+  return ['locked', `Add ${money(SHIPPING.freeAtSubtotal - sub)} more for free shipping.`];
 }
 function renderCart(){
   const n = cart.length;
@@ -2329,6 +2346,8 @@ $('#heroStart').addEventListener('click', e=>{
 })();
 if(TEST_MODE) $('#testBanner').hidden = false;
 $('#footerEmail').href = 'mailto:' + BUSINESS_EMAIL;
+$$('.biz-email').forEach(a=>{ a.href = 'mailto:' + BUSINESS_EMAIL + (a.dataset.subject ? '?subject=' + encodeURIComponent(a.dataset.subject) : ''); if(!a.textContent) a.textContent = BUSINESS_EMAIL; });
+$('#customToggle').hidden = !CUSTOM_ENABLED; $('#customNote').hidden = CUSTOM_ENABLED;
 $('#failEmail').href = 'mailto:' + BUSINESS_EMAIL; $('#failEmail').textContent = BUSINESS_EMAIL;
 renderVideos(); renderReviews(); renderCart();
 fitTwistToLength();
