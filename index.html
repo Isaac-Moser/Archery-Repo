@@ -42,6 +42,8 @@
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+/* Safety net: nothing decorative may make the page scroll sideways on a phone. clip (not hidden) keeps the sticky header working. */
+html,body{overflow-x:clip}
 body{margin:0;background:var(--fog);color:var(--text);font:400 16px/1.55 var(--body);-webkit-font-smoothing:antialiased}
 h1,h2,h3{font-family:var(--display);font-weight:600;line-height:1.08;margin:0;letter-spacing:.005em}
 h1{font-size:clamp(40px,6vw,64px);text-transform:uppercase;letter-spacing:.02em}
@@ -92,9 +94,9 @@ img,svg{display:block}
 /* ---- header ---- */
 .site-header{position:sticky;top:0;z-index:50;background:var(--ink);color:var(--on-ink);border-bottom:1px solid var(--ink-line)}
 .site-header .wrap{display:flex;align-items:center;gap:24px;height:var(--header-h)}
-.brand{display:flex;align-items:center;gap:12px;text-decoration:none;flex:none}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;flex:0 1 auto;min-width:0}
 .brand .logo{width:24px;height:40px}
-.wordmark{font:600 22px/1 var(--display);letter-spacing:.06em;text-transform:uppercase}
+.wordmark{font:600 22px/1 var(--display);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;overflow:hidden}
 .site-nav{display:flex;gap:4px;margin-left:auto}
 .site-nav a{padding:8px 12px;border-radius:var(--r-sm);text-decoration:none;color:var(--on-ink-muted);font-weight:500;font-size:15px}
 .site-nav a:hover{color:var(--on-ink)}
@@ -120,6 +122,12 @@ img,svg{display:block}
   .cart-label{display:none}
   .cart-icon{display:block}
   .cart-btn,.menu-btn{padding:6px 10px}
+}
+@media (max-width:380px){
+  .site-header .wrap{padding:0 12px;gap:8px}
+  .brand{gap:8px}
+  .wordmark{font-size:15px;letter-spacing:.03em}
+  .wrap{padding:0 16px}
 }
 
 /* ---- hero ---- */
@@ -961,7 +969,8 @@ const COLORS = [
   {name:'Neon Orange', hex:'#FA8E36', stock:true},
   {name:'Digital Blue', hex:'#0378D0', stock:true},
   {name:'Neon Red', hex:'#FF3F38', stock:true},
-  {name:'Neon Green', hex:'#2EFF6D', stock:true}
+  {name:'Neon Green', hex:'#2EFF6D', stock:true},
+  {name:'Light Green', hex:'#A0FD62', stock:true}   // Overture 95A TPU
 ];
 
 /* =====================================================================
