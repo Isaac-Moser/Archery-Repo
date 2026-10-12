@@ -19,15 +19,14 @@
    See the setup checklist Claude gave you for the exact click-path.
 ===================================================================== */
 
-const PACK_PRICES_CENTS = { 12: 3000, 18: 4000 }; // same prices as index.html's PACK_PRICES -- keep in sync
+const PACK_PRICES_CENTS = { 6: 2000, 12: 3000, 18: 4000 }; // same prices as index.html's PACK_PRICES -- keep in sync
 // Added per pack for a customer-designed shape. Keep in sync with
 // CUSTOM_SHAPE_SURCHARGE in index.html (display only -- this is the real charge).
 const CUSTOM_SHAPE_SURCHARGE_CENTS = 1000;
 const SHIPPING_FLAT_CENTS = 499;
 const MAX_PACKS_PER_ITEM = 10; // same cap as index.html's MAX_PACKS_PER_ITEM
 const MAX_ITEMS = 25;          // sanity cap on cart lines
-const FREE_SHIP_MIN_PACKS = 2;
-const FREE_SHIP_MIN_SUBTOTAL_CENTS = 8000;
+const FREE_SHIP_MIN_SUBTOTAL_CENTS = 4000; // same as index.html's SHIPPING.freeAtSubtotal
 
 export async function onRequestPost(context) {
   const { request, env } = context;
@@ -52,7 +51,6 @@ export async function onRequestPost(context) {
 
     const lineItems = [];
     let itemsSubtotalCents = 0;
-    let totalPacks = 0;
 
     for (const item of items) {
       const packSize = parseInt(item.packSize, 10);
@@ -74,10 +72,9 @@ export async function onRequestPost(context) {
         quantity: qty,
       });
       itemsSubtotalCents += unitAmount * qty;
-      totalPacks += qty;
     }
 
-    const freeShipping = totalPacks >= FREE_SHIP_MIN_PACKS || itemsSubtotalCents >= FREE_SHIP_MIN_SUBTOTAL_CENTS;
+    const freeShipping = itemsSubtotalCents >= FREE_SHIP_MIN_SUBTOTAL_CENTS;
     const shippingCents = freeShipping ? 0 : SHIPPING_FLAT_CENTS;
     if (shippingCents > 0) {
       lineItems.push({ currency: 'usd', unit_amount: shippingCents, name: 'Shipping', quantity: 1 });
@@ -85,13 +82,13 @@ export async function onRequestPost(context) {
 
     // Save the full order (specs, studio copy-paste lines, JSON backup) to
     // KV, keyed by order ref. The webhook reads this back once Stripe
-    // confirms payment -- and it expires on its own after 7 days if a
-    // checkout is started but never completed.
+    // confirms payment -- and it expires on its own after 14 days if a
+    // checkout is started but never completed (14 days covers slow bank payments).
     if (!env.ORDERS_KV) return jsonError('Server misconfigured: ORDERS_KV binding missing', 500);
     await env.ORDERS_KV.put(
       'order:' + orderRef,
       `Name: ${name}\nEmail: ${email}\nAddress: ${address || '(not provided)'}\nNotes: ${notes || '(none)'}\n\n${fullOrderText}`,
-      { expirationTtl: 60 * 60 * 24 * 7 }
+      { expirationTtl: 60 * 60 * 24 * 14 }
     );
 
     const siteUrl = env.SITE_URL || 'https://moserarchery.com';

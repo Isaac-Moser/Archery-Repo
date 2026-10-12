@@ -14,12 +14,12 @@
    2. Environment variable STRIPE_WEBHOOK_SECRET (mark it "Encrypted") --
       you get this value from Stripe Dashboard -> Developers -> Webhooks
       after adding this URL as an endpoint there.
-   3. Environment variable RESEND_API_KEY (mark it "Encrypted") -- from
-      resend.com -> API Keys. Cloudflare Pages Functions don't support
-      the send_email binding (Workers-only), so this calls Resend's
-      HTTPS API instead -- same effect, no binding needed.
-   4. Environment variables BUSINESS_EMAIL and FROM_ADDRESS (FROM_ADDRESS
-      must be on a domain verified in Resend -- see Domains there).
+   3. A "send_email" binding named "EMAIL" (Settings -> Functions ->
+      Email bindings), which requires your domain to be onboarded under
+      Cloudflare's Email Service AND moserarchery.orders@gmail.com added
+      and verified as a destination address under Email Routing first --
+      see the setup checklist Claude gave you.
+   4. Environment variables BUSINESS_EMAIL and FROM_ADDRESS.
 ===================================================================== */
 
 export async function onRequestPost(context) {
@@ -39,16 +39,27 @@ export async function onRequestPost(context) {
     return new Response('Invalid JSON', { status: 400 });
   }
 
-  if (event.type !== 'checkout.session.completed') {
+  // Card payments arrive as checkout.session.completed with payment_status 'paid'.
+  // Bank payments (ACH etc.) complete first as 'unpaid' and the money clears days
+  // later as checkout.session.async_payment_succeeded. Only email once it's paid.
+  const handled = ['checkout.session.completed', 'checkout.session.async_payment_succeeded'];
+  if (!handled.includes(event.type)) {
+    // Not an event we care about -- acknowledge so Stripe doesn't retry it.
     return new Response('Ignored', { status: 200 });
   }
 
   const session = event.data.object || {};
+  if (session.payment_status !== 'paid' && session.payment_status !== 'no_payment_required') {
+    return new Response('Not paid yet; waiting for async_payment_succeeded', { status: 200 });
+  }
   const orderRef = session.metadata?.order_ref || '';
   if (!/^[A-Za-z0-9-]{1,64}$/.test(orderRef)) {
     return new Response('No valid order ref', { status: 200 });
   }
 
+  // Stripe may deliver the same webhook more than once (it retries on
+  // anything but a clean 200). This marker makes sure a duplicate
+  // delivery never emails you the same paid order twice.
   const sentMarkerKey = 'sent:' + orderRef;
   if (await env.ORDERS_KV.get(sentMarkerKey)) {
     return new Response('Already processed', { status: 200 });
@@ -63,34 +74,27 @@ export async function onRequestPost(context) {
     `Payment confirmed by Stripe.\nOrder ref: ${orderRef}\nAmount paid: $${amountTotal}\nCustomer email (from Stripe): ${customerEmail}\n\n` +
     (orderText || `(Order text not found in KV for ref ${orderRef} -- check the Stripe dashboard for session ${session.id})`);
 
-  const sent = await sendOrderEmail(env, subject, body, customerEmail);
-  if (sent) {
-    await env.ORDERS_KV.put(sentMarkerKey, new Date().toISOString(), { expirationTtl: 60 * 60 * 24 * 30 });
+  const mailError = await sendOrderEmail(env, subject, body, customerEmail);
+  if (mailError) {
+    // Answer with an error so Stripe retries (it keeps trying for up to 3 days and
+    // flags the failing endpoint in the dashboard). The sent marker below means a
+    // retry never emails the same order twice.
+    return new Response('Mail failed: ' + mailError, { status: 500 });
   }
-
-  return new Response(sent ? 'OK' : 'Mail failed, but acknowledged', { status: 200 });
+  await env.ORDERS_KV.put(sentMarkerKey, new Date().toISOString(), { expirationTtl: 60 * 60 * 24 * 30 });
+  return new Response('OK', { status: 200 });
 }
 
+// Returns null when the email went out, otherwise a short reason.
 async function sendOrderEmail(env, subject, body, replyTo) {
-  if (!env.RESEND_API_KEY || !env.BUSINESS_EMAIL || !env.FROM_ADDRESS) return false;
+  if (!env.EMAIL || !env.BUSINESS_EMAIL || !env.FROM_ADDRESS) return 'EMAIL binding, BUSINESS_EMAIL or FROM_ADDRESS not set';
   try {
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: 'Bearer ' + env.RESEND_API_KEY,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        to: env.BUSINESS_EMAIL,
-        from: env.FROM_ADDRESS,
-        subject,
-        text: body,
-        reply_to: replyTo,
-      }),
-    });
-    return res.ok;
-  } catch {
-    return false;
+    const msg = { to: env.BUSINESS_EMAIL, from: env.FROM_ADDRESS, subject, text: body };
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(replyTo)) msg.replyTo = replyTo;   // Cloudflare spells it replyTo
+    await env.EMAIL.send(msg);
+    return null;
+  } catch (err) {
+    return (err && (err.code || err.message)) || 'unknown error';
   }
 }
 
@@ -101,7 +105,7 @@ async function verifyStripeSignature(payload, sigHeader, secret) {
     if (k && v) parts[k] = v;
   });
   if (!parts.t || !parts.v1) return false;
-  if (Math.abs(Date.now() / 1000 - parseInt(parts.t, 10)) > 300) return false;
+  if (Math.abs(Date.now() / 1000 - parseInt(parts.t, 10)) > 300) return false; // older than 5 minutes
 
   const signedPayload = `${parts.t}.${payload}`;
   const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
