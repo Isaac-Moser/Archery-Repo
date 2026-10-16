@@ -839,7 +839,7 @@ try{ if(!SITE_PASSWORD || localStorage.getItem('moserArcheryGateOK')==='1') docu
         <tr><td>Fixed-blade broadhead</td><td>Helical 3&deg;</td><td>Helical 2&deg;</td></tr>
       </tbody>
     </table>
-    <p>Helical comes in 1&deg; to 4&deg; and offset in 1&deg; to 3&deg;, on any length. Long vanes catch more air at the same angle, so on vanes over about 2.70in, 2&ndash;3&deg; is usually plenty. Past about 3&deg;, more twist mostly adds drag and drop at distance.</p>
+    <p>Long vanes catch more air at the same angle, so we cap helical by length: up to 4&deg; on vanes 2.25in and shorter, 3&deg; up to 2.70in, and 2&deg; above that. Offset comes in 1&deg; to 3&deg; on any length. Past about 3&deg;, more twist mostly adds drag and drop at distance.</p>
 
     <h2>Right or left?</h2>
     <p>Right spins the arrow clockwise as it flies away from you; left spins it counter-clockwise. Neither is more accurate. We default to right because screw-in points and inserts are right-hand threaded, so a clockwise spin tends to snug them rather than loosen them. Pick left only if you shoot single-bevel heads made for a left spin, and keep every arrow in your quiver the same.</p>
@@ -982,7 +982,7 @@ const RULES = {
   wrapMax:1.0, wrapDefault:0.15,   // mm
   steepMax:40,                     // deg, steepest printable slope on a profile
   finRatioMax:4.5,                 // tallest fin / sleeve radius
-  helicalCaps:[[Infinity,4]],   // [up to this length mm, max helical deg]; 4° on every length
+  helicalCaps:[[57.15,4],[68.58,3],[Infinity,2]],   // [up to this length mm, max helical deg]: long vanes catch more air
   offsetMax:3,
   customMaxPoints:25, customMaxH:20
 };
@@ -1581,7 +1581,7 @@ const AMOUNTS = {offset:[[1,'Light'],[2,'Medium'],[3,'Hard']], helical:[[1,'Ligh
 // Pre-filled email for a helical request past what the builder offers; approved by hand before they pay.
 function moreTwistMail(){
   const od = odMM(B), lines = [
-    'I would like more than 4° helical. Here is my setup:', '',
+    'I would like more helical than the builder offers. Here is my setup:', '',
     `Profile: ${profileName(B)}, ${inch(B.lengthMM)} long`,
     `Shaft: ${od ? inch(od,4) + ' outside diameter' : 'not picked yet'}${arrowText(B) ? ' (' + arrowText(B) + ')' : ''}`,
     `Vanes per arrow: ${B.fletch}`, 'Helical I want: ', ''];
@@ -1621,11 +1621,11 @@ function renderSpin(){
     const cap = B.twist==='helical' ? helicalCap(B.lengthMM) : RULES.offsetMax;
     setHTML($('#amountChoices'), AMOUNTS[B.twist].map(([d,word])=>{
       const off = d > cap;
-      return `<button type="button" class="choice" role="radio" data-val="${d}" ${off?'disabled':''}>${d}° ${word}<small>${off ? 'Vanes up to ' + inch(RULES.helicalCaps.find(c=>c[1]>=d)[0]) : (B.twist==='helical' && d===4 && B.lengthMM > 68.58 ? 'Heavy drag at this length' : '&nbsp;')}</small></button>`;
+      return `<button type="button" class="choice" role="radio" data-val="${d}" ${off?'disabled':''}>${d}° ${word}<small>${off ? 'Vanes up to ' + inch(RULES.helicalCaps.filter(c=>c[1]>=d).pop()[0]) : (B.twist==='helical' && d===4 ? 'Short vanes only' : '&nbsp;')}</small></button>`;
     }).join(''));
     setChecked($('#amountChoices'), B.twistDeg);
     $('#amountNote').innerHTML = B.twist==='helical'
-      ? `Most hunting setups use 2–3°. Long vanes catch more air at the same angle, so they need less twist.<br>Want more than 4°? <a href="${moreTwistMail()}">Email us before you order</a> and we'll check it for your arrow.`
+      ? `Most hunting setups use 2–3°. Longer vanes are capped lower because they catch more air at the same angle.<br>Want more twist than we list for this vane? <a href="${moreTwistMail()}">Email us before you order</a> and we'll check it for your arrow.`
       : 'Offset adds spin with very little drag. Most people use 1–2°.';
   }
   const r = $('#spinReadout');
