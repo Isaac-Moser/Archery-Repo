@@ -152,9 +152,10 @@ img,svg{display:block}
 .builder{padding:40px 0 56px}
 .builder .wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:32px;align-items:start}
 .stage-col{position:sticky;top:calc(var(--header-h) + 16px)}
+.stage-col,.steps{min-width:0}
 @media (max-width:980px){
   .builder{padding-top:24px}
-  .builder .wrap{grid-template-columns:1fr;gap:20px;padding:0 16px}
+  .builder .wrap{grid-template-columns:minmax(0,1fr);gap:20px;padding:0 16px}
   .stage-col{position:static}
   #canvasHost{height:42vh;min-height:260px}
 }
@@ -163,6 +164,8 @@ img,svg{display:block}
 .stage{position:relative;border-radius:var(--r-lg);overflow:hidden;background:radial-gradient(120% 90% at 50% 35%,#EEF2EF 0%,#CDD5D0 60%,#B5C0BA 100%);box-shadow:var(--shadow)}
 #canvasHost{height:min(52vh,460px);min-height:300px;cursor:grab;touch-action:none}
 #canvasHost:active{cursor:grabbing}
+/* The canvas follows its box; it must never set the box's width, or a phone's layout gets pushed wider than the screen. */
+#canvasHost canvas{display:block;width:100%;height:100%}
 #canvasHost.no3d{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:15px;cursor:default}
 .stage-bar{position:absolute;left:12px;right:12px;top:12px;display:flex;gap:8px;align-items:center;pointer-events:none}
 .stage-bar>*{pointer-events:auto}
@@ -1846,7 +1849,7 @@ const View = (()=>{
 
   function resize(){
     const w = host.clientWidth, h = Math.max(1, host.clientHeight);
-    camera.aspect = w/h; camera.updateProjectionMatrix(); renderer.setSize(w, h); dirty = true;
+    camera.aspect = w/h; camera.updateProjectionMatrix(); renderer.setSize(w, h, false); dirty = true;
   }
   new ResizeObserver(resize).observe(host);
   function place(){
