@@ -826,7 +826,7 @@ try{ if(!SITE_PASSWORD || localStorage.getItem('moserArcheryGateOK')==='1') docu
         <div class="field"><label class="label" for="custAddress">Shipping address</label><textarea class="input" id="custAddress" autocomplete="street-address" placeholder="Street, city, state, ZIP" required></textarea></div>
         <div class="field"><label class="label" for="custNotes">Notes <span class="opt">(optional)</span></label><textarea class="input" id="custNotes" placeholder="Anything we should know, like a hunt date"></textarea></div>
         <button class="btn btn-primary btn-lg btn-block" type="submit" id="payBtn">Pay with card</button>
-        <p class="help">You'll finish payment on Stripe's secure page. Every order is printed for you; most ship within 5&ndash;7 business days.</p>
+        <p class="help">You'll finish payment on Stripe's secure page. Every order is printed for you; most ship within 5&ndash;7 business days. By paying, you agree to our <a href="terms.html" target="_blank" rel="noopener">Terms</a> and <a href="shipping-returns.html" target="_blank" rel="noopener">Shipping &amp; returns</a> policy.</p>
         <div class="help err" id="formError" hidden></div>
         <div class="notice amber" id="testPanel" hidden>
           <b>Test order built.</b> Nothing was charged or sent. This is the email you'd receive. Copy it into the Studio.
@@ -989,6 +989,9 @@ try{ if(!SITE_PASSWORD || localStorage.getItem('moserArcheryGateOK')==='1') docu
   <div class="wrap">
     <a class="brand" href="#build" data-page="build"><span class="logo" role="img" aria-label=""></span><span class="wordmark">Moser Archery</span></a>
     <span class="grow">Custom-fit vanes, printed to order.</span>
+    <a href="shipping-returns.html">Shipping &amp; returns</a>
+    <a href="terms.html">Terms</a>
+    <a href="privacy.html">Privacy</a>
     <a id="footerEmail" href="#">Contact us</a>
   </div>
 </footer>
