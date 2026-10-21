@@ -373,8 +373,38 @@ textarea.input{min-height:84px;resize:vertical;line-height:1.45}
 .howto-steps p{margin:0;color:var(--muted)}
 .video{position:relative;aspect-ratio:16/9;border-radius:var(--r-md);overflow:hidden;background:#000;margin:16px 0;max-width:760px}
 .video iframe,.video video{position:absolute;inset:0;width:100%;height:100%;border:0}
+.video.tall{aspect-ratio:9/16;max-width:min(360px,100%)}
 .review{background:var(--paper);border:1px solid var(--line-soft);border-radius:var(--r-md);padding:18px 20px;margin-bottom:12px;max-width:760px}
 .stars{color:var(--red);letter-spacing:2px}
+
+/* ---- photos ---- */
+.photo-group{margin-bottom:48px}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin:18px 0 0}
+.shot{display:block;width:100%;padding:0;border:1px solid var(--line-soft);border-radius:var(--r-md);background:var(--paper);overflow:hidden;cursor:zoom-in;text-align:left;font:inherit;color:inherit;transition:border-color .15s}
+.shot:hover{border-color:var(--text)}
+.shot:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.shot img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;background:var(--fog)}
+.shot.wide{grid-column:1/-1}
+.shot.wide img{aspect-ratio:auto}
+.shot-cap{display:flex;align-items:center;gap:8px;padding:10px 12px;font-weight:600;font-size:15px}
+.shot-cap i{width:14px;height:14px;border-radius:50%;border:1px solid rgba(28,36,33,.25);flex:none}
+.photos-empty{background:var(--paper);border:1px dashed var(--line);border-radius:var(--r-md);padding:18px 20px;max-width:760px}
+.lightbox{border:0;padding:0;background:transparent;width:min(1100px,94vw);max-width:none;max-height:none;color:var(--on-ink);overflow:visible}
+.lightbox::backdrop{background:rgba(14,18,16,.9)}
+.lightbox img{display:block;width:100%;max-height:78vh;object-fit:contain;border-radius:var(--r-md);background:#000}
+.lb-bar{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
+.lb-cap{flex:1 1 160px;min-width:0;font-weight:600}
+.lb-cap small{display:block;font-weight:500;color:var(--on-ink-muted)}
+.lb-arrow{min-width:48px;font-size:22px;padding:6px 12px}
+.share{background:var(--paper);border:1px solid var(--line-soft);border-radius:var(--r-lg);padding:24px;max-width:760px}
+.photos-empty{margin-bottom:24px}
+.share h2{margin-top:0}
+.share .choice{min-width:56px;text-align:center}
+.share .stars-chip{color:var(--red);letter-spacing:1px}
+.share .choice[aria-checked="true"] .stars-chip{color:#fff}
+.consent{display:flex;gap:12px;align-items:flex-start;font-size:15px;line-height:1.45;cursor:pointer}
+.consent input{width:22px;height:22px;margin:1px 0 0;flex:none;accent-color:var(--red)}
+@media (max-width:480px){.gallery{grid-template-columns:1fr 1fr;gap:10px}.shot-cap{font-size:14px;padding:8px 10px}.share{padding:18px}}
 .prose .quote{font:500 24px/1.3 var(--display);border-left:4px solid var(--red);padding:4px 0 4px 18px;margin:24px 0;max-width:34ch}
 
 /* ---- checkout ---- */
@@ -471,6 +501,7 @@ try{ if(!SITE_PASSWORD || localStorage.getItem('moserArcheryGateOK')==='1') docu
       <a href="#build" data-page="build">Build</a>
       <a href="#compare" data-page="compare">Compare</a>
       <a href="#howto" data-page="howto">How it works</a>
+      <a href="#photos" data-page="photos">Photos</a>
       <a href="#reviews" data-page="reviews" id="navReviews" hidden>Reviews</a>
       <a href="#about" data-page="about">About</a>
     </nav>
@@ -856,10 +887,13 @@ try{ if(!SITE_PASSWORD || localStorage.getItem('moserArcheryGateOK')==='1') docu
   <div class="wrap prose">
     <h2>Putting a vane on</h2>
     <div id="videoApply"></div>
+    <div class="callout"><b>No clip needed.</b> The binder clip in the video is just a backstop at the front mark so the vane stops in the right spot. In the field, pinch the shaft between your thumb and finger at the front mark and slide the vane up against your thumb.</div>
     <ol class="howto-steps">
-      <li><div><b>Add two rings of glue</b><p>A small ring near the front of the vane's opening and another in the middle.</p></div></li>
-      <li><div><b>Slide it down the shaft</b><p>Push it on from the nock end until it sits where you want it.</p></div></li>
-      <li><div><b>Hold it a few seconds</b><p>Keep it still while the glue grabs. No clamps and no waiting on the next vane.</p></div></li>
+      <li><div><b>Mark the spot</b><p>Mark the shaft where the front and back of the vane will sit.</p></div></li>
+      <li><div><b>Glue at the back mark</b><p>Put a thin bead of glue around the shaft at the mark nearest the nock, right on it or just inside it.</p></div></li>
+      <li><div><b>Glue in the middle</b><p>Put a second bead roughly halfway between the two marks.</p></div></li>
+      <li><div><b>Slide it on</b><p>From the nock end, slide the vane on in one smooth, quick motion until it reaches the front mark.</p></div></li>
+      <li><div><b>Done</b><p>That's it. On to the next arrow.</p></div></li>
     </ol>
     <div class="callout">A little glue goes a long way. Too much just squeezes out the ends.</div>
 
@@ -873,6 +907,58 @@ try{ if(!SITE_PASSWORD || localStorage.getItem('moserArcheryGateOK')==='1') docu
     <p><button class="btn btn-primary" type="button" data-page-link="build">Build your vanes</button></p>
   </div>
 </section>
+
+<!-- ============================== PHOTOS ============================== -->
+<section id="page-photos" class="page" hidden>
+  <div class="page-head"><svg class="topo" aria-hidden="true"><use href="#topoPattern" width="100%" height="100%"/></svg><div class="wrap"><h1>See every color</h1><p>Real prints, not renders. Every color we stock on the ANCHOR profile, the sample pack we send to clubs, and setups from people shooting them.</p></div></div>
+  <div class="wrap prose">
+    <div class="photos-empty" id="photosEmpty" hidden><b>Photos are on the way.</b><p class="muted" style="margin:6px 0 0">We're shooting every color now. In the meantime, the 3D preview on the Build page shows your exact vane in your color.</p></div>
+
+    <div class="photo-group" id="photos-color" hidden>
+      <h2>Colors</h2>
+      <p class="muted">Every color shown on the ANCHOR profile. Tap a photo to see it larger.</p>
+      <div class="gallery"></div>
+    </div>
+
+    <div class="photo-group" id="photos-sample" hidden>
+      <h2>Club sample pack</h2>
+      <p>The kit we hand to archery clubs around the Fargo area: all five profiles, each in an offset and a helical, printed for real arrows so members can see and feel the difference. Run a club and want one? <a class="biz-email" data-subject="Club sample pack">Email us</a>.</p>
+      <div class="gallery"></div>
+    </div>
+
+    <div class="photo-group" id="photos-customer" hidden>
+      <h2>From shooters</h2>
+      <p class="muted">Sent in by people shooting our vanes, shared with their permission.</p>
+      <div class="gallery"></div>
+    </div>
+
+    <div class="share" id="share">
+      <h2>Share your setup</h2>
+      <p>Shooting our vanes? Send a photo and tell us how they fly. Nothing is posted until we've looked at it, and we remove location data from every photo before it goes up.</p>
+      <form id="shareForm" novalidate>
+        <div class="field"><label class="label" for="shareName">Name to show with your photo</label><input class="input" id="shareName" maxlength="40" autocomplete="given-name" placeholder="Jake, Fargo ND"><div class="help">First name and town is plenty.</div></div>
+        <div class="field"><label class="label" for="shareProfile">Profile</label><select class="input" id="shareProfile"></select></div>
+        <div class="field"><span class="label" id="shareRatingLabel">Rating <span class="opt">(optional)</span></span><div class="choices" id="shareRating" role="radiogroup" aria-labelledby="shareRatingLabel"></div></div>
+        <div class="field"><label class="label" for="shareText">How do they fly? <span class="opt">(optional)</span></label><textarea class="input" id="shareText" maxlength="600" placeholder="Setup, broadhead, distance, what you noticed"></textarea><div class="help" id="shareCount">0 / 600</div></div>
+        <div class="field"><label class="consent"><input type="checkbox" id="shareConsent"><span>I took these photos, I'm 13 or older, and anyone else in them is OK with it. Moser Archery may post my photos and review, with the name above, on its website and social media.</span></label></div>
+        <button class="btn btn-primary btn-lg" type="submit">Open email to attach photos</button>
+        <p class="help">Your email app opens with this filled in. Attach up to 5 photos and hit send. No email app? Send them to <a class="biz-email" data-subject="Photo submission"></a> with the details above.</p>
+        <div class="help err" id="shareError" hidden></div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<dialog class="lightbox" id="lightbox" aria-label="Photo viewer">
+  <img id="lbImg" alt="">
+  <div class="lb-bar">
+    <button class="btn btn-on-ink lb-arrow" type="button" id="lbPrev" aria-label="Previous photo">&lsaquo;</button>
+    <div class="lb-cap" id="lbCap"></div>
+    <button class="btn btn-primary" type="button" id="lbBuild" hidden>Build in this color</button>
+    <button class="btn btn-on-ink lb-arrow" type="button" id="lbNext" aria-label="Next photo">&rsaquo;</button>
+    <button class="btn btn-on-ink" type="button" id="lbClose">Close</button>
+  </div>
+</dialog>
 
 <!-- ============================== REVIEWS ============================== -->
 <section id="page-reviews" class="page" hidden>
@@ -936,7 +1022,12 @@ try{ if(!SITE_PASSWORD || localStorage.getItem('moserArcheryGateOK')==='1') docu
 const BUSINESS_EMAIL = 'moserarchery.orders@gmail.com';
 const CHECKOUT_ENDPOINT = '/create-checkout-session';
 const STUDIO_URL = '';                  // leave blank unless the Studio is behind a real login
-const HOWTO_VIDEOS = {apply:'', remove:''};  // a YouTube video ID, or a file name like 'apply-vane.mp4'
+// Each is a YouTube video ID, a file name like 'videos/apply.mp4', or {src, poster, tall:true for a vertical phone video}.
+// Self-hosted files: H.264 MP4 with narration, location data removed, under 25 MB each (Cloudflare Pages limit).
+const HOWTO_VIDEOS = {
+  apply:  {src:'videos/install-vane.mp4', poster:'videos/install-vane-poster.webp'},
+  remove: {src:'videos/remove-vane.mp4',  poster:'videos/remove-vane-poster.webp'}
+};
 const PACK_PRICES = {6:20, 12:30, 18:40};  // must match the checkout function
 const CUSTOM_FEE = 10;                  // per pack, must match the checkout function
 const CUSTOM_ENABLED = false;           // true brings back the Draw your own profile editor
@@ -945,6 +1036,27 @@ const MAX_PACKS = 10;
 
 // Add reviews as they come in: {name:'Jane D.', rating:5, date:'2026-10', text:'...', photo:null}
 const REVIEWS = [];
+
+// PHOTOS: put the image files in a "photos" folder next to index.html, then add one line each.
+//   group 'color'    -> ANCHOR in one color. color must match a name in COLORS exactly.
+//   group 'sample'   -> the club sample pack.
+//   group 'customer' -> ONLY photos a customer sent with the permission box checked.
+// Optional: thumb (smaller file for the grid), caption, alt (describes the photo for screen readers).
+// {group:'color',    src:'photos/anchor-neon-red.webp', thumb:'photos/anchor-neon-red-sm.webp', color:'Neon Red', alt:'Neon Red ANCHOR vanes on an arrow'},
+// {group:'sample',   src:'photos/sample-pack-1.webp', caption:'All ten sleeves', alt:'Club sample pack laid out with its insert card'},
+// {group:'customer', src:'photos/cust-jake-1.webp', caption:'Jake, Fargo ND', alt:'RANGE vanes on a hunting arrow'},
+const PHOTOS = [
+  {group:'color', src:'photos/anchor-white.webp', thumb:'photos/anchor-white-sm.webp', color:'White', alt:'White ANCHOR vane, helical'},
+  {group:'color', src:'photos/anchor-black.webp', thumb:'photos/anchor-black-sm.webp', color:'Black', alt:'Black ANCHOR vane, helical'},
+  {group:'color', src:'photos/anchor-neon-yellow.webp', thumb:'photos/anchor-neon-yellow-sm.webp', color:'Neon Yellow', alt:'Neon Yellow ANCHOR vane, helical'},
+  {group:'color', src:'photos/anchor-neon-magenta.webp', thumb:'photos/anchor-neon-magenta-sm.webp', color:'Neon Magenta', alt:'Neon Magenta ANCHOR vane, helical'},
+  {group:'color', src:'photos/anchor-neon-orange.webp', thumb:'photos/anchor-neon-orange-sm.webp', color:'Neon Orange', alt:'Neon Orange ANCHOR vane, helical'},
+  {group:'color', src:'photos/anchor-digital-blue.webp', thumb:'photos/anchor-digital-blue-sm.webp', color:'Digital Blue', alt:'Digital Blue ANCHOR vane, helical'},
+  {group:'color', src:'photos/anchor-neon-red.webp', thumb:'photos/anchor-neon-red-sm.webp', color:'Neon Red', alt:'Neon Red ANCHOR vane, helical'},
+  {group:'color', src:'photos/anchor-neon-green.webp', thumb:'photos/anchor-neon-green-sm.webp', color:'Neon Green', alt:'Neon Green ANCHOR vane, helical'},
+  {group:'color', src:'photos/anchor-light-green.webp', thumb:'photos/anchor-light-green-sm.webp', color:'Light Green', alt:'Light Green ANCHOR vane, helical'},
+  {group:'sample', src:'photos/sample-pack-lineup.webp', wide:true, caption:'All ten sleeves, longest to shortest', alt:'Ten vanes in a row: ANCHOR, RANGE, IMPACT, RIDGE and GHOST, each in an offset and a helical, in ten colors'},
+];
 
 // Set stock:false to take a profile or color off sale.
 const SHAPES = {
@@ -1681,7 +1793,7 @@ function renderSummary(){
     ['Profile', `${profileName(B)}, ${inch(B.lengthMM)}`],
     ['Spin', `${B.fletch} vanes, ${twistText(B).toLowerCase()}`],
     ['Color', col ? col.name : '—'],
-    ['Weight', grains ? `About ${Math.round(grains)} grains` : '—']
+    ['Weight', grains ? `About ${Math.round(grains)} grains each` : '—']
   ];
   $('#summaryList').innerHTML = rows.map(([k,v])=>`<dt>${k}</dt><dd>${esc(v)}</dd>`).join('');
   const p = problems(B);
@@ -1901,9 +2013,24 @@ function buildPreviewMesh(b){
     }
     for(let k=0;k<K;k++) quad(prev.R[k+1],prev.L[k+1],prev.L[k],prev.R[k]);
   }
-  return {positions, normals, grains: Math.abs(vol)/1000*1.21*15.4324};
+  return {positions, normals, grains: estimateGrains(b)};
 }
-function estimateGrains(){ return buildPreviewMesh(B).grains; }
+/* WEIGHT (grains per vane). Vase mode prints one 0.30mm line per 0.15mm layer,
+   around the sleeve and out and back along each fin, so weight follows the length
+   of that path, not the solid volume. Per layer:
+     2*pi*(sleeve radius - 0.15) + fins*(2*fin height - 0.55)  mm
+   times layers (length/0.15) times grains per mm of path.
+   Calibrated Oct 2026 on 10 weighed sample-pack vanes (all 5 profiles, 3 and 4 fin,
+   helical and offset): every estimate within 0.7 grains. Twist doesn't change it. */
+const WEIGHT = {grPerMM:0.000750, layerH:0.15, inset:0.15, finExtra:-0.55};
+function estimateGrains(b=B){
+  const L = b.lengthMM, curve = curveAt(profileNodes(b), L), N = 200;
+  let s = 0;
+  for(let i=0;i<=N;i++) s += Math.max(0, curveHeightAt(curve, i/N*L)) * ((i===0||i===N) ? 0.5 : 1);
+  const sleeveR = seatR(b) + 0.085/2 + 0.30;   // the Studio's real sleeve (clearance 0.085, wall 0.30)
+  const perLayer = 2*Math.PI*(sleeveR - WEIGHT.inset) + b.fletch*(2*s/N + WEIGHT.finExtra);
+  return WEIGHT.grPerMM * (L/WEIGHT.layerH) * perLayer;
+}
 
 /* =====================================================================
    CUSTOM PROFILE EDITOR
@@ -2291,15 +2418,20 @@ function renderCompare(){
 }
 function renderReviews(){
   $('#navReviews').hidden = !REVIEWS.length;
-  if(!REVIEWS.length){ $('#reviewsSummary').textContent = 'No reviews yet.'; $('#reviewsList').innerHTML = '<p class="muted">Tried a set? Email us how they flew, with a photo if you have one.</p>'; return; }
+  if(!REVIEWS.length){ $('#reviewsSummary').textContent = 'No reviews yet.'; $('#reviewsList').innerHTML = '<p class="muted">Tried a set? <button class="link-btn" type="button" data-page-link="photos">Share a photo and review</button>.</p>'; return; }
   const avg = REVIEWS.reduce((s,r)=>s+r.rating,0)/REVIEWS.length;
   $('#reviewsSummary').textContent = `${avg.toFixed(1)} out of 5 from ${REVIEWS.length} review${REVIEWS.length>1?'s':''}`;
-  $('#reviewsList').innerHTML = REVIEWS.slice().reverse().map(r=>`<div class="review"><div class="stars" aria-label="${r.rating} out of 5">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div><h3>${esc(r.name)}</h3><p class="muted small">${esc(r.date||'')}</p><p>${esc(r.text)}</p>${r.photo ? `<img src="${esc(r.photo)}" alt="Photo from ${esc(r.name)}" style="max-width:260px;border-radius:8px">` : ''}</div>`).join('');
+  $('#reviewsList').innerHTML = REVIEWS.slice().reverse().map(r=>`<div class="review"><div class="stars" aria-label="${r.rating} out of 5">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div><h3>${esc(r.name)}</h3><p class="muted small">${esc(r.date||'')}</p><p>${esc(r.text)}</p>${r.photo ? `<img src="${esc(r.photo)}" alt="Photo from ${esc(r.name)}" style="max-width:260px;border-radius:8px">` : ''}</div>`).join('')
+    + '<p style="margin-top:20px"><button class="btn btn-ghost" type="button" data-page-link="photos">Share your photos and review</button></p>';
 }
 function renderVideos(){
-  const embed = v=>!v ? '' : /\.(mp4|webm|mov)$/i.test(v)
-    ? `<div class="video"><video controls playsinline src="${esc(v)}"></video></div>`
-    : `<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/${esc(v)}" title="How-to video" allowfullscreen loading="lazy"></iframe></div>`;
+  const embed = raw=>{
+    if(!raw) return '';
+    const v = typeof raw==='string' ? {src:raw} : raw;
+    return /\.(mp4|webm|mov)$/i.test(v.src)
+      ? `<div class="video${v.tall ? ' tall' : ''}"><video controls playsinline preload="metadata"${v.poster ? ` poster="${esc(v.poster)}"` : ''} src="${esc(v.src)}"></video></div>`
+      : `<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/${esc(v.src)}" title="How-to video" allowfullscreen loading="lazy"></iframe></div>`;
+  };
   $('#videoApply').innerHTML = embed(HOWTO_VIDEOS.apply);
   $('#videoRemove').innerHTML = embed(HOWTO_VIDEOS.remove);
 }
@@ -2307,7 +2439,94 @@ function renderVideos(){
 /* =====================================================================
    PAGES
 ===================================================================== */
-const PAGES = ['build','compare','howto','reviews','about','checkout'];
+/* =====================================================================
+   PHOTOS
+===================================================================== */
+const LB = {list:[], i:0};
+function renderPhotos(){
+  const rank = name=>{ const i = COLORS.findIndex(c=>c.name===name); return i < 0 ? 999 : i; };
+  const groups = {
+    color: PHOTOS.filter(p=>p.group==='color').sort((a,b)=>rank(a.color)-rank(b.color)),
+    sample: PHOTOS.filter(p=>p.group==='sample'),
+    customer: PHOTOS.filter(p=>p.group==='customer'),
+  };
+  LB.list = [...groups.color, ...groups.sample, ...groups.customer];
+  Object.entries(groups).forEach(([g, list])=>{
+    const box = $('#photos-'+g);
+    box.hidden = !list.length;
+    $('.gallery', box).innerHTML = list.map(p=>{
+      const col = p.color ? COLORS.find(c=>c.name===p.color) : null;
+      const cap = p.caption || p.color || '';
+      return `<button type="button" class="shot${p.wide ? ' wide' : ''}" data-shot="${LB.list.indexOf(p)}" aria-label="Open photo${cap ? ': ' + esc(cap) : ''}">`
+        + `<img src="${esc(p.thumb || p.src)}" alt="${esc(p.alt || cap)}" loading="lazy" decoding="async">`
+        + (cap ? `<span class="shot-cap">${col ? `<i style="background:${esc(col.hex)}"></i>` : ''}${esc(cap)}</span>` : '')
+        + `</button>`;
+    }).join('');
+  });
+  $('#photosEmpty').hidden = LB.list.length > 0;
+}
+function showShot(i){
+  const n = LB.list.length; if(!n) return;
+  LB.i = (i + n) % n;
+  const p = LB.list[LB.i], cap = p.caption || p.color || '';
+  $('#lbImg').src = p.src; $('#lbImg').alt = p.alt || cap;
+  $('#lbCap').innerHTML = `${esc(cap)}<small>${LB.i + 1} of ${n}</small>`;
+  const col = p.group==='color' && p.color ? COLORS.find(c=>c.name===p.color && c.stock) : null;
+  $('#lbBuild').hidden = !col; $('#lbBuild').dataset.hex = col ? col.hex : '';
+  $('#lbPrev').hidden = $('#lbNext').hidden = n < 2;
+}
+$('#page-photos').addEventListener('click', e=>{
+  const s = e.target.closest('[data-shot]'); if(!s) return;
+  showShot(+s.dataset.shot);
+  const d = $('#lightbox'); if(d.showModal) d.showModal(); else window.open(LB.list[LB.i].src, '_blank', 'noopener');
+});
+$('#lbPrev').onclick = ()=>showShot(LB.i - 1);
+$('#lbNext').onclick = ()=>showShot(LB.i + 1);
+$('#lbClose').onclick = ()=>$('#lightbox').close();
+$('#lightbox').addEventListener('click', e=>{ if(e.target===e.currentTarget) e.currentTarget.close(); });
+$('#lightbox').addEventListener('keydown', e=>{ if(e.key==='ArrowLeft') showShot(LB.i - 1); if(e.key==='ArrowRight') showShot(LB.i + 1); });
+$('#lbBuild').onclick = ()=>{
+  const col = colorOf($('#lbBuild').dataset.hex); if(!col) return;
+  B.color = col.hex; $('#lightbox').close(); go('build'); refresh();
+  toast(`${esc(col.name)} selected. Pick the rest of your setup.`);
+};
+
+/* Share your setup: launch version builds an email the customer attaches photos to.
+   Nothing is uploaded or stored by the site. */
+let shareRating = 0;
+function initShare(){
+  $('#shareProfile').innerHTML = ['Not sure', ...Object.values(SHAPES).filter(s=>s.stock).map(s=>s.name)]
+    .map((n,i)=>`<option${i ? '' : ' value=""'}>${esc(n)}</option>`).join('');
+  $('#shareRating').innerHTML = `<button type="button" class="choice" role="radio" data-val="0">Skip</button>`
+    + [5,4,3,2,1].map(n=>`<button type="button" class="choice" role="radio" data-val="${n}" aria-label="${n} out of 5"><span class="stars-chip">${'★'.repeat(n)}</span></button>`).join('');
+  setChecked($('#shareRating'), 0);
+  $('#shareRating').addEventListener('click', e=>{ const b = e.target.closest('[role="radio"]'); if(b){ shareRating = +b.dataset.val; setChecked($('#shareRating'), shareRating); } });
+  $('#shareText').addEventListener('input', ()=>{ $('#shareCount').textContent = `${$('#shareText').value.length} / 600`; });
+  $('#shareForm').addEventListener('submit', e=>{
+    e.preventDefault();
+    const err = $('#shareError'), name = $('#shareName').value.trim().replace(/\s+/g, ' ');
+    const msg = !name ? 'Add the name you want shown with your photo.' : !$('#shareConsent').checked ? 'Check the permission box so we can post your photos.' : '';
+    err.hidden = !msg; err.textContent = msg;
+    if(msg) return;
+    const review = $('#shareText').value.trim();
+    const body = [
+      'PHOTO SUBMISSION',
+      '',
+      'Name to show: ' + name,
+      'Profile: ' + ($('#shareProfile').value || 'Not sure'),
+      'Rating: ' + (shareRating ? shareRating + ' of 5' : '(none)'),
+      'Review: ' + (review || '(none)'),
+      '',
+      'Permission: I took these photos, I am 13 or older, and anyone else in them is OK with it. Moser Archery may post my photos and review, with the name above, on its website and social media.',
+      '',
+      '>>> Attach your photos (up to 5) before you send. <<<',
+    ].join('\n');
+    location.href = 'mailto:' + BUSINESS_EMAIL + '?subject=' + encodeURIComponent('Photo submission: ' + name) + '&body=' + encodeURIComponent(body);
+    toast('Your email should be open. Attach your photos and hit send.', 6000);
+  });
+}
+
+const PAGES = ['build','compare','howto','photos','reviews','about','checkout'];
 function go(page, push=true){
   if(!PAGES.includes(page)) page = 'build';
   if(page==='reviews' && !REVIEWS.length) page = 'build';
@@ -2358,7 +2577,7 @@ $('#footerEmail').href = 'mailto:' + BUSINESS_EMAIL;
 $$('.biz-email').forEach(a=>{ a.href = 'mailto:' + BUSINESS_EMAIL + (a.dataset.subject ? '?subject=' + encodeURIComponent(a.dataset.subject) : ''); if(!a.textContent) a.textContent = BUSINESS_EMAIL; });
 $('#customToggle').hidden = !CUSTOM_ENABLED; $('#customNote').hidden = CUSTOM_ENABLED;
 $('#failEmail').href = 'mailto:' + BUSINESS_EMAIL; $('#failEmail').textContent = BUSINESS_EMAIL;
-renderVideos(); renderReviews(); renderCart();
+renderVideos(); renderReviews(); renderPhotos(); initShare(); renderCart();
 fitTwistToLength();
 refresh();
 openStep(STEPS.find(s=>!stepDone(s)) || 'finish', false);
