@@ -9,17 +9,20 @@
    redirect back to your site. Verifies the request is genuinely from
    Stripe, pulls the saved order back out of KV, and emails it to you.
 
-   REQUIRES, in the Cloudflare Pages dashboard (Settings):
+   REQUIRES, in the Cloudflare Pages dashboard (Settings, Production):
    1. The same "ORDERS_KV" binding as create-checkout-session.js.
-   2. Environment variable STRIPE_WEBHOOK_SECRET (mark it "Encrypted") --
-      you get this value from Stripe Dashboard -> Developers -> Webhooks
-      after adding this URL as an endpoint there.
-   3. A "send_email" binding named "EMAIL" (Settings -> Functions ->
-      Email bindings), which requires your domain to be onboarded under
-      Cloudflare's Email Service AND moserarchery.orders@gmail.com added
-      and verified as a destination address under Email Routing first --
-      see the setup checklist Claude gave you.
-   4. Environment variables BUSINESS_EMAIL and FROM_ADDRESS.
+   2. Secret STRIPE_WEBHOOK_SECRET -- the live endpoint's whsec_ value from
+      Stripe Workbench -> Webhooks.
+   3. Text variables BUSINESS_EMAIL (where order emails go) and FROM_ADDRESS
+      (an address on moserarchery.com, which is onboarded under
+      Cloudflare Email Service -> Email Sending).
+   4. EMAIL SENDING -- either one works:
+      a) Text variable CF_ACCOUNT_ID (your Cloudflare account ID) plus secret
+         CF_EMAIL_API_TOKEN (an API token allowed to send email). This uses
+         Cloudflare's Email Sending REST API and works on Pages, which has no
+         dashboard option for an email binding.
+      b) A "send_email" binding named EMAIL (Workers-style). Used first if
+         present.
 ===================================================================== */
 
 export async function onRequestPost(context) {
@@ -87,14 +90,38 @@ export async function onRequestPost(context) {
 
 // Returns null when the email went out, otherwise a short reason.
 async function sendOrderEmail(env, subject, body, replyTo) {
-  if (!env.EMAIL || !env.BUSINESS_EMAIL || !env.FROM_ADDRESS) return 'EMAIL binding, BUSINESS_EMAIL or FROM_ADDRESS not set';
+  if (!env.BUSINESS_EMAIL || !env.FROM_ADDRESS) return 'BUSINESS_EMAIL or FROM_ADDRESS not set';
+  const validReply = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(replyTo);
+
+  // Option b: a send_email binding, if one is attached.
+  if (env.EMAIL) {
+    try {
+      const msg = { to: env.BUSINESS_EMAIL, from: env.FROM_ADDRESS, subject, text: body };
+      if (validReply) msg.replyTo = replyTo;   // Cloudflare's binding spells it replyTo
+      await env.EMAIL.send(msg);
+      return null;
+    } catch (err) {
+      return 'binding: ' + ((err && (err.code || err.message)) || 'unknown error');
+    }
+  }
+
+  // Option a: Cloudflare Email Sending REST API (works from Pages Functions).
+  if (!env.CF_ACCOUNT_ID || !env.CF_EMAIL_API_TOKEN) return 'No email sender: set CF_ACCOUNT_ID and CF_EMAIL_API_TOKEN';
   try {
-    const msg = { to: env.BUSINESS_EMAIL, from: env.FROM_ADDRESS, subject, text: body };
-    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(replyTo)) msg.replyTo = replyTo;   // Cloudflare spells it replyTo
-    await env.EMAIL.send(msg);
-    return null;
+    const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${env.CF_ACCOUNT_ID}/email/sending/send`, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + env.CF_EMAIL_API_TOKEN, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to: env.BUSINESS_EMAIL, from: env.FROM_ADDRESS, subject, text: body }),
+    });
+    let data = null;
+    try { data = await res.json(); } catch { /* non-JSON error page */ }
+    if (res.ok && data && data.success) return null;
+    const why = data && Array.isArray(data.errors) && data.errors.length
+      ? data.errors.map((e) => `${e.code} ${e.message}`).join('; ')
+      : 'HTTP ' + res.status;
+    return 'REST: ' + why;
   } catch (err) {
-    return (err && (err.code || err.message)) || 'unknown error';
+    return 'REST: ' + ((err && err.message) || 'network error');
   }
 }
 
