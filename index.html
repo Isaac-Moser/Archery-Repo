@@ -406,6 +406,15 @@ textarea.input{min-height:84px;resize:vertical;line-height:1.45}
 .share .stars-chip{color:var(--red);letter-spacing:1px}
 .share .choice[aria-checked="true"] .stars-chip{color:#fff}
 .share-lede{margin:6px 0 22px;color:var(--muted)}
+.ship-addr{border:0;padding:0;margin:0 0 18px;min-width:0}
+.ship-addr legend{padding:0;margin-bottom:10px}
+.ship-addr .field{margin-bottom:12px}
+.label.sub{font-size:14px;margin-bottom:6px}
+.addr-grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1.3fr) minmax(0,0.9fr);gap:12px}
+.addr-grid select.input{padding-left:10px;padding-right:4px}
+.addr-grid .field{margin:0}
+.input.bad{border-color:var(--red-deep);box-shadow:0 0 0 1px var(--red-deep)}
+@media (max-width:560px){.addr-grid{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}.addr-grid .addr-city{grid-column:1 / -1}}
 .share-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .share-grid.place{grid-template-columns:1.5fr 1fr;margin-top:12px}
 .share-grid .field{margin:0}
@@ -874,11 +883,20 @@ try{ if(!SITE_PASSWORD || localStorage.getItem('moserArcheryGateOK')==='1') docu
         <h2>Shipping details</h2>
         <div class="field"><label class="label" for="custName">Full name</label><input class="input" id="custName" autocomplete="name" required></div>
         <div class="field"><label class="label" for="custEmail">Email</label><input class="input" id="custEmail" type="email" autocomplete="email" required><div class="help">We'll send your order updates here.</div></div>
-        <div class="field"><label class="label" for="custAddress">Shipping address</label><textarea class="input" id="custAddress" autocomplete="street-address" placeholder="Street, city, state, ZIP" required></textarea></div>
+        <fieldset class="ship-addr">
+          <legend class="label">Shipping address <span class="opt">(United States only)</span></legend>
+          <div class="field"><label class="label sub" for="custStreet">Street address <span class="req" aria-hidden="true">*</span></label><input class="input" id="custStreet" name="ship-street" autocomplete="shipping address-line1" maxlength="80" required></div>
+          <div class="field"><label class="label sub" for="custStreet2">Apt, suite or unit <span class="opt">(optional)</span></label><input class="input" id="custStreet2" name="ship-street2" autocomplete="shipping address-line2" maxlength="40"></div>
+          <div class="addr-grid">
+            <div class="field addr-city"><label class="label sub" for="custCity">City <span class="req" aria-hidden="true">*</span></label><input class="input" id="custCity" name="ship-city" autocomplete="shipping address-level2" maxlength="40" required></div>
+            <div class="field"><label class="label sub" for="custState">State <span class="req" aria-hidden="true">*</span></label><select class="input" id="custState" name="ship-state" autocomplete="shipping address-level1" required><option value="">Choose…</option></select></div>
+            <div class="field"><label class="label sub" for="custZip">ZIP code <span class="req" aria-hidden="true">*</span></label><input class="input" id="custZip" name="ship-zip" autocomplete="shipping postal-code" inputmode="numeric" maxlength="10" required></div>
+          </div>
+        </fieldset>
         <div class="field"><label class="label" for="custNotes">Notes <span class="opt">(optional)</span></label><textarea class="input" id="custNotes" placeholder="Anything we should know, like a hunt date"></textarea></div>
+        <div class="help err" id="formError" role="alert" hidden style="margin:0 0 12px"></div>
         <button class="btn btn-primary btn-lg btn-block" type="submit" id="payBtn">Pay with card</button>
         <p class="help">You'll finish payment on Stripe's secure page. Every order is printed for you; most ship within 5&ndash;7 business days. By paying, you agree to our <a href="terms.html" target="_blank" rel="noopener">Terms</a> and <a href="shipping-returns.html" target="_blank" rel="noopener">Shipping &amp; returns</a> policy.</p>
-        <div class="help err" id="formError" hidden></div>
         <div class="notice amber" id="testPanel" hidden>
           <b>Test order built.</b> Nothing was charged or sent. This is the email you'd receive. Copy it into the Studio.
           <textarea id="testText" readonly></textarea>
@@ -1002,7 +1020,7 @@ try{ if(!SITE_PASSWORD || localStorage.getItem('moserArcheryGateOK')==='1') docu
     <div class="reviews" id="reviewsList"></div>
     <div class="share" id="share">
       <h2 id="shareTitle">Leave a review</h2>
-      <p class="share-lede">Shooting our vanes? Send a photo or two and tell us how they fly. Nothing is posted until we've looked at it.</p>
+      <p class="share-lede">Shooting our vanes? Tell us how they fly, and add a photo of your setup if you can. Nothing is posted until we've looked at it.</p>
       <form id="shareForm" novalidate>
         <input class="hp" type="text" id="shareWebsite" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
 
@@ -1012,7 +1030,7 @@ try{ if(!SITE_PASSWORD || localStorage.getItem('moserArcheryGateOK')==='1') docu
           <div class="field"><label class="label" for="shareLast">Last name <span class="opt">(optional)</span></label><input class="input" id="shareLast" maxlength="40" autocomplete="family-name"></div>
         </div>
         <div class="share-grid place">
-          <div class="field"><label class="label" for="shareTown">Town <span class="opt">(optional)</span></label><input class="input" id="shareTown" maxlength="40" autocomplete="address-level2"></div>
+          <div class="field"><label class="label" for="shareCity">City <span class="opt">(optional)</span></label><input class="input" id="shareCity" maxlength="40" autocomplete="address-level2"></div>
           <div class="field"><label class="label" for="shareState">State <span class="req" aria-hidden="true">*</span></label><select class="input" id="shareState" required></select></div>
         </div>
         <p class="show-as" id="shareShowAs">Only your last initial is shown.</p>
@@ -1023,17 +1041,17 @@ try{ if(!SITE_PASSWORD || localStorage.getItem('moserArcheryGateOK')==='1') docu
         <div class="field"><span class="label" id="shareRatingLabel">Rating <span class="req" aria-hidden="true">*</span></span><div class="choices" id="shareRating" role="radiogroup" aria-labelledby="shareRatingLabel"></div></div>
         <div class="field"><label class="label" for="shareText">How do they fly? <span class="req" aria-hidden="true">*</span></label><textarea class="input" id="shareText" maxlength="600" required placeholder="Setup, broadhead, distance, what you noticed"></textarea><div class="help" id="shareCount">0 / 600</div></div>
 
-        <h3 class="share-sub">Photos <span class="req" aria-hidden="true">*</span></h3>
+        <h3 class="share-sub">Photos <span class="opt" style="text-transform:none;letter-spacing:0">(recommended)</span></h3>
         <label class="drop" id="shareDrop" for="shareFiles">
           <input type="file" id="shareFiles" accept="image/*" multiple>
           <b>Add photos</b>
           <span>Up to 4. Tap to choose, or drag them here.</span>
         </label>
         <div class="thumbs" id="shareThumbs"></div>
-        <div class="help">Photos are resized and their hidden location data is removed on your device before they're sent.</div>
+        <div class="help">Not required, but a photo helps other archers see your setup. Photos are resized and their hidden location data is removed on your device before they're sent.</div>
 
         <h3 class="share-sub">Permission</h3>
-        <label class="consent-box"><input type="checkbox" id="shareConsent"><span>I took these photos, I'm 13 or older, and anyone else in them is OK with it. Moser Archery may post my photos and review, with my first name, last initial, town and state, on its website and social media.</span></label>
+        <label class="consent-box"><input type="checkbox" id="shareConsent"><span>I'm 13 or older. If I sent photos, I took them and anyone else in them is OK with it. Moser Archery may post my review and photos, with my first name, last initial, city and state, on its website and social media.</span></label>
 
         <div class="share-actions">
           <button class="btn btn-primary btn-lg" type="submit" id="shareSend" disabled>Send my review</button>
@@ -1044,7 +1062,7 @@ try{ if(!SITE_PASSWORD || localStorage.getItem('moserArcheryGateOK')==='1') docu
       <div class="share-done" id="shareDone" hidden>
         <div class="tick" aria-hidden="true"></div>
         <h3 id="shareDoneTitle">Thanks!</h3>
-        <p class="muted">We got your photos and review. We'll take a look, and if they go up you'll see them right here.</p>
+        <p class="muted">We got your review. We'll take a look, and if they go up you'll see them right here.</p>
         <button class="btn btn-ghost" type="button" id="shareAgain">Send more photos</button>
       </div>
     </div>
@@ -1123,11 +1141,11 @@ const SHIPPING = {flat:4.99, freeAtSubtotal:40};   // must match the checkout fu
 const MAX_PACKS = 10;
 
 // REVIEWS: one entry per approved photo submission (copy the details from the "Photo submission" email).
-//   first, last (optional; only the initial is shown), town (optional), state, profile, rating 1-5, date, text,
+//   first, last (optional; only the initial is shown), city (optional), state, profile, rating 1-5, date, text,
 //   photos: [{src, thumb (optional smaller file), alt (describes the photo)}]. Put the photo files in the photos folder.
 //   If text has an apostrophe, put a backslash before it: don\'t
 const REVIEWS = [
-  {first:'Sawyer', last:'', town:'Roseau', state:'MN', profile:'IMPACT', rating:5, date:'October 2026',
+  {first:'Sawyer', last:'', city:'Roseau', state:'MN', profile:'IMPACT', rating:5, date:'October 2026',
    text:'They fly incredible and very quiet. Steer my broad heads great!',
    photos:[
      {src:'photos/cust-sawyer-1.webp', thumb:'photos/cust-sawyer-1-sm.webp', alt:'Neon Yellow IMPACT vanes on an arrow nocked on a hunting bow'},
@@ -2421,7 +2439,9 @@ function buildOrder(c){
   const sub = cartSubtotal(), ship = shippingFor(sub, cartPacks());
   const pad = s=>('  ' + s + ':').padEnd(20);
   const lines = ['========================================', 'MOSER ARCHERY: NEW ORDER', 'Ref: ' + ref, '========================================', '',
-    'CUSTOMER', pad('Name') + c.name, pad('Email') + c.email, pad('Ship to') + c.address.replace(/\s*\n\s*/g, ', '), pad('Notes') + (c.notes || '(none)'), '',
+    'CUSTOMER', pad('Name') + c.name, pad('Email') + c.email,
+    pad('Ship to') + c.name, ''.padEnd(20) + c.ship.street + (c.ship.street2 ? ', ' + c.ship.street2 : ''), ''.padEnd(20) + `${c.ship.city}, ${c.ship.state} ${c.ship.zip}`,
+    pad('Notes') + (c.notes || '(none)'), '',
     `ITEMS (${n})`];
   cart.forEach((it,i)=>{
     const b = it.b, od = odMM(b), w = wrapMM(b);
@@ -2452,15 +2472,25 @@ $('#checkoutForm').addEventListener('submit', async e=>{
   e.preventDefault();
   if(paying) return;
   const err = $('#formError');
-  const show = (msg, field)=>{ err.textContent = msg; err.hidden = false; if(field){ $(field).focus(); } };
+  const show = (msg, field)=>{ err.textContent = msg; err.hidden = false; if(field){ const f = $(field); f.classList.add('bad'); f.setAttribute('aria-invalid','true'); f.focus(); } };
   err.hidden = true;
-  const c = {name:$('#custName').value.trim(), email:$('#custEmail').value.trim(), address:$('#custAddress').value.trim(), notes:$('#custNotes').value.trim()};
+  const one = sel=>$(sel).value.replace(/\s+/g,' ').trim();
+  const zipM = one('#custZip').match(/^(\d{5})(?:[-\s]?(\d{4}))?$/);
+  const ship = {street:one('#custStreet'), street2:one('#custStreet2'), city:one('#custCity'), state:$('#custState').value,
+    zip:zipM ? zipM[1] + (zipM[2] ? '-' + zipM[2] : '') : ''};
+  const c = {name:one('#custName'), email:$('#custEmail').value.trim(), ship, notes:$('#custNotes').value.trim()};
+  c.address = `${ship.street}${ship.street2 ? ', ' + ship.street2 : ''}, ${ship.city}, ${ship.state} ${ship.zip}`;
   if(!cart.length) return show('Your cart is empty.');
   const bad = cart.findIndex(it=>problems(it.b).length);
   if(bad>=0) return show(`Item ${bad+1} has a problem: ${problems(cart[bad].b)[0].msg} Remove it and build it again.`);
   if(!c.name) return show('Enter your name.', '#custName');
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email)) return show('Check your email address. We need it to reach you.', '#custEmail');
-  if(c.address.replace(/\s+/g,' ').length < 10) return show('Enter your full shipping address: street, city, state and ZIP.', '#custAddress');
+  if(ship.street.length < 4) return show('Enter your street address.', '#custStreet');
+  if(!/\d/.test(ship.street)) return show('Add your house or building number to the street address.', '#custStreet');
+  if(ship.city.length < 2) return show('Enter your city.', '#custCity');
+  if(/\d/.test(ship.city)) return show('The city box should only have the city name. Put the ZIP code in its own box.', '#custCity');
+  if(!US_STATES.some(([code])=>code===ship.state)) return show('Choose your state.', '#custState');
+  if(!ship.zip) return show('Enter a 5-digit ZIP code, like 58102.', '#custZip');
   const order = buildOrder(c);
   lastOrderText = order.subject + '\n\n' + order.text;
   $('#testPanel').hidden = true; $('#failPanel').hidden = true;
@@ -2474,8 +2504,9 @@ $('#checkoutForm').addEventListener('submit', async e=>{
   btn.disabled = true; btn.textContent = 'Opening secure checkout…';
   try{
     const res = await fetch(CHECKOUT_ENDPOINT, {method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({orderRef:order.ref, name:c.name, email:c.email, address:c.address, notes:c.notes, fullOrderText:order.text, items:order.stripeItems})});
+      body:JSON.stringify({orderRef:order.ref, name:c.name, email:c.email, address:c.address, shipping:c.ship, notes:c.notes, fullOrderText:order.text, items:order.stripeItems})});
     const data = await res.json().catch(()=>({}));
+    if(res.status === 400 && /^#cust[A-Za-z0-9]+$/.test(data.field || '')){ paying = false; btn.disabled = false; btn.textContent = label; return show(data.error, data.field); }
     if(!res.ok || !data.url) throw new Error(data.error || 'no url');
     window.location.href = data.url;
   }catch(x){
@@ -2487,6 +2518,7 @@ async function copyText(text, statusSel){
   try{ await navigator.clipboard.writeText(text); $(statusSel).textContent = 'Copied.'; }
   catch(e){ $(statusSel).textContent = 'Select the text and copy it by hand.'; }
 }
+['#custName','#custEmail','#custStreet','#custCity','#custState','#custZip'].forEach(id=>$(id).addEventListener(id==='#custState' ? 'change' : 'input', e=>{ e.target.classList.remove('bad'); e.target.removeAttribute('aria-invalid'); }));
 $('#testCopy').onclick = ()=>copyText($('#testText').value, '#testCopied');
 $('#failCopy').onclick = ()=>copyText(lastOrderText, '#failCopied');
 
@@ -2513,7 +2545,7 @@ function renderCompare(){
   }).join('');
 }
 const reviewName = r=>`${r.first}${r.last ? ' ' + r.last.trim()[0].toUpperCase() + '.' : ''}`;
-const reviewPlace = r=>r.town ? `${r.town}, ${r.state}` : r.state;
+const reviewPlace = r=>r.city ? `${r.city}, ${r.state}` : r.state;
 function renderReviews(){
   const list = REVIEWS.slice().reverse();
   if(!list.length){
@@ -2616,9 +2648,9 @@ const SHARE = {max:4, side:1280, quality:0.82, endpoint:'/submit-photos'};
 let shareRating = 0, sharePhotos = [], shareBusy = false;
 const shareClean = v=>String(v||'').replace(/\s+/g,' ').trim();
 const shareShowAs = ()=>{
-  const first = shareClean($('#shareFirst').value), last = shareClean($('#shareLast').value), town = shareClean($('#shareTown').value), st = $('#shareState').value;
+  const first = shareClean($('#shareFirst').value), last = shareClean($('#shareLast').value), city = shareClean($('#shareCity').value), st = $('#shareState').value;
   if(!first || !st) return '';
-  return reviewName({first, last}) + ' · ' + reviewPlace({town, state:st});
+  return reviewName({first, last}) + ' · ' + reviewPlace({city, state:st});
 };
 function shareRefresh(){
   const name = shareShowAs();
@@ -2626,7 +2658,7 @@ function shareRefresh(){
   const ready = $('#shareConsent').checked && !shareBusy;
   $('#shareSend').disabled = !ready;
   $('#shareHint').textContent = !$('#shareConsent').checked ? 'Check the permission box to send.'
-    : !sharePhotos.length ? 'Add at least one photo.' : '';
+    : '';
 }
 function shrinkPhoto(file){
   return new Promise((resolve, reject)=>{
@@ -2664,7 +2696,6 @@ function shareProblem(){
   if(!$('#shareText').value.trim()) return ['#shareText', 'Tell us how they fly.'];
   const em = $('#shareEmail').value.trim();
   if(em && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return ['#shareEmail', 'That email doesn\'t look right. Fix it or leave it blank.'];
-  if(!sharePhotos.length) return ['#shareFiles', 'Add at least one photo.'];
   if(!$('#shareConsent').checked) return ['#shareConsent', 'Check the permission box so we can post your photos.'];
   return null;
 }
@@ -2672,11 +2703,12 @@ function initShare(){
   $('#shareProfile').innerHTML = ['Not sure', ...Object.values(SHAPES).filter(s=>s.stock).map(s=>s.name)]
     .map((n,i)=>`<option${i ? '' : ' value=""'}>${esc(n)}</option>`).join('');
   $('#shareState').innerHTML = '<option value="">Choose…</option>' + US_STATES.map(([c,n])=>`<option value="${c}">${esc(n)}</option>`).join('');
+  $('#custState').innerHTML = $('#shareState').innerHTML;
   $('#shareRating').innerHTML = [5,4,3,2,1].map(n=>`<button type="button" class="choice" role="radio" data-val="${n}" aria-label="${n} out of 5"><span class="stars-chip">${'★'.repeat(n)}</span></button>`).join('');
   setChecked($('#shareRating'), 0);
   $('#shareRating').addEventListener('click', e=>{ const b = e.target.closest('[role="radio"]'); if(b){ shareRating = +b.dataset.val; setChecked($('#shareRating'), shareRating); } });
   $('#shareText').addEventListener('input', ()=>{ $('#shareCount').textContent = `${$('#shareText').value.length} / 600`; });
-  ['#shareFirst','#shareLast','#shareTown','#shareState','#shareConsent'].forEach(id=>$(id).addEventListener(id==='#shareState'||id==='#shareConsent' ? 'change' : 'input', shareRefresh));
+  ['#shareFirst','#shareLast','#shareCity','#shareState','#shareConsent'].forEach(id=>$(id).addEventListener(id==='#shareState'||id==='#shareConsent' ? 'change' : 'input', shareRefresh));
   $('#shareFiles').addEventListener('change', e=>{ shareAddFiles(e.target.files); e.target.value = ''; });
   const drop = $('#shareDrop');
   ['dragenter','dragover'].forEach(t=>drop.addEventListener(t, e=>{ e.preventDefault(); drop.classList.add('over'); }));
@@ -2692,7 +2724,7 @@ function initShare(){
     shareBusy = true; shareRefresh(); $('#shareSend').textContent = 'Sending…';
     try{
       const res = await fetch(SHARE.endpoint, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({
-        firstName: shareClean($('#shareFirst').value), lastName: shareClean($('#shareLast').value), town: shareClean($('#shareTown').value), state: $('#shareState').value,
+        firstName: shareClean($('#shareFirst').value), lastName: shareClean($('#shareLast').value), city: shareClean($('#shareCity').value), state: $('#shareState').value,
         email: $('#shareEmail').value.trim(), profile: $('#shareProfile').value, rating: shareRating,
         review: $('#shareText').value.trim(), consent: $('#shareConsent').checked, website: $('#shareWebsite').value,
         photos: sharePhotos.map(p=>p.data)
