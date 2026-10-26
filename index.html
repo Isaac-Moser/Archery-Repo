@@ -405,8 +405,56 @@ textarea.input{min-height:84px;resize:vertical;line-height:1.45}
 .share .choice{min-width:56px;text-align:center}
 .share .stars-chip{color:var(--red);letter-spacing:1px}
 .share .choice[aria-checked="true"] .stars-chip{color:#fff}
-.consent{display:flex;gap:12px;align-items:flex-start;font-size:15px;line-height:1.45;cursor:pointer}
-.consent input{width:22px;height:22px;margin:1px 0 0;flex:none;accent-color:var(--red)}
+.share-lede{margin:6px 0 22px;color:var(--muted)}
+.share-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.share-grid.place{grid-template-columns:1.5fr 1fr;margin-top:12px}
+.share-grid .field{margin:0}
+.share-sub{font:600 13px/1 var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:26px 0 12px;padding-top:18px;border-top:1px solid var(--line-soft)}
+.share-sub:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.show-as{margin-top:10px;font-size:14px;color:var(--muted)}
+.show-as b{color:var(--text)}
+.req{color:var(--red-deep)}
+.drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;border:2px dashed var(--line);border-radius:var(--r-md);padding:22px 16px;background:var(--white);cursor:pointer;transition:border-color .15s,background .15s}
+.drop:hover,.drop.over{border-color:var(--ink);background:#fff}
+.drop b{font-size:16px}
+.drop span{font-size:14px;color:var(--muted)}
+.drop input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px;margin-top:12px}
+.thumbs:empty{display:none}
+.thumb{position:relative;aspect-ratio:1/1;border-radius:var(--r-sm);overflow:hidden;background:var(--fog);border:1px solid var(--line-soft)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb button{position:absolute;top:4px;right:4px;width:28px;height:28px;border-radius:50%;border:0;background:rgba(28,36,33,.8);color:#fff;font-size:18px;line-height:1;cursor:pointer}
+.consent-box{display:flex;gap:12px;align-items:flex-start;font-size:15px;line-height:1.45;cursor:pointer;background:var(--white);border:1.5px solid var(--line);border-radius:var(--r-md);padding:14px 16px;transition:border-color .15s,background .15s}
+.consent-box:has(input:checked){border-color:var(--sage);background:var(--sage-tint)}
+.consent-box input{width:22px;height:22px;margin:1px 0 0;flex:none;accent-color:var(--sage)}
+.share-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:18px}
+.share-actions .help{margin:0}
+.share-done{text-align:center;padding:12px 4px}
+.share-done .tick{width:56px;height:56px;border-radius:50%;background:var(--sage);margin:0 auto 14px;display:flex;align-items:center;justify-content:center}
+.share-done .tick::after{content:"";width:22px;height:12px;border:solid #fff;border-width:0 0 3.5px 3.5px;transform:translate(0,-3px) rotate(-45deg)}
+.share-done h3{font:600 26px/1.15 var(--display);margin:0 0 8px}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+@media (max-width:420px){.share-grid,.share-grid.place{grid-template-columns:1fr}}
+/* reviews */
+.reviews{display:grid;gap:16px;max-width:760px;margin-bottom:40px}
+.rv{background:var(--white);border:1px solid var(--line-soft);border-radius:var(--r-lg);padding:20px 22px;box-shadow:var(--shadow)}
+.rv-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px 16px;flex-wrap:wrap}
+.rv-who b{display:block;font:600 24px/1.1 var(--display)}
+.rv-who span{display:block;font-size:14px;color:var(--muted);margin-top:3px}
+.rv-stars{color:var(--red);font-size:20px;letter-spacing:2px;line-height:1;white-space:nowrap}
+.rv-meta{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 14px}
+.rv-chip{font-size:13px;font-weight:600;border:1px solid var(--line);border-radius:999px;padding:3px 11px;background:var(--paper);color:var(--text)}
+.rv-chip.date{font-weight:500;color:var(--muted)}
+.prose .rv-text{font-size:17px;line-height:1.55;margin:0 0 16px;max-width:none}
+.rv-photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.rv-photos button{display:block;padding:0;border:1px solid var(--line-soft);border-radius:var(--r-md);overflow:hidden;cursor:zoom-in;background:var(--fog)}
+.rv-photos button:hover{border-color:var(--text)}
+.rv-photos img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover}
+.rv-empty{background:var(--paper);border:1px dashed var(--line);border-radius:var(--r-md);padding:18px 20px;max-width:760px;margin-bottom:24px}
+.cta-card{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px 20px;background:var(--paper);border:1px solid var(--line-soft);border-radius:var(--r-lg);padding:20px 22px;max-width:760px}
+.cta-card b{display:block;font:600 22px/1.15 var(--display)}
+.cta-card span{color:var(--muted)}
+@media (max-width:480px){.rv{padding:16px}.rv-photos{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:480px){.gallery{grid-template-columns:1fr 1fr;gap:10px}.shot-cap{font-size:14px;padding:8px 10px}.share{padding:18px}}
 .prose .quote{font:500 24px/1.3 var(--display);border-left:4px solid var(--red);padding:4px 0 4px 18px;margin:24px 0;max-width:34ch}
 
@@ -505,7 +553,7 @@ try{ if(!SITE_PASSWORD || localStorage.getItem('moserArcheryGateOK')==='1') docu
       <a href="#compare" data-page="compare">Compare</a>
       <a href="#howto" data-page="howto">How it works</a>
       <a href="#photos" data-page="photos">Photos</a>
-      <a href="#reviews" data-page="reviews" id="navReviews" hidden>Reviews</a>
+      <a href="#reviews" data-page="reviews" id="navReviews">Reviews</a>
       <a href="#about" data-page="about">About</a>
     </nav>
     <button class="menu-btn" id="menuBtn" type="button" aria-expanded="false" aria-controls="siteNav">Menu</button>
@@ -913,7 +961,7 @@ try{ if(!SITE_PASSWORD || localStorage.getItem('moserArcheryGateOK')==='1') docu
 
 <!-- ============================== PHOTOS ============================== -->
 <section id="page-photos" class="page" hidden>
-  <div class="page-head"><svg class="topo" aria-hidden="true"><use href="#topoPattern" width="100%" height="100%"/></svg><div class="wrap"><h1>See every color</h1><p>Real prints, not renders. Every color we stock on the ANCHOR profile, the sample pack we send to clubs, and setups from people shooting them.</p></div></div>
+  <div class="page-head"><svg class="topo" aria-hidden="true"><use href="#topoPattern" width="100%" height="100%"/></svg><div class="wrap"><h1>See every color</h1><p>Real prints, not renders. Every color we stock on the ANCHOR profile, and the sample pack we send to clubs.</p></div></div>
   <div class="wrap prose">
     <div class="photos-empty" id="photosEmpty" hidden><b>Photos are on the way.</b><p class="muted" style="margin:6px 0 0">We're shooting every color now. In the meantime, the 3D preview on the Build page shows your exact vane in your color.</p></div>
 
@@ -929,25 +977,9 @@ try{ if(!SITE_PASSWORD || localStorage.getItem('moserArcheryGateOK')==='1') docu
       <div class="gallery"></div>
     </div>
 
-    <div class="photo-group" id="photos-customer" hidden>
-      <h2>From shooters</h2>
-      <p class="muted">Sent in by people shooting our vanes, shared with their permission.</p>
-      <div class="gallery"></div>
-    </div>
-
-    <div class="share" id="share">
-      <h2>Share your setup</h2>
-      <p>Shooting our vanes? Send a photo and tell us how they fly. Nothing is posted until we've looked at it, and we remove location data from every photo before it goes up.</p>
-      <form id="shareForm" novalidate>
-        <div class="field"><label class="label" for="shareName">Name to show with your photo</label><input class="input" id="shareName" maxlength="40" autocomplete="given-name" placeholder="Jake, Fargo ND"><div class="help">First name and town is plenty.</div></div>
-        <div class="field"><label class="label" for="shareProfile">Profile</label><select class="input" id="shareProfile"></select></div>
-        <div class="field"><span class="label" id="shareRatingLabel">Rating <span class="opt">(optional)</span></span><div class="choices" id="shareRating" role="radiogroup" aria-labelledby="shareRatingLabel"></div></div>
-        <div class="field"><label class="label" for="shareText">How do they fly? <span class="opt">(optional)</span></label><textarea class="input" id="shareText" maxlength="600" placeholder="Setup, broadhead, distance, what you noticed"></textarea><div class="help" id="shareCount">0 / 600</div></div>
-        <div class="field"><label class="consent"><input type="checkbox" id="shareConsent"><span>I took these photos, I'm 13 or older, and anyone else in them is OK with it. Moser Archery may post my photos and review, with the name above, on its website and social media.</span></label></div>
-        <button class="btn btn-primary btn-lg" type="submit">Open email to attach photos</button>
-        <p class="help">Your email app opens with this filled in. Attach up to 5 photos and hit send. No email app? Send them to <a class="biz-email" data-subject="Photo submission"></a> with the details above.</p>
-        <div class="help err" id="shareError" hidden></div>
-      </form>
+    <div class="cta-card">
+      <div><b>Shooting our vanes?</b><span>See how other archers' setups fly, or share your own.</span></div>
+      <button class="btn btn-primary" type="button" data-page-link="reviews">Reviews &amp; share yours</button>
     </div>
   </div>
 </section>
@@ -965,8 +997,58 @@ try{ if(!SITE_PASSWORD || localStorage.getItem('moserArcheryGateOK')==='1') docu
 
 <!-- ============================== REVIEWS ============================== -->
 <section id="page-reviews" class="page" hidden>
-  <div class="page-head"><div class="wrap"><h1>Reviews</h1><p id="reviewsSummary"></p></div></div>
-  <div class="wrap prose" id="reviewsList"></div>
+  <div class="page-head"><svg class="topo" aria-hidden="true"><use href="#topoPattern" width="100%" height="100%"/></svg><div class="wrap"><h1>Reviews</h1><p id="reviewsSummary"></p><p style="margin-top:18px"><button class="btn btn-on-ink" type="button" id="reviewsLeave">Leave a review</button></p></div></div>
+  <div class="wrap prose">
+    <div class="reviews" id="reviewsList"></div>
+    <div class="share" id="share">
+      <h2 id="shareTitle">Leave a review</h2>
+      <p class="share-lede">Shooting our vanes? Send a photo or two and tell us how they fly. Nothing is posted until we've looked at it.</p>
+      <form id="shareForm" novalidate>
+        <input class="hp" type="text" id="shareWebsite" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+        <h3 class="share-sub">About you</h3>
+        <div class="share-grid">
+          <div class="field"><label class="label" for="shareFirst">First name <span class="req" aria-hidden="true">*</span></label><input class="input" id="shareFirst" maxlength="30" autocomplete="given-name" required></div>
+          <div class="field"><label class="label" for="shareLast">Last name <span class="opt">(optional)</span></label><input class="input" id="shareLast" maxlength="40" autocomplete="family-name"></div>
+        </div>
+        <div class="share-grid place">
+          <div class="field"><label class="label" for="shareTown">Town <span class="opt">(optional)</span></label><input class="input" id="shareTown" maxlength="40" autocomplete="address-level2"></div>
+          <div class="field"><label class="label" for="shareState">State <span class="req" aria-hidden="true">*</span></label><select class="input" id="shareState" required></select></div>
+        </div>
+        <p class="show-as" id="shareShowAs">Only your last initial is shown.</p>
+        <div class="field" style="margin-top:14px"><label class="label" for="shareEmail">Email <span class="opt">(optional)</span></label><input class="input" id="shareEmail" type="email" maxlength="80" autocomplete="email"><div class="help">Only used if we have a question about your photos. Never shown on the site.</div></div>
+
+        <h3 class="share-sub">Your vanes</h3>
+        <div class="field"><label class="label" for="shareProfile">Profile</label><select class="input" id="shareProfile"></select></div>
+        <div class="field"><span class="label" id="shareRatingLabel">Rating <span class="req" aria-hidden="true">*</span></span><div class="choices" id="shareRating" role="radiogroup" aria-labelledby="shareRatingLabel"></div></div>
+        <div class="field"><label class="label" for="shareText">How do they fly? <span class="req" aria-hidden="true">*</span></label><textarea class="input" id="shareText" maxlength="600" required placeholder="Setup, broadhead, distance, what you noticed"></textarea><div class="help" id="shareCount">0 / 600</div></div>
+
+        <h3 class="share-sub">Photos <span class="req" aria-hidden="true">*</span></h3>
+        <label class="drop" id="shareDrop" for="shareFiles">
+          <input type="file" id="shareFiles" accept="image/*" multiple>
+          <b>Add photos</b>
+          <span>Up to 4. Tap to choose, or drag them here.</span>
+        </label>
+        <div class="thumbs" id="shareThumbs"></div>
+        <div class="help">Photos are resized and their hidden location data is removed on your device before they're sent.</div>
+
+        <h3 class="share-sub">Permission</h3>
+        <label class="consent-box"><input type="checkbox" id="shareConsent"><span>I took these photos, I'm 13 or older, and anyone else in them is OK with it. Moser Archery may post my photos and review, with my first name, last initial, town and state, on its website and social media.</span></label>
+
+        <div class="share-actions">
+          <button class="btn btn-primary btn-lg" type="submit" id="shareSend" disabled>Send my review</button>
+          <p class="help" id="shareHint">Check the permission box to send.</p>
+        </div>
+        <div class="notice red" id="shareError" hidden></div>
+      </form>
+      <div class="share-done" id="shareDone" hidden>
+        <div class="tick" aria-hidden="true"></div>
+        <h3 id="shareDoneTitle">Thanks!</h3>
+        <p class="muted">We got your photos and review. We'll take a look, and if they go up you'll see them right here.</p>
+        <button class="btn btn-ghost" type="button" id="shareAgain">Send more photos</button>
+      </div>
+    </div>
+  </div>
 </section>
 
 <!-- ============================== ABOUT ============================== -->
@@ -1040,17 +1122,25 @@ const CUSTOM_ENABLED = false;           // true brings back the Draw your own pr
 const SHIPPING = {flat:4.99, freeAtSubtotal:40};   // must match the checkout function
 const MAX_PACKS = 10;
 
-// Add reviews as they come in: {name:'Jane D.', rating:5, date:'2026-10', text:'...', photo:null}
-const REVIEWS = [];
+// REVIEWS: one entry per approved photo submission (copy the details from the "Photo submission" email).
+//   first, last (optional; only the initial is shown), town (optional), state, profile, rating 1-5, date, text,
+//   photos: [{src, thumb (optional smaller file), alt (describes the photo)}]. Put the photo files in the photos folder.
+//   If text has an apostrophe, put a backslash before it: don\'t
+const REVIEWS = [
+  {first:'Sawyer', last:'', town:'Roseau', state:'MN', profile:'IMPACT', rating:5, date:'October 2026',
+   text:'They fly incredible and very quiet. Steer my broad heads great!',
+   photos:[
+     {src:'photos/cust-sawyer-1.webp', thumb:'photos/cust-sawyer-1-sm.webp', alt:'Neon Yellow IMPACT vanes on an arrow nocked on a hunting bow'},
+     {src:'photos/cust-sawyer-2.webp', thumb:'photos/cust-sawyer-2-sm.webp', alt:'Neon Yellow IMPACT vane on an arrow nocked on a bow, side view'},
+   ]},
+];
 
 // PHOTOS: put the image files in a "photos" folder next to index.html, then add one line each.
 //   group 'color'    -> ANCHOR in one color. color must match a name in COLORS exactly.
 //   group 'sample'   -> the club sample pack.
-//   group 'customer' -> ONLY photos a customer sent with the permission box checked.
 // Optional: thumb (smaller file for the grid), caption, alt (describes the photo for screen readers).
 // {group:'color',    src:'photos/anchor-neon-red.webp', thumb:'photos/anchor-neon-red-sm.webp', color:'Neon Red', alt:'Neon Red ANCHOR vanes on an arrow'},
 // {group:'sample',   src:'photos/sample-pack-1.webp', caption:'All ten sleeves', alt:'Club sample pack laid out with its insert card'},
-// {group:'customer', src:'photos/cust-jake-1.webp', caption:'Jake, Fargo ND', alt:'RANGE vanes on a hunting arrow'},
 const PHOTOS = [
   {group:'color', src:'photos/anchor-white.webp', thumb:'photos/anchor-white-sm.webp', color:'White', alt:'White ANCHOR vane, helical'},
   {group:'color', src:'photos/anchor-black.webp', thumb:'photos/anchor-black-sm.webp', color:'Black', alt:'Black ANCHOR vane, helical'},
@@ -2422,13 +2512,26 @@ function renderCompare(){
       </div></div>`;
   }).join('');
 }
+const reviewName = r=>`${r.first}${r.last ? ' ' + r.last.trim()[0].toUpperCase() + '.' : ''}`;
+const reviewPlace = r=>r.town ? `${r.town}, ${r.state}` : r.state;
 function renderReviews(){
-  $('#navReviews').hidden = !REVIEWS.length;
-  if(!REVIEWS.length){ $('#reviewsSummary').textContent = 'No reviews yet.'; $('#reviewsList').innerHTML = '<p class="muted">Tried a set? <button class="link-btn" type="button" data-page-link="photos">Share a photo and review</button>.</p>'; return; }
-  const avg = REVIEWS.reduce((s,r)=>s+r.rating,0)/REVIEWS.length;
-  $('#reviewsSummary').textContent = `${avg.toFixed(1)} out of 5 from ${REVIEWS.length} review${REVIEWS.length>1?'s':''}`;
-  $('#reviewsList').innerHTML = REVIEWS.slice().reverse().map(r=>`<div class="review"><div class="stars" aria-label="${r.rating} out of 5">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div><h3>${esc(r.name)}</h3><p class="muted small">${esc(r.date||'')}</p><p>${esc(r.text)}</p>${r.photo ? `<img src="${esc(r.photo)}" alt="Photo from ${esc(r.name)}" style="max-width:260px;border-radius:8px">` : ''}</div>`).join('')
-    + '<p style="margin-top:20px"><button class="btn btn-ghost" type="button" data-page-link="photos">Share your photos and review</button></p>';
+  const list = REVIEWS.slice().reverse();
+  if(!list.length){
+    $('#reviewsSummary').textContent = 'No reviews yet. Yours could be the first.';
+    $('#reviewsList').innerHTML = '';
+    return;
+  }
+  const avg = list.reduce((s,r)=>s+r.rating,0)/list.length;
+  $('#reviewsSummary').innerHTML = `<span style="color:var(--red);letter-spacing:2px">${'★'.repeat(Math.round(avg))}${'☆'.repeat(5-Math.round(avg))}</span> &nbsp;${avg.toFixed(1)} out of 5 from ${list.length} review${list.length>1?'s':''}`;
+  $('#reviewsList').innerHTML = list.map((r,ri)=>`<article class="rv">
+    <div class="rv-top">
+      <div class="rv-who"><b>${esc(reviewName(r))}</b><span>${esc(reviewPlace(r))}</span></div>
+      <div class="rv-stars" role="img" aria-label="${r.rating} out of 5 stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div>
+    </div>
+    <div class="rv-meta">${r.profile ? `<span class="rv-chip">${esc(r.profile)}</span>` : ''}${r.date ? `<span class="rv-chip date">${esc(r.date)}</span>` : ''}</div>
+    ${r.text ? `<p class="rv-text">${esc(r.text)}</p>` : ''}
+    ${(r.photos||[]).length ? `<div class="rv-photos">${r.photos.map((ph,pi)=>`<button type="button" data-rv="${ri}" data-ph="${pi}" aria-label="Open photo ${pi+1} from ${esc(reviewName(r))}"><img src="${esc(ph.thumb||ph.src)}" alt="${esc(ph.alt||'')}" loading="lazy" decoding="async"></button>`).join('')}</div>` : ''}
+  </article>`).join('');
 }
 function renderVideos(){
   const embed = raw=>{
@@ -2448,28 +2551,31 @@ function renderVideos(){
 /* =====================================================================
    PHOTOS
 ===================================================================== */
-const LB = {list:[], i:0};
+const LB = {list:[], i:0, photos:[]};
+function openLightbox(list, i){
+  LB.list = list; showShot(i);
+  const d = $('#lightbox'); if(d.showModal) d.showModal(); else window.open(list[LB.i].src, '_blank', 'noopener');
+}
 function renderPhotos(){
   const rank = name=>{ const i = COLORS.findIndex(c=>c.name===name); return i < 0 ? 999 : i; };
   const groups = {
     color: PHOTOS.filter(p=>p.group==='color').sort((a,b)=>rank(a.color)-rank(b.color)),
     sample: PHOTOS.filter(p=>p.group==='sample'),
-    customer: PHOTOS.filter(p=>p.group==='customer'),
   };
-  LB.list = [...groups.color, ...groups.sample, ...groups.customer];
+  LB.photos = [...groups.color, ...groups.sample];
   Object.entries(groups).forEach(([g, list])=>{
     const box = $('#photos-'+g);
     box.hidden = !list.length;
     $('.gallery', box).innerHTML = list.map(p=>{
       const col = p.color ? COLORS.find(c=>c.name===p.color) : null;
       const cap = p.caption || p.color || '';
-      return `<button type="button" class="shot${p.wide ? ' wide' : ''}" data-shot="${LB.list.indexOf(p)}" aria-label="Open photo${cap ? ': ' + esc(cap) : ''}">`
+      return `<button type="button" class="shot${p.wide ? ' wide' : ''}" data-shot="${LB.photos.indexOf(p)}" aria-label="Open photo${cap ? ': ' + esc(cap) : ''}">`
         + `<img src="${esc(p.thumb || p.src)}" alt="${esc(p.alt || cap)}" loading="lazy" decoding="async">`
         + (cap ? `<span class="shot-cap">${col ? `<i style="background:${esc(col.hex)}"></i>` : ''}${esc(cap)}</span>` : '')
         + `</button>`;
     }).join('');
   });
-  $('#photosEmpty').hidden = LB.list.length > 0;
+  $('#photosEmpty').hidden = LB.photos.length > 0;
 }
 function showShot(i){
   const n = LB.list.length; if(!n) return;
@@ -2482,10 +2588,14 @@ function showShot(i){
   $('#lbPrev').hidden = $('#lbNext').hidden = n < 2;
 }
 $('#page-photos').addEventListener('click', e=>{
-  const s = e.target.closest('[data-shot]'); if(!s) return;
-  showShot(+s.dataset.shot);
-  const d = $('#lightbox'); if(d.showModal) d.showModal(); else window.open(LB.list[LB.i].src, '_blank', 'noopener');
+  const s = e.target.closest('[data-shot]'); if(s) openLightbox(LB.photos, +s.dataset.shot);
 });
+$('#page-reviews').addEventListener('click', e=>{
+  const b = e.target.closest('[data-rv]'); if(!b) return;
+  const r = REVIEWS.slice().reverse()[+b.dataset.rv];
+  openLightbox(r.photos.map(ph=>({src:ph.src, alt:ph.alt, caption:`${reviewName(r)} · ${reviewPlace(r)}`})), +b.dataset.ph);
+});
+$('#reviewsLeave').onclick = ()=>$('#share').scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'start'});
 $('#lbPrev').onclick = ()=>showShot(LB.i - 1);
 $('#lbNext').onclick = ()=>showShot(LB.i + 1);
 $('#lbClose').onclick = ()=>$('#lightbox').close();
@@ -2497,45 +2607,115 @@ $('#lbBuild').onclick = ()=>{
   toast(`${esc(col.name)} selected. Pick the rest of your setup.`);
 };
 
-/* Share your setup: launch version builds an email the customer attaches photos to.
-   Nothing is uploaded or stored by the site. */
-let shareRating = 0;
+/* Share your setup: photos are shrunk to JPEG in the browser (which also strips
+   location data), then posted to /submit-photos, which checks everything again and
+   emails them to you from orders@moserarchery.com. The permission box is required
+   both here and on the server. */
+const US_STATES = [['AL','Alabama'],['AK','Alaska'],['AZ','Arizona'],['AR','Arkansas'],['CA','California'],['CO','Colorado'],['CT','Connecticut'],['DE','Delaware'],['DC','District of Columbia'],['FL','Florida'],['GA','Georgia'],['HI','Hawaii'],['ID','Idaho'],['IL','Illinois'],['IN','Indiana'],['IA','Iowa'],['KS','Kansas'],['KY','Kentucky'],['LA','Louisiana'],['ME','Maine'],['MD','Maryland'],['MA','Massachusetts'],['MI','Michigan'],['MN','Minnesota'],['MS','Mississippi'],['MO','Missouri'],['MT','Montana'],['NE','Nebraska'],['NV','Nevada'],['NH','New Hampshire'],['NJ','New Jersey'],['NM','New Mexico'],['NY','New York'],['NC','North Carolina'],['ND','North Dakota'],['OH','Ohio'],['OK','Oklahoma'],['OR','Oregon'],['PA','Pennsylvania'],['RI','Rhode Island'],['SC','South Carolina'],['SD','South Dakota'],['TN','Tennessee'],['TX','Texas'],['UT','Utah'],['VT','Vermont'],['VA','Virginia'],['WA','Washington'],['WV','West Virginia'],['WI','Wisconsin'],['WY','Wyoming']];
+const SHARE = {max:4, side:1280, quality:0.82, endpoint:'/submit-photos'};
+let shareRating = 0, sharePhotos = [], shareBusy = false;
+const shareClean = v=>String(v||'').replace(/\s+/g,' ').trim();
+const shareShowAs = ()=>{
+  const first = shareClean($('#shareFirst').value), last = shareClean($('#shareLast').value), town = shareClean($('#shareTown').value), st = $('#shareState').value;
+  if(!first || !st) return '';
+  return reviewName({first, last}) + ' · ' + reviewPlace({town, state:st});
+};
+function shareRefresh(){
+  const name = shareShowAs();
+  $('#shareShowAs').innerHTML = name ? `Shown on the site as <b>${esc(name)}</b>` : 'Only your last initial is shown.';
+  const ready = $('#shareConsent').checked && !shareBusy;
+  $('#shareSend').disabled = !ready;
+  $('#shareHint').textContent = !$('#shareConsent').checked ? 'Check the permission box to send.'
+    : !sharePhotos.length ? 'Add at least one photo.' : '';
+}
+function shrinkPhoto(file){
+  return new Promise((resolve, reject)=>{
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = ()=>{
+      const k = Math.min(1, SHARE.side / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(img.naturalWidth*k)); c.height = Math.max(1, Math.round(img.naturalHeight*k));
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      const dataUrl = c.toDataURL('image/jpeg', SHARE.quality);
+      resolve({preview:dataUrl, data:dataUrl.split(',')[1]});
+    };
+    img.onerror = ()=>{ URL.revokeObjectURL(url); reject(new Error('unreadable')); };
+    img.src = url;
+  });
+}
+async function shareAddFiles(list){
+  const files = [...list].filter(f=>/^image\//.test(f.type) || /\.(jpe?g|png|heic|heif|webp)$/i.test(f.name));
+  for(const f of files){
+    if(sharePhotos.length >= SHARE.max){ toast(`Up to ${SHARE.max} photos.`); break; }
+    try{ sharePhotos.push(await shrinkPhoto(f)); }
+    catch(e){ toast(`Couldn't open ${esc(f.name)}. Try a JPG or PNG.`, 5000); }
+  }
+  renderShareThumbs(); shareRefresh();
+}
+function renderShareThumbs(){
+  $('#shareThumbs').innerHTML = sharePhotos.map((p,i)=>`<div class="thumb"><img src="${p.preview}" alt="Photo ${i+1}"><button type="button" data-rm="${i}" aria-label="Remove photo ${i+1}">&times;</button></div>`).join('');
+  $('#shareDrop').hidden = sharePhotos.length >= SHARE.max;
+}
+function shareProblem(){
+  if(!shareClean($('#shareFirst').value)) return ['#shareFirst', 'Add your first name.'];
+  if(!$('#shareState').value) return ['#shareState', 'Pick your state.'];
+  if(!shareRating) return ['#shareRating [role="radio"]', 'Pick a star rating.'];
+  if(!$('#shareText').value.trim()) return ['#shareText', 'Tell us how they fly.'];
+  const em = $('#shareEmail').value.trim();
+  if(em && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return ['#shareEmail', 'That email doesn\'t look right. Fix it or leave it blank.'];
+  if(!sharePhotos.length) return ['#shareFiles', 'Add at least one photo.'];
+  if(!$('#shareConsent').checked) return ['#shareConsent', 'Check the permission box so we can post your photos.'];
+  return null;
+}
 function initShare(){
   $('#shareProfile').innerHTML = ['Not sure', ...Object.values(SHAPES).filter(s=>s.stock).map(s=>s.name)]
     .map((n,i)=>`<option${i ? '' : ' value=""'}>${esc(n)}</option>`).join('');
-  $('#shareRating').innerHTML = `<button type="button" class="choice" role="radio" data-val="0">Skip</button>`
-    + [5,4,3,2,1].map(n=>`<button type="button" class="choice" role="radio" data-val="${n}" aria-label="${n} out of 5"><span class="stars-chip">${'★'.repeat(n)}</span></button>`).join('');
+  $('#shareState').innerHTML = '<option value="">Choose…</option>' + US_STATES.map(([c,n])=>`<option value="${c}">${esc(n)}</option>`).join('');
+  $('#shareRating').innerHTML = [5,4,3,2,1].map(n=>`<button type="button" class="choice" role="radio" data-val="${n}" aria-label="${n} out of 5"><span class="stars-chip">${'★'.repeat(n)}</span></button>`).join('');
   setChecked($('#shareRating'), 0);
   $('#shareRating').addEventListener('click', e=>{ const b = e.target.closest('[role="radio"]'); if(b){ shareRating = +b.dataset.val; setChecked($('#shareRating'), shareRating); } });
   $('#shareText').addEventListener('input', ()=>{ $('#shareCount').textContent = `${$('#shareText').value.length} / 600`; });
-  $('#shareForm').addEventListener('submit', e=>{
+  ['#shareFirst','#shareLast','#shareTown','#shareState','#shareConsent'].forEach(id=>$(id).addEventListener(id==='#shareState'||id==='#shareConsent' ? 'change' : 'input', shareRefresh));
+  $('#shareFiles').addEventListener('change', e=>{ shareAddFiles(e.target.files); e.target.value = ''; });
+  const drop = $('#shareDrop');
+  ['dragenter','dragover'].forEach(t=>drop.addEventListener(t, e=>{ e.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave','drop'].forEach(t=>drop.addEventListener(t, e=>{ e.preventDefault(); drop.classList.remove('over'); }));
+  drop.addEventListener('drop', e=>shareAddFiles(e.dataTransfer.files));
+  $('#shareThumbs').addEventListener('click', e=>{ const b = e.target.closest('[data-rm]'); if(b){ sharePhotos.splice(+b.dataset.rm, 1); renderShareThumbs(); shareRefresh(); } });
+  $('#shareAgain').onclick = ()=>{ $('#shareDone').hidden = true; $('#shareForm').hidden = false; };
+  $('#shareForm').addEventListener('submit', async e=>{
     e.preventDefault();
-    const err = $('#shareError'), name = $('#shareName').value.trim().replace(/\s+/g, ' ');
-    const msg = !name ? 'Add the name you want shown with your photo.' : !$('#shareConsent').checked ? 'Check the permission box so we can post your photos.' : '';
-    err.hidden = !msg; err.textContent = msg;
-    if(msg) return;
-    const review = $('#shareText').value.trim();
-    const body = [
-      'PHOTO SUBMISSION',
-      '',
-      'Name to show: ' + name,
-      'Profile: ' + ($('#shareProfile').value || 'Not sure'),
-      'Rating: ' + (shareRating ? shareRating + ' of 5' : '(none)'),
-      'Review: ' + (review || '(none)'),
-      '',
-      'Permission: I took these photos, I am 13 or older, and anyone else in them is OK with it. Moser Archery may post my photos and review, with the name above, on its website and social media.',
-      '',
-      '>>> Attach your photos (up to 5) before you send. <<<',
-    ].join('\n');
-    location.href = 'mailto:' + BUSINESS_EMAIL + '?subject=' + encodeURIComponent('Photo submission: ' + name) + '&body=' + encodeURIComponent(body);
-    toast('Your email should be open. Attach your photos and hit send.', 6000);
+    const err = $('#shareError'); err.hidden = true;
+    const prob = shareProblem();
+    if(prob){ err.textContent = prob[1]; err.hidden = false; $(prob[0]).focus(); return; }
+    shareBusy = true; shareRefresh(); $('#shareSend').textContent = 'Sending…';
+    try{
+      const res = await fetch(SHARE.endpoint, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({
+        firstName: shareClean($('#shareFirst').value), lastName: shareClean($('#shareLast').value), town: shareClean($('#shareTown').value), state: $('#shareState').value,
+        email: $('#shareEmail').value.trim(), profile: $('#shareProfile').value, rating: shareRating,
+        review: $('#shareText').value.trim(), consent: $('#shareConsent').checked, website: $('#shareWebsite').value,
+        photos: sharePhotos.map(p=>p.data)
+      })});
+      const out = await res.json().catch(()=>({}));
+      if(!res.ok || !out.ok) throw new Error(out.error || 'Something went wrong.');
+      $('#shareDoneTitle').textContent = `Thanks, ${shareClean($('#shareFirst').value)}!`;
+      $('#shareForm').reset(); sharePhotos = []; shareRating = 0; setChecked($('#shareRating'), 0); renderShareThumbs();
+      $('#shareCount').textContent = '0 / 600';
+      $('#shareForm').hidden = true; $('#shareDone').hidden = false;
+    }catch(x){
+      err.innerHTML = `${esc(x.message)} If it keeps happening, email your photos to <a href="mailto:${BUSINESS_EMAIL}?subject=Photo%20submission">${BUSINESS_EMAIL}</a>.`;
+      err.hidden = false;
+    }finally{
+      shareBusy = false; $('#shareSend').textContent = 'Send my review'; shareRefresh();
+    }
   });
+  shareRefresh();
 }
 
 const PAGES = ['build','compare','howto','photos','reviews','about','checkout'];
 function go(page, push=true){
   if(!PAGES.includes(page)) page = 'build';
-  if(page==='reviews' && !REVIEWS.length) page = 'build';
   PAGES.forEach(p=>{ $('#page-'+p).hidden = p!==page; });
   $('#toast').classList.remove('show');
   $$('.site-nav a').forEach(a=>{ if(a.dataset.page===page) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
