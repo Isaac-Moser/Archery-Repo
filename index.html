@@ -344,6 +344,14 @@ textarea.input{min-height:84px;resize:vertical;line-height:1.45}
 .prose p{max-width:68ch}
 .prose ul{max-width:68ch;padding-left:20px}
 .prose li{margin-bottom:6px}
+.callout.warn{border-left-color:var(--red-deep);background:#FBEFEF}
+.callout .tight{margin:8px 0 0;padding-left:20px}.callout .tight li{margin:4px 0}
+.howto-sub{margin:24px 0 10px}
+.prose .prep-list,.prep-list{list-style:none;padding:0;margin:0 0 8px;display:grid;gap:10px;max-width:760px}
+.prep-list li{position:relative;background:var(--paper);border:1px solid var(--line-soft);border-radius:var(--r-md);padding:14px 16px 14px 48px}
+.prep-list li::before{content:"";position:absolute;left:16px;top:16px;width:18px;height:18px;border-radius:4px;border:2px solid var(--ink)}
+.howto-steps li.key-step{border:2px solid var(--red);background:#FFF}
+.howto-steps li.key-step::before{background:var(--red)}
 .callout{background:var(--paper);border:1px solid var(--line-soft);border-left:4px solid var(--red);border-radius:var(--r-sm);padding:16px 20px;margin:20px 0;max-width:68ch}
 .table{width:100%;border-collapse:collapse;font-size:15px;max-width:760px;margin:16px 0}
 .table th,.table td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line-soft);vertical-align:top}
@@ -956,15 +964,35 @@ try{ if(!SITE_PASSWORD || localStorage.getItem('moserArcheryGateOK')==='1') docu
   <div class="wrap prose">
     <h2>Putting a vane on</h2>
     <div id="videoApply"></div>
-    <div class="callout"><b>No clip needed.</b> The binder clip in the video is just a backstop at the front mark so the vane stops in the right spot. In the field, pinch the shaft between your thumb and finger at the front mark and slide the vane up against your thumb.</div>
+
+    <h3 class="howto-sub">Before you start</h3>
+    <ul class="prep-list">
+      <li><b>Start with a clean shaft.</b> Remove any old glue, vane residue, dirt or oil so the shaft is smooth all the way around. Leftover glue can stop the vane partway down the shaft, and it keeps the new glue from bonding.</li>
+      <li><b>Using wraps? Press them flat first.</b> Run your fingers up and down the wrap a few times to make sure it's fully pressed down. Then run the back of your fingernail along the seam where the wrap overlaps itself, a few passes. Flattening that seam lets the vane slide over it cleanly.</li>
+    </ul>
+
+    <div class="callout"><b>Set a stop at the front mark.</b> The binder clip in the video is just a backstop so the vane stops in the right spot. You don't need one:
+      <ul class="tight">
+        <li><b>Thumb:</b> pinch the shaft between your thumb and finger at the front mark and slide the vane up against your thumb.</li>
+        <li><b>Electrical tape:</b> if the vane is a snug fit, wrap a few turns of electrical tape just in front of the front mark. It stops the vane in the right spot and frees up both hands for the slide. Peel the tape off once the vane is on.</li>
+      </ul>
+    </div>
     <ol class="howto-steps">
       <li><div><b>Mark the spot</b><p>Mark the shaft where the front and back of the vane will sit.</p></div></li>
-      <li><div><b>Glue at the back mark</b><p>Put a thin bead of glue around the shaft at the mark nearest the nock, right on it or just inside it.</p></div></li>
+      <li><div><b>Glue at the back mark</b><p>Put a thin bead of glue around the shaft at the mark nearest the nock, right on it or just inside it. Match the amount used in the video.</p></div></li>
       <li><div><b>Glue in the middle</b><p>Put a second bead roughly halfway between the two marks.</p></div></li>
-      <li><div><b>Slide it on</b><p>From the nock end, slide the vane on in one smooth, quick motion until it reaches the front mark.</p></div></li>
+      <li class="key-step"><div><b>Slide it on in one smooth, quick motion</b><p>From the nock end, push the vane all the way to the front mark in a single, steady motion. Don't stop, and don't go slowly.</p></div></li>
       <li><div><b>Done</b><p>That's it. On to the next arrow.</p></div></li>
     </ol>
-    <div class="callout">A little glue goes a long way. Too much just squeezes out the ends.</div>
+
+    <div class="callout warn"><b>The most important step: keep it moving.</b> The glue starts to grab as soon as the vane touches it. If you slide slowly or pause, it can set partway and lock the vane halfway down the shaft. Once that happens it won't move again, and the vane has to be cut off and replaced. One smooth, quick slide every time.</div>
+
+    <div class="callout"><b>Use the right amount of glue.</b> Aim for about what you see in the video.
+      <ul class="tight">
+        <li><b>Too much</b> makes the vane drag, so it's more likely to stall partway, and the extra squeezes out the ends.</li>
+        <li><b>Too little</b> can set too quickly while you're sliding the vane on.</li>
+      </ul>
+    </div>
 
     <h2>Replacing a damaged vane</h2>
     <div id="videoRemove"></div>
